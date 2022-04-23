@@ -38,6 +38,14 @@ type MyResult = MyType<string | number | boolean>;
 type MyResult_ = MyType_<string | number | boolean>;
 
 // infer type
+type Flatten<Type> = Type extends Array<infer Item> ? Item : Type;
+type Str = Flatten<string[]>;
+type Num = Flatten<number>;
+
+type GetReturnType<Type> = Type extends (...args: never[]) => infer Return
+  ? Return
+  : never;
+
 type InferSomething<T> = T extends infer U ? U : any;
 type Inferred = InferSomething<1>;
 
@@ -51,3 +59,49 @@ type Inferred2 = InferSomething2<{
 }>; // type = any
 
 type MyFuncReturnValue = ReturnType<() => true>;
+
+interface IdLabel {
+  id: number /* some fields */;
+}
+interface NameLabel {
+  name: string /* other fields */;
+}
+
+// function createLabel(id: number): IdLabel;
+// function createLabel(name: string): NameLabel;
+// function createLabel(nameOrId: string | number): IdLabel | NameLabel;
+// function createLabel(nameOrId: string | number): IdLabel | NameLabel {
+//   throw "unimplemented";
+// }
+
+type NameOrId<T extends number | string> = T extends number
+  ? IdLabel
+  : NameLabel;
+
+// now just single function needed
+function createLabel<T extends number | string>(idOrName: T): NameOrId<T> {
+  throw "unimplemented";
+}
+let x = createLabel("typescript");
+let y = createLabel("golang");
+let xy = createLabel(Math.random() ? "hello" : 11);
+
+// type MessageOf<T extends { message: unknown }> = T["message"];
+// interface Email {
+//   message: string;
+// }
+
+// type EmailMessageContents = MessageOf<Email>;
+
+// to make this fallback to never when not avaiable
+
+type MessageOf<T> = T extends { message: unknown } ? T["message"] : never;
+interface Email {
+  message: string;
+}
+interface Dog {
+  bark(): void;
+}
+
+type EmailMessageContents = MessageOf<Email>;
+type DogMessageContents = MessageOf<Dog>;
