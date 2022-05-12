@@ -1,6 +1,6 @@
-// Mixin/Transoformable class::
+// Mixin/Transformable class::
 
-export type ClassType = new (...args: any[]) => any;
+export type ClassType = new (...args: any[]) => any | {};
 
 export function DisposableMixin<Base extends ClassType>(base: Base) {
   // return a new class than extends base
@@ -24,3 +24,4 @@ export function ActivatableMixin<Base extends ClassType>(base: Base) {
     }
   };
 }
+
