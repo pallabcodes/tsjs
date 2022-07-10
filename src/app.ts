@@ -68,3 +68,6 @@ log("Hello TypeScript");
 // https://medium.com/jspoint/typescript-compilation-the-typescript-compiler-4cb15f7244bc
 // https://medium.com/jspoint/typescript-module-system-5022cac310f6
 // https://medium.com/jspoint/typescript-namespaces-f43cd002c08c
+// https://fettblog.eu/advanced-typescript-guide/
+// https://stackoverflow.com/questions/53710368/how-do-i-add-typescript-types-to-a-javascript-module-without-switching-to-typesc
+// https://www.typescriptlang.org/docs/handbook/declaration-files/introduction.html
