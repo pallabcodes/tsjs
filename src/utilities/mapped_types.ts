@@ -44,3 +44,5 @@ const someRecord: Record1<"A" | "B", number> = {
 interface Record2 {
   [key: number]: number;
 }
+
+
