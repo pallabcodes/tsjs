@@ -13,7 +13,7 @@ type PersonScore = {
 
 const bill: PersonScore = {
   name: "Bill",
-  score: 90,
+  score: 90
 };
 
 // function doubleScore2(person: PersonScore) {
@@ -54,7 +54,7 @@ function deepFreeze<T>(obj: T) {
   const propNames = Object.getOwnPropertyNames(obj);
   for (let name of propNames) {
     let value = (obj as any)[name];
-    if(value && typeof  value === "object") {
+    if (value && typeof value === "object") {
       deepFreeze(value);
     }
   }
@@ -88,4 +88,4 @@ let goten: Immutable<Person> = deepFreeze({
     level: 1
   },
   scores: [80, 100]
-} as const);
+});

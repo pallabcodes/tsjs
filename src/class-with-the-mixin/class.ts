@@ -1,7 +1,14 @@
 class Visibility {
-  visible = true;
-  setVisible(visible: boolean) {
+  private static digit: number = 0;
+  private visible: boolean = true;
+  constructor() {
+    Visibility.digit++;
+  }
+  setVisible(visible: boolean): void {
     this.visible = visible;
+  }
+  public static getDigit() {
+    return Visibility.digit
   }
 }
 
@@ -21,3 +28,6 @@ const mock = new MockVisibility();
 
 mock.setVisible(true);
 mock.setVisible(false);
+
+
+

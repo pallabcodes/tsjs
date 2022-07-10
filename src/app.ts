@@ -56,3 +56,11 @@ function log(value: unknown) {
 }
 log(12.1212);
 log("Hello TypeScript");
+
+// https://learntypescript.dev/07/intro - done
+// https://www.dhiwise.com/post/advanced-typescript-cheatsheet
+// https://javascript.plainenglish.io/implement-hybrid-decorator-functions-in-typescript-f6d24bc5abb0
+// https://css-tricks.com/understanding-javascript-constructors/
+// https://prateeksurana.me/blog/react-library-with-typescript/
+// https://medium.com/jspoint/typescript-type-system-81fdb84bba75
+// https://medium.com/@KevinBGreene/typescript-type-guards-using-reflect-api-e86bda75d587

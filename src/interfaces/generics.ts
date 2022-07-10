@@ -12,3 +12,19 @@ interface ESports {
 
 // Extending the multiple interfaces
 // interface Gamers extends Game<boolean>, ESports { venue: string }
+
+interface Form<T> {
+  values: T;
+  errors: { [K in keyof T]?: string };
+}
+
+const contactForm: Form<{ name: string; email: string, mobile: string }> = {
+  values: {
+    name: "Bob",
+    email: "bob@someemail.com",
+    mobile: "8670364441"
+  },
+  errors: {
+    email: "invalid email address entered"
+  }
+};
