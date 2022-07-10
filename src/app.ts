@@ -64,3 +64,7 @@ log("Hello TypeScript");
 // https://prateeksurana.me/blog/react-library-with-typescript/
 // https://medium.com/jspoint/typescript-type-system-81fdb84bba75
 // https://medium.com/@KevinBGreene/typescript-type-guards-using-reflect-api-e86bda75d587
+// https://medium.com/jspoint/typescript-namespaces-f43cd002c08c
+// https://medium.com/jspoint/typescript-compilation-the-typescript-compiler-4cb15f7244bc
+// https://medium.com/jspoint/typescript-module-system-5022cac310f6
+// https://medium.com/jspoint/typescript-namespaces-f43cd002c08c
