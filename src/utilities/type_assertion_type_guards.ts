@@ -1,4 +1,5 @@
-let getStuff = (type: string): any => {
+// TYPE ASSERTION
+const getStuff = (type: string): any => {
   switch (type) {
     case "string":
       return `Apple`;
@@ -27,3 +28,6 @@ let isApplePi = getStuff("boolean") as boolean;
 console.log(apple.toUpperCase());
 console.log(pi.toFixed(2));
 console.log(isApplePi);
+
+
+// TYPE GUARDS
