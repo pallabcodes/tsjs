@@ -4,3 +4,11 @@ interface Game<T> {
   method: (...args: any[]) => void;
   released: string;
 }
+
+interface ESports {
+  title: string;
+  released: number;
+}
+
+// Extending the multiple interfaces
+// interface Gamers extends Game<boolean>, ESports { venue: string }

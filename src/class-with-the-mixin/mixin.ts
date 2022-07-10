@@ -25,3 +25,16 @@ export function ActivatableMixin<Base extends ClassType>(base: Base) {
   };
 }
 
+interface Movies {
+  cast: Array<string>,
+  destination: "Hollywood"
+}
+const movies = <Movies>{}
+
+// Explanation: Not allowed to cast from a custom to a primitive without erasing the type first. unknown erases the type checking
+let accountcode = "12";
+let usecode = accountcode as unknown as number;
+
+// Type Assertion
+const selectButtonElementById1 = document.getElementById("main_button") as HTMLButtonElement;
+const selectButtonElementById2 = <HTMLButtonElement>document.getElementById("main_button");

@@ -1,4 +1,5 @@
 type SomeType = string;
+
 type CustomSomeType = SomeType extends string ? string : null;
 
 function someFunction<T>(value: T) {
