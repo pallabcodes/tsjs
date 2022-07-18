@@ -8,7 +8,7 @@ class Visibility {
     this.visible = visible;
   }
   public static getDigit() {
-    return Visibility.digit
+    return Visibility.digit;
   }
 }
 
@@ -28,6 +28,3 @@ const mock = new MockVisibility();
 
 mock.setVisible(true);
 mock.setVisible(false);
-
-
-

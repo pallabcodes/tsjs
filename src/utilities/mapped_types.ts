@@ -46,3 +46,9 @@ interface Record2 {
 }
 
 
+type Artist = { name: string, bio: string };
+type Subscriber<Type> = {
+  [Property in keyof Type]: (newValue: Type[Property]) => void
+}
+
+type ArtistSub = Subscriber<Artist>;
