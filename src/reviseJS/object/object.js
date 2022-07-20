@@ -1,3 +1,48 @@
+const obj1 = {
+  languages: ['JS'],
+  defColor: "blue",
+  defMake: "Toyota",
+  count: 0,
+
+  // same name could be used for getter and setter but properties name should be different i.e. here count
+  get countNumber() {
+    return this.count;
+  },
+
+  set countNumber(value) {
+    this.count += value;
+  },
+
+  get make() {
+    return this.defMake;
+  }
+};
+Object.defineProperty(obj1, "color", {
+  get: function() {
+    return this.defColor;
+  },
+  set: function(color) {
+    this.defColor = color;
+  }
+});
+
+obj1.color = "yellowGreen";
+console.log(obj1.countNumber, obj1.defColor);
+
+const obj2 = Object.defineProperties({  }, {
+  "hobby": {
+    value: "gaming",
+    writable: true
+  },
+  "languages": {
+    value: 'React',
+    writable: false
+  }
+});
+
+console.log(obj2.hobby, obj2.languages);
+
+
 const personPrototype = {
   greet() {
     console.log(`hello, my name is ${this.name}!`);
@@ -15,7 +60,7 @@ Person.prototype.constructor = Person;
 
 const person = {
   greet() {
-    console.log(`Hello`);
+    return `hello`
   }
 }
 const john = Object.create(person);
