@@ -23,3 +23,7 @@ function getBaseLog(x, y) {
 // log16 = 2 * 2 * 2 * 2
 console.log(getBaseLog(2, 16));
 console.log(Math.log(16));
+
+
+let today = new Date('07-21-2022'); // mm-dd-yyyy
+console.log(today);
