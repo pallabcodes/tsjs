@@ -15,16 +15,12 @@ for (let i = 0; i < array.length; i++) {
 
 // These are some functional programming paradigms::
 
-// 1. Pure Functions : Given the same input it returns the same output [idempotent function]
-// @ts-ignore
-Math.abs("-1"); // given the same input i.e. here '-1'; it will return the same output i.e. 1
-Math.abs(-1); // 1
-// @ts-ignore
-Math.abs(null); // 0
+// ## 1. Pure Functions : Given the same input it returns the same output [idempotent function]
+console.log(Math.abs(-1)); // given the same input i.e. here -1; it'll always return same output i.e. 1
+console.log(Math.abs(0)); // 1
 
 Math.abs(Math.abs(Math.abs(-1))); // still return the 1 value as the given input is basically same
-// @ts-ignore
-Math.abs(Math.abs(Math.abs(Math.abs("-1")))); // still return the 1 value as the given input is basically same
+Math.abs(Math.abs(Math.abs(Math.abs(1)))); // still return the 1 value as the given input is basically same
 
 // SIDE EFFECTS: When interacting with anything literally outside the function that would change the data within function
 
@@ -45,12 +41,11 @@ const obj = Object.freeze({ change: "Locked" }); // the `freeze' enforces immuta
 // delete obj.change;
 // obj.addProp = "adding";
 
-// any computation done within function should use its local variables and function arguments
+// any computation done within function should use its local variables and functional arguments
 // copy external variable if needed from global state or variables
 
 // ## Don't iterate since it alter the variable's value use something like map
 
-//  recursion
 
 function recurse(start: number = 1, end: number = 10): number | undefined {
   if (start === end) {
