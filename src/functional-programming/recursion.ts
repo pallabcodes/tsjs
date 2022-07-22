@@ -41,6 +41,8 @@ function sum(n: number): number {
   }
   return n + sum(n - 1);
 }
+
+
 /*
     * recursive call: n = 1 so : popState: return  1
     * recursive call: pushState 2 + sum( 2 - 1) : popState: return 2 + 1 = 3
@@ -69,3 +71,95 @@ console.log(arraySum([1, 2, 4, 5]));
 
 
 // advanced
+
+// without recursion
+function fibonacci(n: number, array: number[] = [0, 1]): number[] {
+  while (n > 2) {
+    const [nextToLast, last] = array.slice(-2);
+    // @ts-ignore
+    array.push(nextToLast + last);
+    n -= 1;
+  }
+  return array;
+}
+
+console.log(fibonacci(12));
+
+const fibo = (num: number, array: number[] = [0, 1]): number[] => {
+  if (num <= 2) return array;
+  const [nextToLast, last] = array.slice(-2);
+  // @ts-ignore
+  return fibo(num - 1, [...array, nextToLast + last]);
+};
+console.log(fibo(12));
+
+// what number is at nth position of fibonacci sequence
+
+const fibonacciPos = (pos: number) => {
+  if (pos <= 1) return pos;
+  const seq = [0, 1];
+  for (let i = 2; i <= pos; i++) {
+    const [nextToLast, last] = seq.slice(-2);
+    // @ts-ignore
+    seq.push(nextToLast + last);
+  }
+  return seq[pos];
+};
+
+console.log(fibonacciPos(8));
+
+const fibPos = (pos: number): number => {
+  if (pos < 2) return pos;
+  return fibPos(pos - 1) + fibPos(pos - 2);
+};
+
+/*
+*     recursive call : fibPos(1) return 1
+*     recursive call : fibPos(2 - 1 = 1)
+*     recursive call : fibPos(3 - 1 = 2)
+*     recursive call : fibPos(4 - 1 = 3)
+*     recursive call : fibPos(5 - 1 = 4)   +   fibPost(2 - 2 = 0)
+*     recursive call : fibPos(6 - 1 = 5)   +   fibPost(4 - 2 = 2)
+*     recursive call : fibPos(7 - 1 = 6)   +   fibPost(6 - 2 = 4)
+*     recursive call : fibPos(8 - 1 = 7)   +   fibPost(8 - 2 = 6)
+* default call : fibPos(pos = 8)
+* Global Execution context/main
+* */
+console.log(fibPos(8));
+
+
+const getAwsProductIdImages = async (productId: string, s3: unknown, resultArray: any[], data: { isTruncated: boolean, NextContinuationToken: any }): Promise<unknown> => {
+  if (data.isTruncated) {
+    return await getAwsProductIdImages(productId, s3, resultArray, data.NextContinuationToken);
+  }
+  return resultArray;
+};
+
+const artistByGenre = {
+  jazz: [`Miles`, `John`],
+  rock: {
+    classic: ["Bob", "Eagles"],
+    hair: ["bowl", "long"],
+    alt: {
+      classic: ["pearl", "coldplay"],
+      current: ["joy", "fly"]
+    }
+  },
+  unclassified: {
+    new: ["camp", "neil"],
+    classic: ["seal", "chris"]
+  }
+};
+
+const getArtistNames = (dataObj: Record<string, any>, arr: any[] = []) => {
+  Object.keys(dataObj).forEach(key => {
+    if(Array.isArray(dataObj[key])) {
+      return dataObj[key].forEach((artist: any) => {
+        arr.push(artist);
+      })
+    }
+    getArtistNames(dataObj[key], arr);
+  })
+  return arr;
+}
+console.log(getArtistNames(artistByGenre));

@@ -1,3 +1,44 @@
+// ## hoisting
+
+// ## IIFE (Immediately Invoked Function Expression)
+const counter = ((value: number): Function => {
+  let n: number = value;
+  console.log(`initial value here is `, n);
+  return (): void => {
+    n += 1;
+    console.log(n);
+  };
+})(0);
+
+counter();
+counter();
+
+// ## closure : lexical scope decide how a variable should be looked up from a fn/nested fn
+// nested/inner function have access to its parent function i.e. lexical scoping i.e. part of the closure but not what closure is
+
+// closure is a function that has access to its parent scope, even after the parent fn has popped of from stack
+
+// closure is created during function declaration not during when fn is being executed i.e. function invocation
+
+let global_value = 1;
+
+const parentFn = () => {
+  let value = 2;
+  return (): void => {
+    console.log(`global`, (global_value += 5));
+    console.log(`local`, (value += 1));
+  };
+};
+
+const result = parentFn(); // function innerFn () {....}
+console.log(result);
+result();
+result();
+result();
+result();
+console.log(global_value);
+
+
 // Iterative vs Declarative Programming::
 let array: Array<number> = [1, 2];
 
@@ -93,6 +134,8 @@ console.log(unboundGetComputedHeight(44));
 const boundGetComputedHeight = unboundGetComputedHeight.bind(module); // first, value of this context
 boundGetComputedHeight(55); // required argument(s)
 
+// ## compose-pipe
+
 
 // ## function composition : allows to take two/more functions and turn them into one function that does exactly what the two function (or more) do
 
@@ -134,4 +177,159 @@ function add20Composed(num: number) {
 }
 
 composed(1); // returns 111
+
+// ## composition vs inheritance
+
+class Pizza {
+  public size: string;
+  public crust: string;
+  public sauce: string;
+  public toppings: any[];
+
+  constructor(size: string = "small", crust: string = "standard", sauce: string = "tomato") {
+    this.size = size;
+    this.crust = crust;
+    this.sauce = sauce;
+    this.toppings = [];
+  }
+
+  prepare() {
+    console.log(`preparing now`);
+  }
+
+  toss() {
+    console.log(`tossing`);
+  }
+
+  bake() {
+    console.log(`baking`);
+  }
+}
+
+class Salad {
+  private size: string;
+  private dressing: string;
+
+  constructor(size: string, dressing: string) {
+    this.size = size;
+    this.dressing = dressing;
+  }
+
+  prepare() {
+    console.log(`preparing now`);
+  }
+
+  toss() {
+    console.log(`tossing`);
+  }
+
+  bake() {
+    console.log(`baking`);
+  }
+}
+
+class StuffedCrustPizza extends Pizza {
+  stuff() {
+    console.log(`stuffing crust`);
+  }
+}
+
+class ButterCrustPizza extends Pizza {
+  butter() {
+    console.log(`buttering crust`);
+  }
+}
+
+class StuffedButterCrustPizza extends Pizza {
+  stuff() {
+    console.log(`stuffing crust`);
+  }
+
+  butter() {
+    console.log(`buttering crust`);
+  }
+}
+
+const myPizza = new StuffedButterCrustPizza();
+
+const prepare = () => ({ prepare: () => console.log(`Preparing`) });
+const bake = () => ({ bake: () => console.log(`Baking`) });
+const toss = () => ({ toss: () => console.log(`Tossing`) });
+const ready = () => ({ ready: () => console.log(`Ready`) });
+const stuff = () => ({ stuff: () => console.log(`Stuffing crust`) });
+const butter = () => ({ butter: () => console.log(`Buttering crust`) });
+
+type TFood = ReturnType<typeof createPizza>;
+
+const createPizza = (size: string, crust: string, sauce: string) => {
+  const pizza = {
+    size,
+    crust,
+    sauce,
+    toppings: []
+  };
+  return {
+    ...pizza,
+    ...prepare(),
+    ...bake(),
+    ...ready()
+  };
+};
+
+const createSalad = (size: string, dressing: string) => {
+  return {
+    size, dressing,
+    ...prepare(),
+    ...toss(),
+    ...ready()
+  };
+};
+const createStuffedButteredCrustPizza = (pizza: Record<string, any>) => {
+  return {
+    ...pizza,
+    ...stuff(),
+    ...butter()
+  };
+};
+
+
+const anotherPizza = createPizza("small", "thin", "original");
+const stuffedButterCrustedPizza = createStuffedButteredCrustPizza(anotherPizza);
+
+const johnsPizza = createStuffedButteredCrustPizza(createPizza("medium", "thin", "original"));
+const johnSalad = createSalad("side", "ranch");
+
+// @ts-ignore
+johnsPizza.bake();
+johnsPizza.stuff();
+
+johnSalad.prepare();
+johnSalad.ready();
+
+console.log(johnsPizza);
+console.log(johnSalad);
+
+
+// const shallowPizzaClone = (fn: Function) => {
+//   return (obj: Record<string, any>, array: Array<any>) => {
+//     const newObj = { ...obj };
+//     return fn(newObj, array);
+//   };
+// };
+const shallowPizzaClone = (fn: Function) => (obj: Record<string, any>, array: Array<any>) => fn({ ...obj }, array);
+
+let addToppings = (pizza: Record<string, any>, toppings: string | Array<string>) => {
+  pizza.toppings = [...pizza.toppings, ...toppings];
+  return pizza;
+};
+
+// @ts-ignore
+addToppings = shallowPizzaClone(addToppings);
+
+const timsPizza = createPizza("small", "thick", "og");
+const timsPizzaWithToppings = addToppings(timsPizza, ["olives", "mozzarella"]);
+
+console.log(JSON.stringify(timsPizza));
+console.log(JSON.stringify(timsPizzaWithToppings));
+
 
