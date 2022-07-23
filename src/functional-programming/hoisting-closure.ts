@@ -1,5 +1,5 @@
 // ## hoisting
-console.log(x);
+// console.log(x);
 var x = "hoisting";
 console.log(x);
 
