@@ -17,7 +17,6 @@ counter();
 // nested/inner function have access to its parent function i.e. lexical scoping i.e. part of the closure but not what closure is
 
 // closure is a function that has access to its parent scope, even after the parent fn has popped of from stack
-
 // closure is created during function declaration not during when fn is being executed i.e. function invocation
 
 let global_value = 1;
@@ -100,41 +99,254 @@ function recurse(start: number = 1, end: number = 10): number | undefined {
 
 recurse(1, 10); // 1, 2, 3, 4, 5, 6,7, 8, 9, 10
 
+// ## decorator function : manual implementation [ adds new capabilities to an existing function]
+let sum = (...args: any[]) => {
+  // left to right move
+  return args.reduce((acc: number, num: number): number => acc + num, 0);
+};
 
-// ## currying: has argument of 1 or more than 1 by returning an inner function
+console.log(sum(1, 2, 4, 5));
 
-// normal function
-function add(firstNum: number, secondNum: number): number {
-  return firstNum + secondNum;
-}
-
-// now with the currying : so main fn takes one argument then inner function next argument/arguments as needed
-function adding(firstNum: number) {
-  return function(secondNum: number) {
-    return firstNum + secondNum;
+const callCounter = (fn: Function) => {
+  let count = 0;
+  return (...args: any[]) => {
+    console.log(`sum has been called ${count += 1} times`);
+    return fn(...args);
   };
-}
+};
 
-let addition2 = adding(5);
-addition2(10); // 12
+sum = callCounter(sum); // this expects a function on which extra abilities need to be added
+sum(1, 2, 4, 5); // now the arguments given
 
-// ## Partial application in functional programming
-const module = {
-  height: 42,
-  getComputedHeight: function(height: number) {
-    return this.height + height;
+let rectangleArea = (length: number, width: number): unknown => {
+  return length * width;
+};
+
+const countParams = (fn: Function) => {
+  return (...params: any) => {
+    if (params.length !== fn.length) {
+      throw new Error(`Wrong number of parameters for ${fn.name}`);
+    }
+    return fn(...params);
+  };
+};
+
+const requiredIntegers = (fn: Function) => {
+  return (...params: any) => {
+    params.forEach((param: any) => {
+      if (!Number.isInteger(param)) {
+        throw new TypeError(`Params for ${fn.name} must be integers`);
+      }
+    });
+    return fn(...params);
+  };
+};
+
+rectangleArea = countParams(rectangleArea);
+rectangleArea = requiredIntegers(rectangleArea);
+
+console.log(rectangleArea(20, 40));
+console.log(rectangleArea(10, 5));
+
+let requestData = async (url: string) => {
+  try {
+    const response = await fetch(url);
+    return await response.json();
+  } catch (error: any) {
+    console.log(error);
   }
 };
 
-const unboundGetComputedHeight = module.getComputedHeight;
-console.log(unboundGetComputedHeight(44));
-/* This function invoked on global scope thus this.height + height = undefined + 44 = return NaN */
+const dataResponseTime = (fn: Function) => {
+  return async (url: string) => {
+    console.time("fn");
+    const data = await fn(url);
+    console.timeEnd("fn");
+    return data;
+  };
+};
 
-// const boundGetComputedHeight = module.getComputedHeight.bind(module); // first, value of this context
-const boundGetComputedHeight = unboundGetComputedHeight.bind(module); // first, value of this context
-boundGetComputedHeight(55); // required argument(s)
+const testFn = async (): Promise<void> => {
+  requestData = dataResponseTime(requestData);
+  const data = await requestData("https://jsonplaceholder.typicode.com/posts");
+  console.log(data);
+};
+
+testFn();
+
+
+// ## currying: takes a function that receives more tha one parameter & breaks it to a series of unary (one parameter) fn
+// thus, curried function only takes a single parameter at a time
+
+const buildSandwich = (ingredient1: any) => {
+  return (ingredient2: any) => {
+    return (ingredient3: any) => {
+      return `${ingredient1} ${ingredient2} ${ingredient3}`;
+    };
+  };
+};
+
+const sandwich = buildSandwich("Bacon")("Lettuce")("Tomato");
+console.log(sandwich);
+
+const buildSammy = (singed1: string) => (singed2: string) => (singed3: string) => `${singed1} ${singed2} ${singed3}`;
+const sammy = buildSammy("turkey")("cheese")("bread");
+
+// partial currying
+const turkey = buildSammy(`turkey`);
+const buyTurkeySammySandwich = turkey("cheese")("bread");
+
+const multiply = (x: number, y: number) => x * y;
+const curriedMultiply = (x: number) => (y: number) => x * y;
+
+const multiplyBy2 = curriedMultiply(2);
+const multiplyBy4 = curriedMultiply(4);
+
+console.log(multiplyBy2(6));
+console.log(multiplyBy2(7));
+
+const updateElemText = (id: string) => (element: unknown) => document.querySelector(`#${id}`);
+const updateHeaderText = updateElemText("header");
+console.log(updateHeaderText("hello john"));
+
+// maintaining a specific order
+const addCustomer = (fn: Function) => (...args: any[]) => {
+  console.log("registering customer");
+  return fn(...args);
+};
+
+const processOrder = (fn: Function) => (...args: any[]) => {
+  console.log(`processing order is #${args[0]}`);
+  return fn(...args);
+};
+
+let completeOrder = (...args: any[]) => {
+  console.log(`Order no #${[...args].toString()} has done`);
+};
+
+completeOrder = (processOrder(completeOrder));
+console.log(completeOrder);
+completeOrder = (addCustomer(completeOrder));
+completeOrder(1000);
+
+// https://dev.to/pegahsafaie/real-world-example-of-compose-function-and-currying-3ofl
+// https://medium.com/javascript-scene/curry-and-function-composition-2c208d774983
+
+// function addCustomer1(...args: any[]) {
+//   return function processOrder(...args: any[]) {
+//     return function completeOrder(...args: any[]) {
+//     };
+//   };
+// }
+
+
+const curried = (fn: Function) => {
+  const curried: (...args: any[]) => (any) = (...args: any[]) => {
+      // the no. of parameters is = fn.length while as no. of the arguments
+    if (fn.length !== args.length) {
+      return curried.bind(null, ...args);
+    }
+    return fn(...args);
+  };
+  return curried;
+};
+
+const total = (x: number, y: number, z: number) => x + y + z;
+const curriedTotal = curried(total);
+
+console.log(curriedTotal(10)(11)(15));
+
 
 // ## compose-pipe
+
+const add2 = (x: number) => x + 2;
+const subtract1 = (x: number) => x - 1;
+const multiplyBy5 = (x: number) => x * 5;
+console.log((add2(4)));
+
+// reduceRight: move from right to left
+const compose = (...fns: Array<Function>) => (value: any) => fns.reduceRight((prev, fn) => fn(prev), value);
+// so first add2(4) = 6 : subtract1(6) - 1 = 5; multiplyBy5(5) * 4 = 20
+const compResult = compose(multiplyBy5, subtract1, add2)(4);
+
+// pipe do the same but from left to the right using reduce method
+const pipe = (...fns: Array<Function>) => (value: any) => fns.reduce((prev, fn) => fn(prev), value);
+const pipeResult = pipe(add2, subtract1, multiplyBy5)(5);
+const pipeResult2 = pipe(add2, subtract1, multiplyBy5)(7);
+console.log(pipeResult, pipeResult2);
+
+
+const divideBy = (divisor: any, n: any) => n / divisor;
+const piped = pipe(add2, subtract1, multiplyBy5, (x: any) => divideBy(2, x))(5);
+console.log(piped);
+
+// alternative
+const divBy = (divisor: number) => (num: number) => num / divisor;
+const divideBy2 = divBy(2);  // partially applied
+const piped2 = pipe(add2, subtract1, multiplyBy5, divideBy2)(5);
+console.log(piped2);
+
+const lorem = "At vero eos et accusamus et iusto odio dignissimos ducimus qui blanditiis praesentium voluptatum deleniti atque corrupti quos dolores et quas molestias excepturi sint occaecati cupiditate non provident, similique sunt in culpa qui officia deserunt mollitia animi, id est laborum et dolorum fuga. Et harum quidem rerum facilis est et expedita distinctio. Nam libero tempore, cum soluta nobis est eligendi optio cumque nihil impedit quo minus id quod maxime placeat facere possimus, omnis voluptas assumenda est, omnis dolor repellendus. Temporibus autem quibusdam et aut officiis debitis aut rerum necessitatibus saepe eveniet ut et voluptates repudiandae sint et molestiae non recusandae. Itaque earum rerum hic tenetur a sapiente delectus, ut aut reiciendis voluptatibus maiores alias consequatur aut perferendis doloribus asperiores repellat.";
+const splitOnSpace = (string: string): string[] => string.split(" ");
+const count = (arr: any[]): number => arr.length;
+
+const wordCount = pipe(splitOnSpace, count);
+console.log(wordCount(lorem));
+
+const ss = "go lang"
+console.log(wordCount(ss));
+
+const pal1 = `taco cat`;
+const pal2 = `UFO tofu`;
+
+const split = (str: string): string[] => str.split('');
+const join = (arr: string[]): string => arr.join('');
+const toLower = (str: string): string => str.toLowerCase();
+const reverse = (arr: string[]): string[] => arr.reverse();
+
+const fwd = pipe(splitOnSpace, join, toLower);
+const rev = pipe(fwd, split, reverse, join);
+
+console.log(fwd(pal1) === rev(pal1));
+console.log(fwd(pal2) === rev(pal2));
+
+// # clone / copy functions within a pipe or compose function
+const scoreObj = { home: 0, away: 0 };
+const shallowClone = (obj: typeof scoreObj) => Array.isArray(obj) ? [...obj] : { ...obj };
+
+const incrementHome = (obj: typeof scoreObj) => {
+  obj.home += 1;
+  return obj;
+};
+
+const homeScore = pipe(shallowClone, incrementHome);
+
+console.log(homeScore(scoreObj));
+console.log(scoreObj, homeScore(scoreObj) === scoreObj);
+
+let incrementHomeB = (cloneFn: Function): Function => (obj: typeof scoreObj): typeof scoreObj => {
+  const newObj = cloneFn(obj);
+  newObj.home += 1; // mutation
+  return newObj;
+};
+
+// @ts-ignore
+incrementHomeB = incrementHomeB(shallowClone);
+
+const homeScoreB = pipe(incrementHomeB);
+console.log(homeScoreB(scoreObj), scoreObj);
+
+const incrementHomez = (obj: typeof scoreObj, cloneFn: Function) => {
+  const newObj = cloneFn(obj);
+  newObj.home += 1;
+  return newObj;
+};
+
+const homeScorez = pipe(
+  (x: any) => incrementHomez(x, shallowClone)
+);
+
+console.log(homeScorez(scoreObj), scoreObj);
 
 
 // ## function composition : allows to take two/more functions and turn them into one function that does exactly what the two function (or more) do
