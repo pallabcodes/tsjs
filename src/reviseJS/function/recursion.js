@@ -111,3 +111,49 @@ function sum(n) {
 console.log(sum(7));
 
 
+const list = [ 1, [2, 5], [6, 7, [8, 9], 10], [ [11, 12] ]];
+const listSet = new Set(list);
+
+console.log(listSet, Array.isArray(listSet));
+console.log(Array.isArray([...listSet]));
+
+console.log([].concat(...list));
+console.log(Object.keys(list));
+console.log(JSON.stringify(Object.entries(list)));
+
+list.reduce((acc, item) => {
+  console.log(item);
+  if (Array.isArray(item)) {
+    console.log(item);
+    return [...acc, item];
+  } else {
+    return [...acc, item];
+  }
+}, [])
+
+const mySet = new Set();
+console.log(mySet);
+console.log([...mySet], Array.from(mySet));
+
+function flattenReduce(arr) {
+  return arr.reduce((acc, item) => {
+    console.log(acc);
+    if(Array.isArray(item)) {
+    //  first log the items i.e. typeof array
+      console.log(item);
+    //  simply call the function again with the current iterator that would be an array
+    flattenReduce(item)
+    } else {
+      // take everything from prev acc and aad the current item which should a number
+      mySet.add(item);
+      return mySet
+      // return [ item, ...acc]
+    }
+  }, mySet)
+}
+
+flattenReduce(list);
+console.log(mySet);
+
+
+
