@@ -111,7 +111,7 @@ function sum(n) {
 console.log(sum(7));
 
 
-const list = [ 1, [2, 5], [6, 7, [8, 9], 10], [ [11, 12] ]];
+const list = [1, [2, 5], [6, 7, [8, 9], 10], [[11, 12]]];
 const listSet = new Set(list);
 
 console.log(listSet, Array.isArray(listSet));
@@ -129,8 +129,9 @@ list.reduce((acc, item) => {
   } else {
     return [...acc, item];
   }
-}, [])
+}, []);
 
+// Set doesn't really require a key thus it used to flatten
 const mySet = new Set();
 console.log(mySet);
 console.log([...mySet], Array.from(mySet));
@@ -138,22 +139,58 @@ console.log([...mySet], Array.from(mySet));
 function flattenReduce(arr) {
   return arr.reduce((acc, item) => {
     console.log(acc);
-    if(Array.isArray(item)) {
-    //  first log the items i.e. typeof array
+    if (Array.isArray(item)) {
+      //  first log the items i.e. typeof array
       console.log(item);
-    //  simply call the function again with the current iterator that would be an array
-    flattenReduce(item)
+      //  simply call the function again with the current iterator that would be an array
+      flattenReduce(item);
     } else {
       // take everything from prev acc and aad the current item which should a number
       mySet.add(item);
-      return mySet
-      // return [ item, ...acc]
+      return mySet;
+
     }
-  }, mySet)
+  }, mySet);
 }
 
 flattenReduce(list);
-console.log(mySet);
 
+// map requires a key so when deep cloning an object - map is totally right since object must have a key
+// const map = new Map();
 
+const nested = (() => {
+  return {
+    "isbn": "123-456-222",
+    "author":
+      {
+        "firstname": "Jane",
+        "lastname": "Doe"
+      },
+    "editor":
+      {
+        "lastname": "Smith",
+        "firstname": "Jane"
+      },
+    "title": "The Ultimate Database Study Guide",
+    "category": ["Non-Fiction", "Technology"]
+  };
+})();
 
+// basically this here shares the same reference pointer so updating either nested or nested2 are same
+// const nested2 = nested;
+// however here made a new object by JSON.parse(JSON.stringify(nested)); so updating nested2 is independent now
+const nested2 = JSON.parse(JSON.stringify(nested));
+nested2.author.firstname = `John`;
+
+console.log(JSON.stringify(nested.author));
+console.log(JSON.stringify(nested2.author));
+
+console.log(nested === nested2);
+
+/*
+* when an object's value have quite
+*
+*
+* */
+
+// given the object copy all of its key-value then compare JSON.st

@@ -1,5 +1,4 @@
 // Set: doesn't contain duplicate value
-
 function* gen() {
   yield  1;
 }
