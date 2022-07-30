@@ -4,20 +4,20 @@ function* gen() {
   yield  1;
 }
 
-const s = "greeting";
+const s = [1, 2];
 const mySet = new Set([s, ...gen()]);
-console.log(mySet);
-console.log(mySet.has("greeting"));
-console.log(mySet.values());
-console.log(mySet.keys());
-console.log(mySet["size"]);
-mySet.add(5).add(`some text`).add({ title: "JS" }).add({ title: "JS" });
+// console.log(mySet);
+// console.log(mySet.has("greeting"));
+// console.log(mySet.values());
+// console.log(mySet.keys());
+// console.log(mySet["size"]);
+// mySet.add(5).add(`some text`).add({ title: "JS" }).add({ title: "JS" });
 
 console.log(mySet);
 // mySet.clear();
 
 // since Set is iterable so to get every element from it within an array just spread or Array.from
-console.log(Array.from(mySet));
+// console.log(Array.from(mySet));
 console.log([...mySet]);
 
 // make a 2d array from an array by using Object.entries

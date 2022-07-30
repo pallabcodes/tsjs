@@ -1,5 +1,4 @@
-// basic
-
+// basic recursion
 function loop(start: number, end: number = 5) {
   console.log(start);
   if (start < end) {
