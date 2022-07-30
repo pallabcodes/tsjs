@@ -93,7 +93,6 @@ const fibo = (num: number, array: number[] = [0, 1]): number[] => {
 console.log(fibo(12));
 
 // what number is at nth position of fibonacci sequence
-
 const fibonacciPos = (pos: number) => {
   if (pos <= 1) return pos;
   const seq = [0, 1];
@@ -113,18 +112,21 @@ const fibPos = (pos: number): number => {
 };
 
 /*
-*     recursive call : fibPos(1) return 1
-*     recursive call : fibPos(2 - 1 = 1)
-*     recursive call : fibPos(3 - 1 = 2)
-*     recursive call : fibPos(4 - 1 = 3)
-*     recursive call : fibPos(5 - 1 = 4)   +   fibPost(2 - 2 = 0)
-*     recursive call : fibPos(6 - 1 = 5)   +   fibPost(4 - 2 = 2)
-*     recursive call : fibPos(7 - 1 = 6)   +   fibPost(6 - 2 = 4)
-*     recursive call : fibPos(8 - 1 = 7)   +   fibPost(8 - 2 = 6)
-* default call : fibPos(pos = 8)
-* Global Execution context/main
+*     recursive call : fibPos(pos - 1 = 1) returned 1 popped off
+*     recursive call : fibPos(pos - 1 = 2)   : popState: goes to the right side fibPos(2 - 2) > enter function again with pos = 0 so return 0 popped off
+*     recursive call : fibPos(pos - 1 = 3)   : popState:  goes to the right side fibPos(3 - 2) > enter function again with pos = 1; return 1; total return value is 2 popped off
+*     recursive call : fibPos(pos - 1 = 4 ) popstate right now stack has this and previous call but
+*      left: now, as 2 < 2 the left side call itself again fibPos(1) return 1
+*      right: + fibPos(pos/4 - 2 = 2) adds a new call to the stack with fibPos(2); however now as pos = 2 so fibPos(2 - 2) again then returns 0
+*     default call : fibPos(pos = 5): popstate
+*     left-right: fibPos(5 - 2) new call and enter the fn again with pos = 3 then 3 < 2, so now it goes to right side fibPos(3 - 1) then right side call itself
+*     again with fibPos(3 - 1 = 2) again right side with fibPos( 2 - 1 = 1) then enter the fn again but now if 1 < 2 so return pos i.e. now 1, after that
+*    it goes to right side (let's say it uses the prev. pos) fibPos(2 - 2 = 0) if 0 < 2 so return 0 then goes to right side again now prev pos is 3
+*    & call itself so fibPos(3 - 2 = 1) if 1 < 2 so return 1 again goes to prev pos i.e. 5 so fibPos(5 - 2) then popped off
+*     Global Execution context/anonymous
 * */
 console.log(fibPos(8));
+console.log(fibPos(10));
 
 
 const getAwsProductIdImages = async (productId: string, s3: unknown, resultArray: any[], data: { isTruncated: boolean, NextContinuationToken: any }): Promise<unknown> => {
@@ -152,31 +154,32 @@ const artistByGenre = {
 
 const getArtistNames = (dataObj: Record<string, any>, arr: any[] = []) => {
   Object.keys(dataObj).forEach(key => {
-    if(Array.isArray(dataObj[key])) {
+    if (Array.isArray(dataObj[key])) {
       return dataObj[key].forEach((artist: any) => {
         arr.push(artist);
-      })
+      });
     }
     getArtistNames(dataObj[key], arr);
-  })
+  });
   return arr;
-}
+};
 console.log(getArtistNames(artistByGenre));
 
-function combinations (elements: string[], size: number): any[] {
+function combinations(elements: string[], size: number): any[] {
   let result = [];
-  if(size === 0) {
+  if (size === 0) {
     result.push([]);
   } else {
     combinations(elements, size - 1).forEach((prev) => {
       elements.forEach((element) => {
-        result.push([element].concat(prev))
-      })
-    })
+        result.push([element].concat(prev));
+      });
+    });
   }
   return result;
 
 }
+
 let combs = combinations(["a", "b", "c", "d"], 3);
 console.log(combs);
 
@@ -193,31 +196,32 @@ function nested(i: number, j: number, jj: number): void {
   }
   console.log(i, j);
 }
+
 nested(4, 4, 4);
 
 const copyTo = (source: typeof sourceJson, destination: typeof targetJson) => {
   for (const key in source) {
     // @ts-ignore
-    const sourceValue = source[key]
-    const isObject = !!sourceValue && typeof sourceValue === 'object'
+    const sourceValue = source[key];
+    const isObject = !!sourceValue && typeof sourceValue === "object";
     if (isObject) {
-      const destinatonHasEntry = key in destination
+      const destinatonHasEntry = key in destination;
 
       if (destinatonHasEntry === false) {
         // create the entry (plain object or array)
         // @ts-ignore
-        destination[key] = Array.isArray(sourceValue) ? [] : {}
+        destination[key] = Array.isArray(sourceValue) ? [] : {};
       }
 
       // @ts-ignore
-      copyTo(sourceValue, destination[key])
+      copyTo(sourceValue, destination[key]);
     } else {
       // sourceValue is a primitive value
       // @ts-ignore
-      destination[key] = sourceValue
+      destination[key] = sourceValue;
     }
   }
-}
+};
 
 let targetJson = {
   "idp-cms-feed": {
@@ -254,7 +258,7 @@ let targetJson = {
             "returnToOrderSummaryLinkLabel": "Return to Order summary",
             "shippingAddressLabel": "Shipping address:",
             "variationID": "25c344dd-145b-3bed-9d06-6696c9563377",
-            "testt": "ttttt",
+            "testt": "ttttt"
           }
         },
         "equipment": {
@@ -417,6 +421,6 @@ let sourceJson = {
   }
 };
 
-copyTo(sourceJson, targetJson)
+copyTo(sourceJson, targetJson);
 
-console.log(targetJson)
+console.log(targetJson);

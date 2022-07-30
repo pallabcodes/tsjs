@@ -184,13 +184,3 @@ nested2.author.firstname = `John`;
 
 console.log(JSON.stringify(nested.author));
 console.log(JSON.stringify(nested2.author));
-
-console.log(nested === nested2);
-
-/*
-* when an object's value have quite
-*
-*
-* */
-
-// given the object copy all of its key-value then compare JSON.st
