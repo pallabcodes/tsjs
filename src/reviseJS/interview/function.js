@@ -19,22 +19,18 @@ function a() {
 
 a();
 
-
 /*
-*                 web api : closure(2)
-*                 web api : closure(1)
-*                 web api : closure(0)
-* a()
-* main
-* */
-
-
-
+ *                 web api : closure(2)
+ *                 web api : closure(1)
+ *                 web api : closure(0)
+ * a()
+ * main
+ * */
 
 // one level
 let list = [11, 1, 4, 5];
 list.push([-1, -2]);
-list.push([ [ -1100, -1110 ] ]);
+list.push([[-1100, -1110]]);
 
 console.log(list[list.length - 1].length, list[list.length - 1]);
 console.log(list[list.length - 1][0]);
@@ -45,17 +41,15 @@ console.log(list);
 // with this it can only flatten one level
 console.log([].concat(...list));
 
-
-
 // flatten purpose: will take two arguments (arr, depth) then return a flattened array
 /*
-* recursive: flatten(  [  [ [ 1000, 1001 ]  ]   ], 1) : result [1, 2,  5, 6, 7, 8, 9, 10, [ [ 1000, 1001 ]  ]  ]
-* recursive: flatten([5, 6, [7, 8], 9, 10], 1) : result [1, 2,  5, 6, 7, 8, 9, 10]
-* recursive: flatten([4, 5], 1) : result [1, 2, 4, 5]
-* recursive: flatten([1, 2], 1) : result [1, 2]
-* default: flatten(arr, 1)
-* main
-* */
+ * recursive: flatten(  [  [ [ 1000, 1001 ]  ]   ], 1) : result [1, 2,  5, 6, 7, 8, 9, 10, [ [ 1000, 1001 ]  ]  ]
+ * recursive: flatten([5, 6, [7, 8], 9, 10], 1) : result [1, 2,  5, 6, 7, 8, 9, 10]
+ * recursive: flatten([4, 5], 1) : result [1, 2, 4, 5]
+ * recursive: flatten([1, 2], 1) : result [1, 2]
+ * default: flatten(arr, 1)
+ * main
+ * */
 
 function flatten(arr = [], depth = 1) {
   let stored = [];
@@ -63,12 +57,12 @@ function flatten(arr = [], depth = 1) {
   // loop from
   arr.forEach((item, i) => {
     console.log(Array.isArray(item));
-    if(Array.isArray(item) && depth > 0) {
+    if (Array.isArray(item) && depth > 0) {
       console.log(item);
-    // check if the item is array or not and its total length
+      // check if the item is array or not and its total length
 
-    //  take everything from stored then the return value of ...flatten(item, depth - 1)
-    // stored.push(...flatten(item , depth - 1));
+      //  take everything from stored then the return value of ...flatten(item, depth - 1)
+      // stored.push(...flatten(item , depth - 1));
     } else {
       stored.push(item);
     }
@@ -81,20 +75,14 @@ function flatten(arr = [], depth = 1) {
 let arr = [
   0,
   [1, 2],
-  [4, [-11], [-2, -12], [50, 51], [], [[[[]]]] ],
+  [4, [-11], [-2, -12], [50, 51], [], [[[[]]]]],
   [5, 6, [7, 8], 9, 10],
-  [ [ [ 1000, 1001 ]  ] ],
+  [[[1000, 1001]]],
 ];
 
 console.log(flatten(arr));
 
-
-let arr1 = [
-  0,
-  [1, 2],
-  [5, 6, [7, 8], 9, 10],
-  [10, 11]
-];
+let arr1 = [0, [1, 2], [5, 6, [7, 8], 9, 10], [10, 11]];
 
 // loop + recursion
 const flat = (arr, depth = 1) => {
@@ -107,10 +95,9 @@ const flat = (arr, depth = 1) => {
     }
   });
   return result;
-}
+};
 
 flat(arr1);
-
 
 // recursive : normal & mixed
 
@@ -139,3 +126,56 @@ loop(5)
 * }
 *
 * */
+
+function print() {
+  var i = 1;
+  // when setTimeout called it forms a closure so wherever it goes it
+  // knows the value of i
+  setTimeout(function () {
+    console.log(i);
+  }, 1000);
+  console.log(i);
+}
+
+print();
+
+function print2() {
+  var i = 1;
+  function inner() {
+    setTimeout(() => {
+      console.log(i);
+    }, 1000);
+  }
+  var i = i + 1;
+  return inner;
+}
+
+print2();
+
+function x() {
+  for (var index = 1; index <= 5; index++) {
+    function close(x) {
+      setTimeout(() => {
+        console.log(x);
+      }, x * 1000);
+    }
+    close(index);
+  }
+  console.log(`hello  js`);
+}
+x();
+
+function counter() {
+  var count = 0;
+  return function increment() {
+    count++;
+    console.log(count);
+  };
+}
+
+var counter1 = counter();
+counter1();
+counter1();
+
+// var counter2 = counter();
+// counter2();

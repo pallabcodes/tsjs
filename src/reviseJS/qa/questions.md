@@ -9,6 +9,7 @@ css: box model, margin vs padding
 
 # JavaScript Questions
 
+use strict, what's es6?
 primitive vs reference, null vs undefined
 var vs let vs const, hosting, closure
 normal fn vs arrow fn, call vs bind vs apply
