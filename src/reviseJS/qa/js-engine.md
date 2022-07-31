@@ -295,8 +295,6 @@ checks the call stack if its emplty it pushes the function to the stack.
 This queue has higher priority so whatever comes within these queue,
 gets pushed first to call stack than `callback queue`
 
-## js engine
+## js engine: intetpretter, compiler
 
 ## higher order function
-
-## array methods
