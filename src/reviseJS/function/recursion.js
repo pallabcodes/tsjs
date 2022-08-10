@@ -131,6 +131,18 @@ list.reduce((acc, item) => {
   }
 }, []);
 
+function* flatten(arr)
+{
+  for (const val of arr) {
+    Array.isArray(val) ? yield* flatten(val) : yield val;
+  }
+}
+
+const arr = [[1,2],[3,[4,[5]]]];
+
+const flattened = [...flatten(arr)];
+console.log(flattened);
+
 // Set doesn't really require a key thus it used to flatten
 const mySet = new Set();
 console.log(mySet);
