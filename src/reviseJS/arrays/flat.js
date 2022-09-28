@@ -25,8 +25,8 @@ const arr = [1, 2, [3, 4, [5, 6]]];
 
 // to enable deep level flatten `use recursion with reduce and concat`
 function flatDeep(arr, d = 1) {
-  return d > 0 ? arr.reduce( (acc, val) => acc.concat(Array.isArray(val) ? flatDeep(val, d - 1) : val), []) : arr.slice();
-};
+  return d > 0 ? arr.reduce( (acc, val) => acc.concat( Array.isArray(val) ? flatDeep(val, d - 1) : val), [] ) : arr.slice();
+}
 
 flatDeep(arr, Infinity);
 // [1, 2, 3, 4, 5, 6]
@@ -42,7 +42,7 @@ function flatten(input) {
     // pop value from stack
     const next = stack.pop();
     if (Array.isArray(next)) {
-      // push back array items, won't modify the original input
+      // since next is an array so copy all of its elements by spread then push it to stack array
       stack.push(...next);
     } else {
       res.push(next);
@@ -141,18 +141,16 @@ arr1.flatMap((x) => x.split(" "));
 // ["it's","Sunny","in", "", "California"]
 
 
-// Let's say we want to remove all the negative numbers
-// and split the odd numbers into an even number and a 1
-const a = [5, 4, -3, 20, 17, -33, -4, 18]
+// Let's say we want to remove all the negative numbers & then split the odd numbers into an even number by decreasing 1
+  const a = [5, 4, -3, 20, 17, -33, -4, 18]
 //         |\  \  x   |  | \   x   x   |
 //        [4,1, 4,   20, 16, 1,       18]
 
 const result = a.flatMap((n) => {
-  if (n < 0) {
-    return [];
-  }
+  if (n < 0) return [];
   return n % 2 === 0 ? [n] : [n - 1, 1];
 });
+
 // expected output: [4, 1, 4, 20, 16, 1, 18]
 
 
@@ -220,8 +218,5 @@ range(1, 10, 2);
 range('A'.charCodeAt(0), 'Z'.charCodeAt(0), 1).map((x) => String.fromCharCode(x));
 // ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"]
 
-// will make 5 new slots with `undefined` value
-console.log(Array.of(5));
-console.log(Array.of(1, 2));
 
 

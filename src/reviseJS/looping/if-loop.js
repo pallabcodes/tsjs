@@ -15,6 +15,7 @@ console.log(binary.length);
 
 for (let i = 0; i < binary.length; i++) {
   for (let j = 1; j < binary.length; j++) {
+    console.log(j);
     console.log([binary[i], j]);
   }
 }

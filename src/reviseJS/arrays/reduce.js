@@ -52,6 +52,8 @@ for (const number of numbers) {
 }
 console.log(arr);
 
+console.log(numbers);
+
 console.log(numbers.reduce((arr, number) => [...arr, number], []));
 
 const groups = [
@@ -78,6 +80,8 @@ for (const number of numbers) {
 }
 console.log(lookup);
 
+console.log(numbers);
+
 console.log(
   numbers.reduce(
     (lookup, value) => ({
@@ -87,6 +91,7 @@ console.log(
     {}
   )
 );
+
 
 console.log(
   numbers.reduce(
@@ -104,12 +109,7 @@ console.log(
 numbers = [1, 2, 3, 4, 5];
 
 // include
-console.log(
-  numbers.reduce(
-    (includes, value) => (includes ? includes : value === 2),
-    false
-  )
-);
+console.log(numbers.reduce((includes, value) => (includes ? includes : value === 2), false));
 console.log(
   numbers.reduce(
     (includes, value) => (includes ? includes : value === 10),

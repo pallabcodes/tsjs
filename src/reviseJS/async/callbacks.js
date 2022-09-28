@@ -5,15 +5,19 @@ function auth(response = {}, cb) {
   cb(response, 1);
 }
 
-auth({ title: "FIFA" }, (str, n) => {
+// noinspection JSVoidFunctionReturnValueUsed
+const authenticated = auth({ title: "FIFA" }, (str, n) => {
+  // do something
   console.log(str, n);
 });
+
+console.log(authenticated);
 
 let stocks = {
   fruits: ["strawberry", "grapes", `apple`, `banana`, "mango"],
   liquid: ["water", "ice"],
   holder: ["cone", "cup"],
-  toppings: ["chocolate", "peanuts"]
+  toppings: ["chocolate", "peanuts"],
 };
 
 // event when setTimeout(() => {}, 0)/setTimeout(() => {}, 0) it sill goes to the event loop
@@ -46,12 +50,8 @@ let production = () => {
               setTimeout(() => {
                 console.log(`served the ice cream`);
               }, 2000);
-
             }, 3000);
-
-
           }, 2000);
-
         }, 1000);
       }, 1000);
     }, 2000);
@@ -61,12 +61,10 @@ let production = () => {
 order(1, production);
 
 function game(name, cb) {
-  return () => {
-  };
+  return () => {};
 }
 
-function whatGame() {
-}
+function whatGame() {}
 
 function playGame() {
   whatGame();
@@ -91,3 +89,8 @@ one();
 // console.log(`three`);
 // console.log(`two`);
 // console.log(`one`);
+
+// why callback? how promise uses callback? https://jsitor.com/43VqpA3_n
+
+// Promise.all return the error response from of whichever promise rejected
+// Promise.allSettled() returns an array [{value: {}, status: "fullfilled", status: "rejected", value: {}}]

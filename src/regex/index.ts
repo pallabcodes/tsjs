@@ -8,7 +8,7 @@ regex.test("hot-dog"); // true
 
 // ## Special Characters
 
-// Any character represented by . except the newline character \n\
+// Any character could be represented by . except the newline character \n\
 
 regex = /.og/;
 regex.test("fog"); // true
@@ -28,13 +28,13 @@ regex.test('dog1'); // false
 /[A-z]/.test("a"); // true
 /[A-z]/.test("Z"); // true
 
-// negate character: match everything else other than the characters within bracket
+// negate character: match everything else other than the characters within square bracket
 /[^df]og/.test("dog"); // false
 /[^df]og/.test("fog"); // false
 /[^df]og/.test("log"); // true
 
 // Multiple Repetitions: matches exactly how many times the number of occurrence of some expression would appear?
-// {2}, {0, 2}
+// {2}/{0, 2}
 function isValidMobileNo(no: string = '+12 123 123 123') {
   return /\+[0-9]{2} [0-9]{3} [0-9]{3}/.test(no);
 }
@@ -48,7 +48,7 @@ isValidMobileNo("123212") // false
 // /1+23/.test("23"); // false
 
 function hasQuestionMarkBeforeEnd(str: string) {
-  return /\?.+/.test(str);
+  return /\?+/.test(str);
 }
 
 hasQuestionMarkBeforeEnd("do u know the question yet?"); // false
@@ -200,6 +200,6 @@ getResolution('1920 x 1080');
 
 // replace all occurrences from string
 const lorem = "lorem_ipsum";
-// lorem.repeat("_", ' '); // just replace the first match it finds
+// lorem.replace("_", ' '); // just replace the first match it finds
 // now with global flag find all matches  then replace with space
 lorem.replace(/_/g, ' ');

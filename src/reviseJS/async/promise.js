@@ -1,3 +1,6 @@
+// https://towardsdev.com/how-does-javascript-promise-work-under-the-hood-24fe991761f
+// # JS is synchronous single thread language so,  how does it achieve asynchronicity?
+
 // Promise is JavaScript object that handles async tasks, has these modes : pending : fulfilled : rejected
 // read: https://www.twilio.com/blog/asynchronous-javascript-advanced-promises-chaining-collections-nodejs#:~:text=Promises%20with%20Node.-,js,the%20values%20returned%20by%20it.
 
@@ -10,7 +13,7 @@ const promise = new Promise((resolve, _) => {
   }, 100);
 });
 
-promise.then(data => {
+promise.then((data) => {
   console.log(data, [...data, 11]);
   return [...data, 11];
 });
@@ -20,7 +23,6 @@ console.log(true && false);
 console.log(true && 1);
 console.log("hello" && 11);
 console.log(null && NaN && false && 0);
-
 
 // race, any, all, settled, allSettled, then catch finally
 
@@ -33,20 +35,29 @@ const moderately = Promise.resolve(`moderately`);
 
 const promises = [play, games, quite, moderately];
 
-Promise.all(promises).then(results => {
-  results.forEach(result => console.log(result.status));
-}).catch(reason => console.error(`Error: ${reason}`));
-
+Promise.all(promises)
+  .then((results) => {
+    results.forEach((result) => console.log(result.status));
+  })
+  .catch((reason) => console.error(`Error: ${reason}`));
 
 // Promise.allSettled(): returns a promise that fulfills after all given promises have either fulfilled or rejected
 // runs all promises then return results like this { status: 'fulfilled, value: }, {status: "rejected" , reasons: "foo"}
 const promise1 = Promise.resolve(1);
-const promise2 = new Promise((resolve, reject) => setTimeout(reject, 100, "foo has an error"));
+const promise2 = new Promise((resolve, reject) =>
+  setTimeout(reject, 100, "foo has an error")
+);
 
-const promises1 = [promise1, promise2, new Promise(resolve => setTimeout(() => resolve(66), 1000)), 10];
+const promises1 = [
+  promise1,
+  promise2,
+  new Promise((resolve) => setTimeout(() => resolve(66), 1000)),
+  10,
+];
 
-Promise.allSettled(promises1)
-  .then((results) => results.forEach((result) => console.log(result.status)));
+Promise.allSettled(promises1).then((results) =>
+  results.forEach((result) => console.log(result.status))
+);
 
 /*
 [
@@ -69,12 +80,11 @@ Promise.allSettled(promises1)
 ]
  */
 
-
 const values = await Promise.allSettled([
   Promise.resolve(11),
-  new Promise(resolve => setTimeout(() => resolve(66), 0)),
+  new Promise((resolve) => setTimeout(() => resolve(66), 0)),
   100,
-  Promise.reject(new Error("it has an error"))
+  Promise.reject(new Error("it has an error")),
 ]);
 console.log(values);
 
@@ -84,7 +94,6 @@ console.log(values);
 //   {status: "fulfilled", value: 99},
 //   {status: "rejected",  reason: Error: it has an error}
 // ]
-
 
 // Promise.race()
 
@@ -110,23 +119,31 @@ const slow = new Promise((resolve) => setTimeout(resolve, 500, "slowly"));
 
 const promisesByUsingAny = [zero, quick, slow];
 
-Promise.any(promisesByUsingAny).then(data => {
+Promise.any(promisesByUsingAny).then((data) => {
   console.log(data);
 });
 
-
 function know() {
-  Promise.all([1], setTimeout(() => {
+  Promise.all(
+    [1],
+    setTimeout(() => {
       console.log("JS");
     }, 1000),
     Promise.reject("ERROR HERE")
   );
 }
 
+know()
+  .then((r) => {
+    console.log(r);
+  })
+  .catch((e) => {
+    console.log(e);
+  });
+
+console.log(`start`);
+setTimeout(() => console.log("timer"), 0);
+Promise.resolve("resolved");
+console.log(`done`);
 
 
-know().then(r => {
-  console.log(r);
-}).catch(e => {
-  console.log(e);
-});
