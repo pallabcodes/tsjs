@@ -1,4 +1,4 @@
-// Tuple is type of array that knows how many it will have and what their type should be
+// Tuple is type of array that knows how many it will have & what their type should be
 
 type Pair = [string, number];
 

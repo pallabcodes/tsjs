@@ -48,7 +48,7 @@ type GetReturnType<Type> = Type extends (...args: never[]) => infer Return
   : never;
 
 type InferSomething<T> = T extends infer U ? U : any;
-type Inferred = InferSomething<1>;
+type Inferred = InferSomething<"1">;
 
 // type InferSomething2<T> = T extends { a: infer A; b: number } ? A : any;
 type InferSomething2<T> = T extends { a: infer A; b: infer B } ? A & B : any;
@@ -75,9 +75,7 @@ interface NameLabel {
 //   throw "unimplemented";
 // }
 
-type NameOrId<T extends number | string> = T extends number
-  ? IdLabel
-  : NameLabel;
+type NameOrId<T extends number | string> = T extends number ? IdLabel : NameLabel;
 
 // now just single function needed
 function createLabel<T extends number | string>(idOrName: T): NameOrId<T> {

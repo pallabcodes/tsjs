@@ -297,4 +297,11 @@ gets pushed first to call stack than `callback queue`
 
 ## js engine: intetpretter, compiler
 
+
+
 ## higher order function
+
+
+## asynchonous programming
+
+## prototype and protoypal inheritance
