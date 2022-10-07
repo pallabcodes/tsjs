@@ -1,3 +1,17 @@
+function sum (...list) {
+  return list.reduce((acc, item) => {
+    if(Number.isInteger(parseInt(item))) {
+      return acc + parseInt(item)
+    } else {
+      // since the current item isn't integer then return acc
+      return acc
+    }
+  })
+}
+
+console.log(sum(1, 4, 5, "7", null, undefined));
+
+
 let numbers = [10, 11, 15, 28, 48, 50];
 console.log(numbers.indexOf((4)));
 console.log(numbers.lastIndexOf(""));

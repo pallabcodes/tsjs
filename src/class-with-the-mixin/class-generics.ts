@@ -59,6 +59,7 @@ class Box<T = any> {
   }
 
   hasValue(): this is { value: T } {
+    // here this's value is an object that value property whose type is T
     return this.value !== undefined;
   }
 }
@@ -70,6 +71,7 @@ class DerivedBox extends Box {
 const base = new Box();
 const derivedBox = new DerivedBox();
 
+// this method will allow to compare the base.content === derivedBox.content
 // derivedBox.sameAs(base)
 
 class FileSystemObject {
@@ -144,6 +146,6 @@ function greet(ctor: new () => Base ) {
   const instance = new ctor();
   instance.printName()
 }
-// Base class is abstract so it can't be instantiated, but it works for the SubClass
+// Base class is abstract, so it can't be instantiated, but it works for the SubClass
 greet(SubClass);
 // greet(Base);
