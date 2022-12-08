@@ -1,3 +1,20 @@
+// to make a Promise use Promise constructor new Promise(), Promise.Resolve / Promise.reject() or async
+
+// to make a Promise either use Promise or return a Promise or use async
+
+function getTheActualValue() {
+  const response = Promise.resolve(2);
+  const result = response.then((data) => {
+    console.log("this is actual resolved data ", data, typeof  data);
+    // however, anything returned from then() will be Promise{<fulfilled>: data};
+    return data;
+  });
+
+  // so, this value isn't actual data but rather Promise{fulfilled: 2} since coming from then
+  // similarly, if the value coming from Promise.Reject() it will be Promise{rejected: {message: "unknown"}>
+  return result;
+}
+
 // https://towardsdev.com/how-does-javascript-promise-work-under-the-hood-24fe991761f
 // # JS is synchronous single thread language so,  how does it achieve asynchronicity?
 
@@ -13,10 +30,13 @@ const promise = new Promise((resolve, _) => {
   }, 100);
 });
 
-promise.then((data) => {
+const data = promise.then((data) => {
   console.log(data, [...data, 11]);
   return [...data, 11];
 });
+
+console.log(typeof promise); // "object"
+console.log(typeof data); // "object"
 
 // using AND
 console.log(true && false);
@@ -145,5 +165,3 @@ console.log(`start`);
 setTimeout(() => console.log("timer"), 0);
 Promise.resolve("resolved");
 console.log(`done`);
-
-
