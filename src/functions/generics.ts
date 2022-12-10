@@ -1,4 +1,4 @@
-// when no type found , then type would be this = "default"
+// when no type found , then type would be "default"
 const printValue = <Type extends number | string | object = "default">(value: Type): Type => {
   console.log(value);
   return value;

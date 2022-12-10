@@ -62,7 +62,7 @@ type InferSomething<T> = T extends infer U ? U : never;
 
 type Inferred = InferSomething<"1">;
 
-let value: Inferred = "2"; // throws error as its value could only be = "1"
+// let value: Inferred = "2"; // throws error as its value could only be = "1"
 
 interface Example {
   foo: string;

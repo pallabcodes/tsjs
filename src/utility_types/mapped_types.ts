@@ -12,11 +12,126 @@ type Properties = "propA" | "propB";
 
 // type MyNewType = MyMappedType<"propA" | "propB">;
 
+type DayOfTheWeek =
+  | "sunday"
+  | "monday"
+  | "tuesday"
+  | "wednesday"
+  | "thursday"
+  | "friday"
+  | "saturday";
+
+type DayOfTheWeekMap<T> = { [day in DayOfTheWeek]: T };
+
+// this object's key must be from DayOfTheWeek and value type will be T
+const chores: DayOfTheWeekMap<string> = {
+  sunday: "do the dishes",
+  monday: "walk the dog",
+  tuesday: "water the plants",
+  wednesday: "take out the trash",
+  thursday: "clean your room",
+  friday: "mow the lawn",
+  saturday: "relax",
+};
+
+// this object's key must be from DayOfTheWeek and value type will be T
+const workDays: DayOfTheWeekMap<boolean> = {
+  sunday: false,
+  monday: true,
+  tuesday: true,
+  wednesday: true,
+  thursday: true,
+  friday: true,
+  saturday: false,
+};
+
+
+type SetProperty<K extends string = "value"> = `set${Capitalize<K>}`; // "setValue"
+type UsingSetProperty = SetProperty;
+
+type SettersState = { name: string; age: string };
+
+type Setters = {
+  [K in keyof SettersState as `set${Capitalize<K>}`]: (value: SettersState[K]) => void;
+};
+
+type UsingSetters = Setters;
+
+
+type Getters<Type> = {
+  [Property in keyof Type as `get${Capitalize<
+    string & Property
+  >}`]: () => Type[Property];
+};
+
+interface Person {
+  name: string;
+  age: number;
+  location: string;
+}
+
+type LazyPerson = Getters<Person>;
+
+type RemoveKindField<Type> = {
+  [Property in keyof Type as Exclude<Property, "kind">]: Type[Property];
+};
+
+interface Circle {
+  kind: "circle";
+  radius: number;
+}
+
+type KindlessCircle = RemoveKindField<Circle>; //  { radius: number; }
+
+type EventConfig<Events extends { kind: string }> = {
+  // Events = SquareEvent | CircleEvent; so it could be looped and here iterator is E
+  // so, on the first iteration E = SquareEvent and second iteration is = CircleEvent
+
+  // now then remap E = SquareEvent so remapped key is SquareEvent["kind"] = square : (event: SquareEvent) => void
+  // same follow on the second loop
+
+  [E in Events as E["kind"]]: (event: E) => void;
+};
+
+type SquareEvent = { kind: "square"; x: number; y: number };
+type CircleEvent = { kind: "circle"; radius: number };
+
+type Config = EventConfig<SquareEvent | CircleEvent>;
+
+// type Config = {
+//   square: (event: SquareEvent) => void;
+//   circle: (event: CircleEvent) => void;
+// }
+
+type ExtractPII<Type> = {
+  [Property in keyof Type]: Type[Property] extends { pii: true } ? true : false;
+};
+
+type DBFields = {
+  id: { format: "incrementing" };
+  name: { type: string; pii: true };
+};
+
+type ObjectsNeedingGDPRDeletion = ExtractPII<DBFields>;
+
+// type ObjectsNeedingGDPRDeletion = {
+//   id: false;
+//   name: true;
+// }
+
 type MyMappedType<T> = {
   // P must be key of T object
   [P in keyof T]: T[P];
+
+  // re-map change the key's type like below
+  // [P in keyof T as NewKeyType]: T[P];
+
   // readonly [P in keyof T]: T[P]; // all properties within T will be readonly
-  // [P in keyof T]?: T[P]; // all properties within T will be optional
+  // -readonly [P in keyof T]: T[P]; // remove readonly attribute from T
+
+  // [P in keyof T]-?: T[P]; // all properties within T is now optional
+  // [P in keyof T]+?: T[P]; // removes optional attributes from T
+
   // [P in keyof T]: T[P] | null; // all properties within T will be optional
 };
 
@@ -166,13 +281,18 @@ type ImplementationMapExample = ImplementationMap<DefinitionMapExample>;
 // same solution with Partial and Record
 
 // Gets the keys of T whose values are assignable to V
-type KeysMatching<T, V> = {[K in keyof T]: T[K] extends V ? K : never}[keyof T]
+type KeysMatching<T, V> = {
+  [K in keyof T]: T[K] extends V ? K : never;
+}[keyof T];
 
 type ImplementationMap2<T extends DefinitionMap> =
-// A partial (all properties are optional) record for all the keys
+  // A partial (all properties are optional) record for all the keys
   Partial<Record<keyof T, ImplementationType>> &
-  // Require ImplementationType for all the keys that do not have defaultImplementation
-  Record<KeysMatching<T, { defaultImplementation?: undefined }>, ImplementationType>
+    // Require ImplementationType for all the keys that do not have defaultImplementation
+    Record<
+      KeysMatching<T, { defaultImplementation?: undefined }>,
+      ImplementationType
+    >;
 
 /*
 Test is equivalent to
@@ -183,12 +303,15 @@ Test is equivalent to
 }
 */
 type Test = ImplementationMap2<{
-  foo: { name: 'x' },
-  bar: { name: 'y', defaultImplementation: { /*...*/ } },
-  baz: { name: 'z', defaultImplementaiton: undefined }
-}>
-
-
+  foo: { name: "x" };
+  bar: {
+    name: "y";
+    defaultImplementation: {
+      /*...*/
+    };
+  };
+  baz: { name: "z"; defaultImplementaiton: undefined };
+}>;
 
 // https://stackoverflow.com/questions/67552360/conditionally-apply-modifier-in-mapped-type-per-property
 
