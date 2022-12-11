@@ -1,6 +1,7 @@
+// ## Iterables = Array, string, Map, Set etc.
 
-// ## Iterables
-// An object is deemed iterable if it has an implementation for the Symbol.iterator property. Some built-in types like Array, Map, Set, String, Int32Array, Uint32Array, etc. have their Symbol.iterator property already implemented. Symbol.iterator function on an object is responsible for returning the list of values to iterate on.
+// plain object is not iterable thus needed to use Object.keys, Object.values, Object.entries or for in
+
 
 function toArray<X>(xs: Iterable<X>): X[] {
   return [...xs]

@@ -1,14 +1,17 @@
 export type name = { name: string };
 export type age = { age: number };
 
-type Union = name | age;
+// type Union = name | age;
 
-// this object may have properties from either name or age or both as it seen below
-const UsingUnion: Union = { name: "john" };
+type Union = name | age | Intersection;
 
+let union: Union;
+
+union = { name: "John" };
+union = { age: 11 };
+union = { name: "john", age: 11 };
+
+// take unique properties from each other and for same properties they must be available at both
 type Intersection = name & age;
 
-// however, this object must have all properties from name & age as it seen below
-const UIntersection: Intersection = { name: "john", age: 11 };
-
-
+let intersection: Intersection = { age: 1, name: "John" };

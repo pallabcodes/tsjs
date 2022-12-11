@@ -45,23 +45,26 @@ const workDays: DayOfTheWeekMap<boolean> = {
   saturday: false,
 };
 
-
 type SetProperty<K extends string = "value"> = `set${Capitalize<K>}`; // "setValue"
 type UsingSetProperty = SetProperty;
 
 type SettersState = { name: string; age: string };
 
 type Setters = {
-  [K in keyof SettersState as `set${Capitalize<K>}`]: (value: SettersState[K]) => void;
+  [K in keyof SettersState as `set${Capitalize<K>}`]: (
+    value: SettersState[K]
+  ) => void;
 };
 
 type UsingSetters = Setters;
 
-
 type Getters<Type> = {
-  [Property in keyof Type as `get${Capitalize<
-    string & Property
-  >}`]: () => Type[Property];
+  // when remapping, only get the keys that is string from iterator i.e. Property
+  // [Property in keyof Type as `get${Capitalize<string & Property>}`]: () => Type[Property];
+
+  // does the same thing, only take Property from Type whose are type string
+  [Property in keyof Type &
+    string as `get${Capitalize<Property>}`]: () => Type[Property];
 };
 
 interface Person {
@@ -241,7 +244,7 @@ const value3: ExampleHere2 = {
 };
 
 // https://stackoverflow.com/questions/66928064/typescript-mapped-type-add-optional-modifier-conditionally
-// https://www.typescriptlang.org/play?#code/MYGwhgzhAECSC2AHEBTeKB2AXMWCWA9hgCoCeiK0A3gL4CwAUFuZQCIoBmeGe+R0AXmqNo0DGHQAuaBCwAnbgHMANCOgATTmACuILAmRpMOPhgD80g6nTZchEi0b0mLaOy49TAWTCJB0ACUUYAI5dQAeWQUMFTdObl57AD5GRmYKaAA5IisjbBR1AGkUUghw4mgUAA8sTHUYdwTvXyT-KgBtQuhuaABrEoIOaGIAXWliTpHKmrqYKk0OHT1cmxN7SyRrYzsiMgoaaDMxFAA3FDloaUKadv7SQeGRtNdMvGAUWHy5CGDTcIBlZTDVpCDpdHp3B4ACn+0AAZMMAJRjaAw+FIybOdKUFbbZqIcrTWoYepxDyJIg+RAgrJvD5fH7AP5UNSiTrdDBZHKbPK1IolMrEJIo3G2Ux7FBOIEshiiNngzmQoajCxwHmrHYOChOFIMZ4ZRqeexUgCiVQkhjaag4BAI0ioYgkKGkAHIqi7oDRVLLoAAjMBye2OqTQF2kF1AhZLfTqvHrajQAD0ACoAHTp5OJz2epypBiJrNUG12tWGDXilhA-1yVWita7VwAH2g2hJ8QwBSxrjrmtN5p5-h7+PChopGD7FtQuqAA
+
 
 class ImplementationType {}
 
@@ -342,4 +345,4 @@ type DesiredOutcome = Intersection<
 >;
 
 // https://stackoverflow.com/questions/49579094/typescript-conditional-types-filter-out-readonly-properties-pick-only-requir
-// https://blog.logrocket.com/understanding-infer-typescript/
+
