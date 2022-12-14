@@ -13,15 +13,10 @@ type LocaleMessageIDs = `${Lang}_${AllLocaleIDs}`;
 
 // ## Inference with Template literals
 type PropEventSource<Type> = {
-  on<Key extends string & keyof Type>(
-    eventName: `${Key}Changed`,
-    callback: (newValue: Type[Key]) => void
-  ): void;
+  on<Key extends string & keyof Type>(eventName: `${Key}Changed`, callback: (newValue: Type[Key]) => void): void;
 };
 
-declare function makeWatchedObject<Type>(
-  obj: Type
-): Type & PropEventSource<Type>;
+declare function makeWatchedObject<Type>(obj: Type): Type & PropEventSource<Type>;
 
 const person = makeWatchedObject({
   firstName: "Saoirse",

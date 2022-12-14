@@ -319,7 +319,7 @@ function applySnapshot(car: Car, snapshot: Partial<WritablePart<Car>>) {
   let key: keyof typeof snapshot;
   for (key in snapshot) {
     if (!snapshot.hasOwnProperty(key)) continue;
-    car[key] = snapshot[key];
+    // car[key as number] = snapshot[key];
   }
 }
 

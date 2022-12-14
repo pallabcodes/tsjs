@@ -7,11 +7,13 @@ type Union = name | age | Intersection;
 
 let union: Union;
 
-union = { name: "John" };
-union = { age: 11 };
-union = { name: "john", age: 11 };
+// union = { name: "John" };
+// union = { age: 11 };
+// union = { name: "john", age: 11 };
 
-// take unique properties from each other and for same properties they must be available at both
+// or, it could with Union (|) the property could just satisfy one of the given type but intersection has to satisfy both
+
 type Intersection = name & age;
 
+// here type Intersection is an object & it must have both properties from name & age (unless they are optional)
 let intersection: Intersection = { age: 1, name: "John" };
