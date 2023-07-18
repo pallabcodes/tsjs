@@ -29,9 +29,7 @@ type NonImplementedKeys<T extends DefinitionMap> = {
   // so , after all done it is { name: "name", defaultImplementation: "defaultImplementation"} and then keyof T
   // "name" | "defaultImplementation"
 
-  [K in keyof T]: T[K] extends { defaultImplementation: ImplementationType }
-    ? never
-    : K;
+  [K in keyof T]: T[K] extends { defaultImplementation: ImplementationType } ? never : K;
 }[keyof T];
 
 type A = { id: number };
@@ -73,10 +71,7 @@ type ImplementationMap_<T extends DefinitionMap> =
   // A partial (all properties are optional) record for all the keys
   Partial<Record<keyof T, ImplementationType>> &
     // Require ImplementationType for all the keys that do not have defaultImplementation
-    Record<
-      KeysMatching<T, { defaultImplementation?: undefined }>,
-      ImplementationType
-    >;
+    Record<KeysMatching<T, { defaultImplementation?: undefined }>, ImplementationType>;
 
 /*
 Test is equivalent to
@@ -137,10 +132,7 @@ type Unboxed<T> = T extends Strong<infer I> ? I : never;
 const unified = unify({ strong: strong<string>(), weak: weak<string>() });
 
 // now this compiles...
-const valid: Array<Unboxed<typeof unified>> = [
-  { strong: "" },
-  { strong: "", weak: "" },
-];
+const valid: Array<Unboxed<typeof unified>> = [{ strong: "" }, { strong: "", weak: "" }];
 
 // ...and this do not
 // const invalid: Array<Unboxed<typeof unified>> = [{}, { weak: "" }, { unknown: "" }];
@@ -280,9 +272,7 @@ type I5 = ExcludeNotOptionalProps<I3>; // {b?: number}
 
 // ## how to exclude getter only properties from type
 
-type IfEquals<X, Y, A, B> = (<T>() => T extends X ? 1 : 2) extends <
-  T
->() => T extends Y ? 1 : 2
+type IfEquals<X, Y, A, B> = (<T>() => T extends X ? 1 : 2) extends <T>() => T extends Y ? 1 : 2
   ? A
   : B;
 
@@ -295,12 +285,7 @@ type IfEquals<X, Y, A, B> =
 */
 
 type WritableKeysOf<T> = {
-  [P in keyof T]: IfEquals<
-    { [Q in P]: T[P] },
-    { -readonly [Q in P]: T[P] },
-    P,
-    never
-  >;
+  [P in keyof T]: IfEquals<{ [Q in P]: T[P] }, { -readonly [Q in P]: T[P] }, P, never>;
 }[keyof T];
 
 type WritablePart<T> = Pick<T, WritableKeysOf<T>>;
@@ -323,4 +308,21 @@ function applySnapshot(car: Car, snapshot: Partial<WritablePart<Car>>) {
   }
 }
 
-// https://www.typescriptlang.org/docs/handbook/advanced-types.html#mapped-types
+const ODirection = {
+  Up: 0,
+  Down: 1,
+  Left: 2,
+  Right: 3,
+} as const;
+
+// # make a type from ODirection variable then just
+type Direction = typeof ODirection;
+type Direction1 = keyof typeof ODirection; // makes an union of keys i.e. "Up" | "Down" | "Left" | "Right"
+
+// now to get the correspoing value from each key
+type Direction2 = (typeof ODirection)[keyof typeof ODirection]; // 0 | 1 | 2 | 3
+
+// #Mapped Types: https://www.typescriptlang.org/docs/handbook/advanced-types.html#mapped-types
+
+//at the left side: loop, key Remapping with String Literals and Utility types
+// at the right side: do whatever

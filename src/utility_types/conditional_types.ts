@@ -52,9 +52,7 @@ type Str = Flatten<string[]>;
 type Num = Flatten<number>;
 
 // if the type argument is a function , then infer its return value with an type variable i.e. Return
-type GetReturnType<Type> = Type extends (...args: never[]) => infer Return
-  ? Return
-  : never;
+type GetReturnType<Type> = Type extends (...args: never[]) => infer Return ? Return : never;
 
 type InferSomething<T> = T extends infer U ? U : never;
 // here, type argument is "1", & then type variable i.e. U also inferred from T; so U = infer T  = "1"
@@ -70,10 +68,7 @@ interface Example {
 }
 
 type GenericExample<T, K extends keyof T> = T extends infer U ? T[K] : never;
-const generic: Array<GenericExample<Example, "permission">> = [
-  "READ",
-  "CREATE",
-];
+const generic: Array<GenericExample<Example, "permission">> = ["READ", "CREATE"];
 
 // type InferSomething2<T> = T extends { a: infer A; b: number } ? A : any;
 type InferSomething2<T> = T extends { a: infer A; b: infer B } ? A & B : never;
@@ -97,9 +92,7 @@ interface NameLabel {
 //   throw "unimplemented";
 // }
 
-type NameOrId<T extends number | string> = T extends number
-  ? IdLabel
-  : NameLabel;
+type NameOrId<T extends number | string> = T extends number ? IdLabel : NameLabel;
 
 // now just single function needed
 function createLabel<T extends number | string>(idOrName: T): NameOrId<T> {
@@ -128,7 +121,6 @@ interface Dog {
 
 type EmailMessageContents = MessageOf<Email>;
 type DogMessageContents = MessageOf<Dog>;
-
 
 type PromiseReturnType<T> = T extends Promise<infer Response> ? Response : T;
 type T = PromiseReturnType<string>;

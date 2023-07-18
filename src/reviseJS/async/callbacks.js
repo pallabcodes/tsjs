@@ -94,3 +94,19 @@ one();
 
 // Promise.all return the error response from of whichever promise rejected
 // Promise.allSettled() returns an array [{value: {}, status: "fullfilled", status: "rejected", value: {}}]
+
+// #
+
+function someFnFromElseWhere(callback) {
+  callback(); // it does whatever it needs to do
+  // return undefind (implicit)
+}
+
+function takeEvery(pattern, saga, ...args) {
+  return someFnFromElseWhere(function* () {
+    // do something
+    console.log("generator")
+  });
+}
+
+takeEvery(1, 1, [1]);

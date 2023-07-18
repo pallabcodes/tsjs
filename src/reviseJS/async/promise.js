@@ -5,7 +5,7 @@
 function getTheActualValue() {
   const response = Promise.resolve(2);
   const result = response.then((data) => {
-    console.log("this is actual resolved data ", data, typeof  data);
+    console.log("this is actual resolved data ", data, typeof data);
     // however, anything returned from then() will be Promise{<fulfilled>: data};
     return data;
   });
@@ -64,9 +64,7 @@ Promise.all(promises)
 // Promise.allSettled(): returns a promise that fulfills after all given promises have either fulfilled or rejected
 // runs all promises then return results like this { status: 'fulfilled, value: }, {status: "rejected" , reasons: "foo"}
 const promise1 = Promise.resolve(1);
-const promise2 = new Promise((resolve, reject) =>
-  setTimeout(reject, 100, "foo has an error")
-);
+const promise2 = new Promise((resolve, reject) => setTimeout(reject, 100, "foo has an error"));
 
 const promises1 = [
   promise1,

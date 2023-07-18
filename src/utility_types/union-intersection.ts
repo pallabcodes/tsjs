@@ -15,5 +15,5 @@ let union: Union;
 
 type Intersection = name & age;
 
-// here type Intersection is an object & it must have both properties from name & age (unless they are optional)
+// here "intersction" is an object & it "must be able to use all properties from name & age" (unless they are optional)
 let intersection: Intersection = { age: 1, name: "John" };
