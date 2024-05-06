@@ -3,7 +3,7 @@ enum Status {
   FullFilled,
   Success,
   Rejected,
-  NetworkError
+  NetworkError,
 }
 
 // # string enums
@@ -16,7 +16,7 @@ enum Language {
 }
 
 type MappingLanguage = {
-  [Property in Language as `${Capitalize<Property>}`]: string
-}
+  [Property in Language as `${Capitalize<Property>}`]: string;
+};
 
 type UsingMapped = MappingLanguage; // {React: string; Angular: string; Node: string; Next: string; Nest: string;}
