@@ -10,19 +10,17 @@ interface Saiyan {
 class Goten extends Goku<boolean> implements Saiyan {
   level!: number;
 
-  stamina(): void {
-  }
+  stamina(): void {}
 }
 
 class Trunks implements Saiyan {
   level!: number;
 
-  stamina(): void {
-  }
+  stamina(): void {}
 }
 
 class Greater {
-  static hobby: string = "watching movies";
+  static hobby: string = 'watching movies';
 
   private _name!: string;
 
@@ -38,11 +36,11 @@ class Greater {
 
   get surName(): string {
     return this._surName;
-  };
+  }
 
   set surName(value: string) {
     this._surName = value;
-  };
+  }
 
   static getHobby(newHobby: string): typeof Greater {
     this.hobby = newHobby;
@@ -52,10 +50,10 @@ class Greater {
 
 class Box<T = any> {
   public value!: T;
-  public content: string = "";
+  public content: string = '';
 
   sameAs(other: this) {
-    return other.content = this.content;
+    return (other.content = this.content);
   }
 
   hasValue(): this is { value: T } {
@@ -65,7 +63,7 @@ class Box<T = any> {
 }
 
 class DerivedBox extends Box {
-  otherContent: string = "?";
+  otherContent: string = '?';
 }
 
 const base = new Box();
@@ -75,12 +73,11 @@ const derivedBox = new DerivedBox();
 // derivedBox.sameAs(base)
 
 class FileSystemObject {
-  constructor(public path: string, private networked: boolean) {
-  }
+  constructor(public path: string, private networked: boolean) {}
 
   isFile(): this is FileRep {
     return this instanceof FileRep;
-  };
+  }
 
   isDirectory(): this is Directory {
     return this instanceof Directory;
@@ -105,7 +102,7 @@ interface Networked {
   host: string;
 }
 
-const fso: FileSystemObject = new FileRep("foo/bar.txt", "foo");
+const fso: FileSystemObject = new FileRep('foo/bar.txt', 'foo');
 // if(fso.isFile()) {} else if(fso.isDirectory()) {} else if {fso.isNetworked()} {}
 
 // class expressions
@@ -116,13 +113,13 @@ const SomeClass = class<Type> {
   }
 };
 
-const m = new SomeClass("Hello, World"); // Type has been inferred from the argument here i.e. string
+const m = new SomeClass('Hello, World'); // Type has been inferred from the argument here i.e. string
 
 // abstract class : not allowed to be directly instantiated, abstract for field, class and method
 abstract class Base {
   abstract getName(): string;
   printName() {
-    console.log("Hello, " + this.getName());
+    console.log('Hello, ' + this.getName());
   }
 }
 // this is not allowed with abstract class
@@ -132,19 +129,19 @@ abstract class Base {
 
 class SubClass extends Base {
   getName(): string {
-    return "TypeScript Nice";
+    return 'TypeScript Nice';
   }
 }
 
 // now the method/props can be used from subclass
-const s = new SubClass()
+const s = new SubClass();
 s.printName();
 
 // write a function that accept something like a constructor
-function greet(ctor: new () => Base ) {
+function greet(ctor: new () => Base) {
   // @ts-ignore
   const instance = new ctor();
-  instance.printName()
+  instance.printName();
 }
 // Base class is abstract, so it can't be instantiated, but it works for the SubClass
 greet(SubClass);
