@@ -1,151 +1,134 @@
-const Starter = {
-  SALAD: 'Salad',
-  SOUP: 'Soup',
-  BRUSCHETTA: 'Bruschetta',
-  VEGGIE_STICKS: 'Veggie Sticks',
-  CHICKEN_WINGS: 'Chicken Wings',
-};
+enum Starter {
+  SALAD = 'Salad',
+  SOUP = 'Soup',
+  BRUSCHETTA = 'Bruschetta',
+  VEGGIE_STICKS = 'Veggie Sticks',
+  CHICKEN_WINGS = 'Chicken Wings',
+}
 
-// Main course options
-const Main = {
-  GRILLED_CHICKEN: 'Grilled Chicken',
-  PASTA: 'Pasta',
-  VEGGIE_STIR_FRY: 'Veggie Stir Fry',
-  FISH: 'Fish',
-  PIZZA: 'Pizza',
-};
+enum Main {
+  GRILLED_CHICKEN = 'Grilled Chicken',
+  PASTA = 'Pasta',
+  VEGGIE_STIR_FRY = 'Veggie Stir Fry',
+  FISH = 'Fish',
+  PIZZA = 'Pizza',
+}
 
-// Dessert options
-const Dessert = {
-  FRUIT_SALAD: 'Fruit Salad',
-  ICE_CREAM: 'Ice Cream',
-  CHOCOLATE_CAKE: 'Chocolate Cake',
-  VEGAN_PUDDING: 'Vegan Pudding',
-  CHEESECAKE: 'Cheesecake',
-};
+enum Dessert {
+  FRUIT_SALAD = 'Fruit Salad',
+  ICE_CREAM = 'Ice Cream',
+  CHOCOLATE_CAKE = 'Chocolate Cake',
+  VEGAN_PUDDING = 'Vegan Pudding',
+  CHEESECAKE = 'Cheesecake',
+}
 
-// Drink options
-const Drink = {
-  WATER: 'Water',
-  VEGAN_SHAKE: 'Vegan Shake',
-  SODA: 'Soda',
-  FRUIT_JUICE: 'Fruit Juice',
-};
+enum Drink {
+  WATER = 'Water',
+  VEGAN_SHAKE = 'Vegan Shake',
+  SODA = 'Soda',
+  FRUIT_JUICE = 'Fruit Juice',
+}
 
 // Meal class to manage meal components
 class Meal {
-  constructor() {
-    this.starter = null;
-    this.main = null;
-    this.dessert = null;
-    this.drink = null;
-  }
+  private starter: Starter | null = null;
+  private main: Main | null = null;
+  private dessert: Dessert | null = null;
+  private drink: Drink | null = null;
 
-  // getter
-  getStarter() {
+  public getStarter(): Starter | null {
     return this.starter;
   }
 
-  // getter
-  getMain() {
+  public getMain(): Main | null {
     return this.main;
   }
 
-  // getter
-  getDessert() {
+  public getDessert(): Dessert | null {
     return this.dessert;
   }
 
-  // getter
-  getDrink() {
+  public getDrink(): Drink | null {
     return this.drink;
   }
 
-  // getter
-  setStarter(starter) {
+  public setStarter(starter: Starter): void {
     this.starter = starter;
   }
 
-  // getter
-  setMain(main) {
+  public setMain(main: Main): void {
     this.main = main;
   }
 
-  // getter
-  setDessert(dessert) {
+  public setDessert(dessert: Dessert): void {
     this.dessert = dessert;
   }
 
-  // getter
-  setDrink(drink) {
+  public setDrink(drink: Drink): void {
     this.drink = drink;
   }
 }
 
-// Vegan meal builder class
+// Vegan meal builder
 class VeganMealBuilder {
-  constructor() {
-    this.meal = new Meal();
-  }
+  private meal: Meal = new Meal();
 
-  addStarter() {
+  public addStarter(): void {
     this.meal.setStarter(Starter.SALAD);
   }
 
-  addMainCourse() {
+  public addMainCourse(): void {
     this.meal.setMain(Main.VEGGIE_STIR_FRY);
   }
 
-  addDessert() {
+  public addDessert(): void {
     this.meal.setDessert(Dessert.VEGAN_PUDDING);
   }
 
-  addDrink() {
+  public addDrink(): void {
     this.meal.setDrink(Drink.VEGAN_SHAKE);
   }
 
-  build() {
+  public build(): Meal {
     return this.meal;
   }
 }
 
 // Healthy meal builder
 class HealthyMealBuilder {
-  constructor() {
-    this.meal = new Meal();
-  }
+  private meal: Meal = new Meal();
 
-  addStarter() {
+  public addStarter(): void {
     this.meal.setStarter(Starter.SALAD);
   }
 
-  addMainCourse() {
+  public addMainCourse(): void {
     this.meal.setMain(Main.GRILLED_CHICKEN);
   }
 
-  addDessert() {
+  public addDessert(): void {
     this.meal.setDessert(Dessert.FRUIT_SALAD);
   }
 
-  addDrink() {
+  public addDrink(): void {
     this.meal.setDrink(Drink.WATER);
   }
 
-  build() {
+  public build(): Meal {
     return this.meal;
   }
 }
 
 // Director to construct meals
 class Director {
-  constructVeganMeal(builder) {
+  public constructVeganMeal(builder: VeganMealBuilder): void {
     builder.addStarter();
     builder.addMainCourse();
     builder.addDessert();
     builder.addDrink();
   }
 
-  constructHealthyMeal(builder) {
+  public constructHealthyMeal(builder: HealthyMealBuilder): void {
     builder.addStarter();
     builder.addMainCourse();
     builder.addDessert();

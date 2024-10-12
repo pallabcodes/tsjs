@@ -35,7 +35,7 @@ class Person1 {}
 
 function printMemberName(target: any, memberName: string) {
   console.log(memberName);
-  // to overwrite property here, use Object.defineProperty along with a setter and getter
+  // to override property here, use Object.defineProperty along with a setter and getter
 }
 
 // const allowList = ["John", "Jones"];
