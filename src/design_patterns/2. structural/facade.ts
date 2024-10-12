@@ -1,17 +1,22 @@
-const Brightness = Object.freeze({
-  UNKNOWN: 'UNKNOWN',
-  BRIGHT: 'BRIGHT',
-  DIM: 'DIM',
-});
+enum Brightness {
+  UNKNOWN = 'UNKNOWN',
+  BRIGHT = 'BRIGHT',
+  DIM = 'DIM',
+}
 
-const Service = Object.freeze({
-  UNKNOWN: 'UNKNOWN',
-  HULU: 'HULU',
-  NETFLIX: 'NETFLIX',
-  HBO: 'HBO',
-});
+enum Service {
+  UNKNOWN = 'UNKNOWN',
+  HULU = 'HULU',
+  NETFLIX = 'NETFLIX',
+  HBO = 'HBO',
+}
 
 class SmartHomeSubSystem {
+  private brightness: Brightness;
+  private temperature: number;
+  private isSecurityArmed: boolean;
+  private streamingService: Service;
+
   constructor() {
     this.brightness = Brightness.UNKNOWN;
     this.temperature = 19;
@@ -19,44 +24,46 @@ class SmartHomeSubSystem {
     this.streamingService = Service.UNKNOWN;
   }
 
-  setBrightness(brightness) {
+  setBrightness(brightness: Brightness): void {
     this.brightness = brightness;
   }
 
-  setTemperature(temperature) {
+  setTemperature(temperature: number): void {
     this.temperature = temperature;
   }
 
-  setIsSecurityArmed(isSecurityArmed) {
+  setIsSecurityArmed(isSecurityArmed: boolean): void {
     this.isSecurityArmed = isSecurityArmed;
   }
 
-  setStreamingService(streamingService) {
+  setStreamingService(streamingService: Service): void {
     this.streamingService = streamingService;
   }
 
-  enableMotionSensors() {
+  enableMotionSensors(): void {
     // Implementation here
   }
 
-  updateFirmware() {
+  updateFirmware(): void {
     // Implementation here
   }
 }
 
 class SmartHomeFacade {
-  constructor(smartHome) {
+  private smartHome: SmartHomeSubSystem;
+
+  constructor(smartHome: SmartHomeSubSystem) {
     this.smartHome = smartHome;
   }
 
-  setMovieMode() {
+  setMovieMode(): void {
     this.smartHome.setBrightness(Brightness.DIM);
     this.smartHome.setTemperature(21);
     this.smartHome.setIsSecurityArmed(false);
     this.smartHome.setStreamingService(Service.NETFLIX);
   }
 
-  setFocusMode() {
+  setFocusMode(): void {
     this.smartHome.setBrightness(Brightness.BRIGHT);
     this.smartHome.setTemperature(22);
     this.smartHome.setIsSecurityArmed(true);
@@ -64,6 +71,7 @@ class SmartHomeFacade {
   }
 }
 
+// Client Code
 const facade = new SmartHomeFacade(new SmartHomeSubSystem());
 facade.setMovieMode();
 facade.setFocusMode();
