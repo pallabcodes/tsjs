@@ -1,58 +1,62 @@
-const multiplyBy10 = (num: number) => num * 10;
+// Function to multiply by 10
+const multiplyBy10 = (num: number): number => num * 10;
+
+// Types
 type Multi = ReturnType<typeof multiplyBy10>;
 
-const add3 = (num1: number, num2: number, num3: number) => num1 + num2 + num3;
-const addMany = (...args: any[]) => args.reduce((acc, num) => acc + num);
+// Function to add three numbers
+const add3 = (num1: number, num2: number, num3: number): number => num1 + num2 + num3;
 
-const memoize = (fn: Function): Function => {
-  const cache: Record<string, any> = {};
-  return (...args: any[]) => {
-    if (args.toString() in cache) {
-      console.log(cache);
-      return cache[args.toString()];
+// Function to add many numbers
+const addMany = (...args: number[]): number => args.reduce((acc, num) => acc + num, 0);
+
+// Memoization function
+const memoize = <T extends (...args: any[]) => any>(fn: T): T => {
+  const cache: Record<string, ReturnType<T>> = {};
+  return ((...args: Parameters<T>): ReturnType<T> => {
+    const key = JSON.stringify(args); // More robust keying
+    if (key in cache) {
+      return cache[key];
     }
     const result = fn(...args);
-    cache[args.toString()] = result;
+    cache[key] = result;
     return result;
-  };
+  }) as T; // Casting to T for type safety
 };
 
-const memoizeMultiplyBy10 = (): Function => {
-  const cache: Record<string, Multi> = {};
-  return (num: number) => {
-    if (num in cache) {
-      console.log(cache);
+// Memoized specific multiplication function
+const memoizeMultiplyBy10 = (): ((num: number) => Multi) => {
+  const cache: Record<number, Multi> = {};
+  return (num: number): Multi => {
+    if (cache.hasOwnProperty(num)) { // More explicit check
       return cache[num];
     }
-    const result = num * 10;
+    const result = multiplyBy10(num); // Call the original function
     cache[num] = result;
-    console.log(result);
-    console.log(cache);
     return result;
   };
 };
 
-const memoized = memoizeMultiplyBy10();
-console.log(memoized(10));
+// Usage
+const memoizedMultiplyBy10 = memoizeMultiplyBy10();
+console.log(memoizedMultiplyBy10(10)); // 100
 
-const memoizedMultiBy10 = memoize(multiplyBy10);
-console.log(memoizedMultiBy10(11));
-console.log(memoizedMultiBy10(111));
-console.log(memoizedMultiBy10(150));
-console.log(memoizedMultiBy10(140));
+const memoizedMultiplyBy10General = memoize(multiplyBy10);
+console.log(memoizedMultiplyBy10General(11)); // 110
+console.log(memoizedMultiplyBy10General(11)); // Cached result
 
 const memoizedAdd3 = memoize(add3);
-console.log(memoizedAdd3(120, 120, 480));
+console.log(memoizedAdd3(120, 120, 480)); // 720
 
-const memoizedAddmany = memoize(addMany);
-console.log(memoizedAddmany(120, 120, 481, 151));
+const memoizedAddMany = memoize(addMany);
+console.log(memoizedAddMany(120, 120, 481, 151)); // 872
 
-// memoized fibonacci
+// Memoized Fibonacci
 const fib = (pos: number): number => {
   if (pos < 2) return pos;
   return fib(pos - 1) + fib(pos - 2);
-}
+};
 
 const memoizedFib = memoize(fib);
-console.log(memoizedFib(40), fib(40));
-
+console.log(memoizedFib(40)); // 102334155
+console.log(fib(40)); // 102334155
