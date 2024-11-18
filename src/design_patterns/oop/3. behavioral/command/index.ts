@@ -25,7 +25,7 @@ class Light {
 
 // Invoker class
 class RemoteControl {
-  private command: Index;
+  private command!: Index;
 
   setCommand(command: Index) {
     this.command = command;

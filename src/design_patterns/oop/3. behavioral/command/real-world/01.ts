@@ -28,51 +28,50 @@
 
 // Command interface
 interface Command {
-    execute(): void;
-    undo(): void;  // Optionally support undo
+  execute(): void;
+  undo(): void; // Optionally support undo
 }
 
 // #### 2. **Receiver (The Actual Devices)**
 
 // The receiver is the device being controlled by the commands. Here, we have `Light` and `Thermostat` classes.
 
-  ```typescript
 // Receiver: Light
 class Light {
-    private isOn = false;
+  private isOn = false;
 
-    turnOn() {
-        this.isOn = true;
-        console.log("Light is ON");
-    }
+  turnOn() {
+    this.isOn = true;
+    console.log('Light is ON');
+  }
 
-    turnOff() {
-        this.isOn = false;
-        console.log("Light is OFF");
-    }
+  turnOff() {
+    this.isOn = false;
+    console.log('Light is OFF');
+  }
 
-    getState() {
-        return this.isOn ? "ON" : "OFF";
-    }
+  getState() {
+    return this.isOn ? 'ON' : 'OFF';
+  }
 }
 
 // Receiver: Thermostat
 class Thermostat {
-    private temperature = 22;  // Default temperature
+  private temperature = 22; // Default temperature
 
-    increaseTemperature() {
-        this.temperature += 1;
-        console.log(`Temperature increased to ${this.temperature}°C`);
-    }
+  increaseTemperature() {
+    this.temperature += 1;
+    console.log(`Temperature increased to ${this.temperature}°C`);
+  }
 
-    decreaseTemperature() {
-        this.temperature -= 1;
-        console.log(`Temperature decreased to ${this.temperature}°C`);
-    }
+  decreaseTemperature() {
+    this.temperature -= 1;
+    console.log(`Temperature decreased to ${this.temperature}°C`);
+  }
 
-    getTemperature() {
-        return this.temperature;
-    }
+  getTemperature() {
+    return this.temperature;
+  }
 }
 
 // #### 3. **Concrete Command Classes**
@@ -81,70 +80,70 @@ class Thermostat {
 
 // Command: TurnOnLightCommand
 class TurnOnLightCommand implements Command {
-    private light: Light;
+  private light: Light;
 
-    constructor(light: Light) {
-        this.light = light;
-    }
+  constructor(light: Light) {
+    this.light = light;
+  }
 
-    execute(): void {
-        this.light.turnOn();
-    }
+  execute(): void {
+    this.light.turnOn();
+  }
 
-    undo(): void {
-        this.light.turnOff();
-    }
+  undo(): void {
+    this.light.turnOff();
+  }
 }
 
 // Command: TurnOffLightCommand
-class TurnOffLightCommand implements Command {
-    private light: Light;
+export class TurnOffLightCommand implements Command {
+  private light: Light;
 
-    constructor(light: Light) {
-        this.light = light;
-    }
+  constructor(light: Light) {
+    this.light = light;
+  }
 
-    execute(): void {
-        this.light.turnOff();
-    }
+  execute(): void {
+    this.light.turnOff();
+  }
 
-    undo(): void {
-        this.light.turnOn();
-    }
+  undo(): void {
+    this.light.turnOn();
+  }
 }
 
 // Command: IncreaseTemperatureCommand
 class IncreaseTemperatureCommand implements Command {
-    private thermostat: Thermostat;
+  private thermostat: Thermostat;
 
-    constructor(thermostat: Thermostat) {
-        this.thermostat = thermostat;
-    }
+  constructor(thermostat: Thermostat) {
+    this.thermostat = thermostat;
+  }
 
-    execute(): void {
-        this.thermostat.increaseTemperature();
-    }
+  execute(): void {
+    this.thermostat.increaseTemperature();
+  }
 
-    undo(): void {
-        this.thermostat.decreaseTemperature();
-    }
+  undo(): void {
+    this.thermostat.decreaseTemperature();
+  }
 }
 
 // Command: DecreaseTemperatureCommand
-class DecreaseTemperatureCommand implements Command {
-    private thermostat: Thermostat;
+export class DecreaseTemperatureCommand implements Command {
+  private thermostat: Thermostat;
 
-    constructor(thermostat: Thermostat) {
-        this.thermostat = thermostat;
-    }
+  constructor(thermostat: Thermostat) {
+    this.thermostat = thermostat;
+  }
 
-    execute(): void {
-        this.thermostat.decreaseTemperature();
-    }
+  execute(): void {
+    this.thermostat.decreaseTemperature();
+  }
 
-    undo(): void {
-        this.thermostat.increaseTemperature();
-    }
+  undo(): void {
+    this.thermostat.increaseTemperature();
+  }
 }
 
 // #### 4. **Invoker (Command Executor)**
@@ -153,21 +152,21 @@ class DecreaseTemperatureCommand implements Command {
 
 // Invoker
 class RemoteControl {
-    private commandHistory: Command[] = [];
+  private commandHistory: Command[] = [];
 
-    pressButton(command: Command): void {
-        command.execute();
-        this.commandHistory.push(command);  // Track the history for undo/redo
-    }
+  pressButton(command: Command): void {
+    command.execute();
+    this.commandHistory.push(command); // Track the history for undo/redo
+  }
 
-    undoLastCommand(): void {
-        const lastCommand = this.commandHistory.pop();
-        if (lastCommand) {
-            lastCommand.undo();
-        } else {
-            console.log("No commands to undo");
-        }
+  undoLastCommand(): void {
+    const lastCommand = this.commandHistory.pop();
+    if (lastCommand) {
+      lastCommand.undo();
+    } else {
+      console.log('No commands to undo');
     }
+  }
 }
 
 // #### 5. **Client**
@@ -179,21 +178,21 @@ const light = new Light();
 const thermostat = new Thermostat();
 
 const turnOnLight = new TurnOnLightCommand(light);
-const turnOffLight = new TurnOffLightCommand(light);
+// const turnOffLight = new TurnOffLightCommand(light);
 const increaseTemp = new IncreaseTemperatureCommand(thermostat);
-const decreaseTemp = new DecreaseTemperatureCommand(thermostat);
+// const decreaseTemp = new DecreaseTemperatureCommand(thermostat);
 
 const remoteControl = new RemoteControl();
 
 // Execute commands
-remoteControl.pressButton(turnOnLight);  // Light is ON
-remoteControl.pressButton(increaseTemp);  // Temperature increased to 23°C
+remoteControl.pressButton(turnOnLight); // Light is ON
+remoteControl.pressButton(increaseTemp); // Temperature increased to 23°C
 
 // Undo last command (Temperature decrease)
-remoteControl.undoLastCommand();  // Temperature decreased to 22°C
+remoteControl.undoLastCommand(); // Temperature decreased to 22°C
 
 // Undo last command (Light off)
-remoteControl.undoLastCommand();  // Light is OFF
+remoteControl.undoLastCommand(); // Light is OFF
 
 // ### Full Power of the Command Pattern in Product-Based Environments
 //

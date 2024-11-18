@@ -7,7 +7,6 @@
 // 3. **Encapsulation of behavior**: Interaction logic is centralized in the mediator.
 // 4. **Real-world complexity**: Examples should reflect practical, product-grade use cases.
 
-
 // ### Comprehensive Real-World Example: A Chatroom System
 
 // This example demonstrates a **Mediator Pattern** in a real-world scenario where users communicate in a chatroom. The chatroom acts as the mediator, managing messages and ensuring participants don't directly interact, satisfying the product-based requirements.
@@ -22,76 +21,82 @@
 // Mediator Interface
 // ===========================
 interface ChatroomMediator {
-    sendMessage(message: string, sender: User): void;
-    addUser(user: User): void;
+  sendMessage(message: string, sender: User): void;
+  addUser(user: User): void;
 }
 
 // ===========================
 // Concrete Mediator
 // ===========================
 class Chatroom implements ChatroomMediator {
-    private users: Map<string, User> = new Map();
+  private users: Map<string, User> = new Map();
 
-    addUser(user: User): void {
-        this.users.set(user.name, user);
-        user.setMediator(this);
-    }
+  addUser(user: User): void {
+    this.users.set(user.name, user);
+    user.setMediator(this);
+  }
 
-    sendMessage(message: string, sender: User): void {
-        console.log(`[Chatroom] ${sender.name} says: "${message}"`);
+  sendMessage(message: string, sender: User): void {
+    console.log(`[Chatroom] ${sender.name} says: "${message}"`);
 
-        // Relay message to all other users
-        this.users.forEach((user) => {
-            if (user !== sender) {
-                user.receiveMessage(message, sender.name);
-            }
-        });
-    }
+    // Relay message to all other users
+    this.users.forEach(user => {
+      if (user !== sender) {
+        user.receiveMessage(message, sender.name);
+      }
+    });
+  }
 }
 
 // ===========================
 // Abstract Colleague (User)
 // ===========================
 abstract class User {
-    protected mediator?: ChatroomMediator;
-    public readonly name: string;
+  protected mediator?: ChatroomMediator;
+  public readonly name: string;
 
-    constructor(name: string) {
-        this.name = name;
+  constructor(name: string) {
+    this.name = name;
+  }
+
+  setMediator(mediator: ChatroomMediator): void {
+    this.mediator = mediator;
+  }
+
+  sendMessage(message: string): void {
+    if (!this.mediator) {
+      throw new Error('No mediator set for user.');
     }
+    this.mediator.sendMessage(message, this);
+  }
 
-    setMediator(mediator: ChatroomMediator): void {
-        this.mediator = mediator;
-    }
-
-    sendMessage(message: string): void {
-        if (!this.mediator) {
-            throw new Error("No mediator set for user.");
-        }
-        this.mediator.sendMessage(message, this);
-    }
-
-    abstract receiveMessage(message: string, senderName: string): void;
+  abstract receiveMessage(message: string, senderName: string): void;
 }
 
 // ===========================
 // Concrete Colleagues
 // ===========================
 class RegularUser extends User {
-    receiveMessage(message: string, senderName: string): void {
-        console.log(`[RegularUser: ${this.name}] Received from ${senderName}: "${message}"`);
-    }
+  receiveMessage(message: string, senderName: string): void {
+    console.log(
+      `[RegularUser: ${this.name}] Received from ${senderName}: "${message}"`
+    );
+  }
 }
 
 class AdminUser extends User {
-    receiveMessage(message: string, senderName: string): void {
-        console.log(`[AdminUser: ${this.name}] Received (priority) from ${senderName}: "${message}"`);
-    }
+  receiveMessage(message: string, senderName: string): void {
+    console.log(
+      `[AdminUser: ${this.name}] Received (priority) from ${senderName}: "${message}"`
+    );
+  }
 
-    kickUser(userToKick: string): void {
-        console.log(`[AdminUser: ${this.name}] Initiates a kick for user: ${userToKick}`);
-        // Admin-specific logic to kick a user (out of scope here)
-    }
+  kickUser(userToKick: string): void {
+    console.log(
+      `[AdminUser: ${this.name}] Initiates a kick for user: ${userToKick}`
+    );
+    // Admin-specific logic to kick a user (out of scope here)
+  }
 }
 
 // ===========================
@@ -99,18 +104,18 @@ class AdminUser extends User {
 // ===========================
 const chatroom = new Chatroom();
 
-const alice = new RegularUser("Alice");
-const bob = new RegularUser("Bob");
-const charlie = new AdminUser("Charlie");
+const alice = new RegularUser('Alice');
+const bob = new RegularUser('Bob');
+const charlie = new AdminUser('Charlie');
 
 chatroom.addUser(alice);
 chatroom.addUser(bob);
 chatroom.addUser(charlie);
 
-alice.sendMessage("Hi, everyone!");
-bob.sendMessage("Hello, Alice!");
-charlie.sendMessage("Welcome to the chatroom!");
-charlie.kickUser("Bob");
+alice.sendMessage('Hi, everyone!');
+bob.sendMessage('Hello, Alice!');
+charlie.sendMessage('Welcome to the chatroom!');
+charlie.kickUser('Bob');
 
 // ### Key Concepts Covered:
 //
@@ -126,14 +131,12 @@ charlie.kickUser("Bob");
 // #### 4. **Real-World Complexity**
 // - The chatroom system reflects real-world scenarios involving diverse users and interactions. The admin’s ability to "kick" users demonstrates role-based functionality.
 
-
 // ### Extending the Example for Full Product-Based Standards:
 //
 // - **Customizable Rules**: Implement rules for message filtering (e.g., profanity detection) or limiting message frequency.
 // - **Integration with External Services**: Extend the mediator to integrate logging, analytics, or monitoring services.
 // - **Concurrency**: Use patterns like thread-safe queues for handling messages in high-traffic systems.
 // - **Dynamic Groups**: Add functionality for users to create private chatrooms (sub-mediators).
-
 
 // ### Is This Enough?
 

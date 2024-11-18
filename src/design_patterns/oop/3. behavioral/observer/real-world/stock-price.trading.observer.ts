@@ -2,14 +2,18 @@
 
 // Subject
 class Stock {
-  symbol: string; // Stock symbol (e.g., AAPL for Apple)
-  observers: User[]; // List of users observing this stock
-  price: number; // Current stock price
+  private observers: User[]; // Make observers private
+  private price: number; // Make price private
 
-  constructor(symbol: string) {
-    this.symbol = symbol;
+  constructor(private readonly symbol: string) {
+    // Use parameter property
     this.observers = [];
     this.price = 0;
+  }
+
+  // Add getter for price
+  public getPrice(): number {
+    return this.price;
   }
 
   // Register a user for updates
@@ -27,7 +31,7 @@ class Stock {
 
   // Notify all users about price changes
   notifyObservers(): void {
-    for (let observer of this.observers) {
+    for (const observer of this.observers) {
       observer.update(this.symbol, this.price); // Call the update method on each observer
     }
   }
@@ -40,17 +44,15 @@ class Stock {
 }
 
 // Observer
-class User {
-  name: string; // User's name
+interface IStockObserver {
+  update(symbol: string, price: number): void;
+}
 
-  constructor(name: string) {
-    this.name = name;
-  }
+class User implements IStockObserver {
+  constructor(private readonly name: string) {} // Use parameter property
 
-  // Receive notifications about stock price changes
   update(symbol: string, price: number): void {
     console.log(`Hello ${this.name}, the price of ${symbol} is now $${price}!`);
-    // Output a notification to the user about the stock price change
   }
 }
 
@@ -79,7 +81,6 @@ stock.removeObserver(user1); // Alice unsubscribes from updates
 stock.setPrice(160); // Notifies only Bob about the new price
 // Output:
 // Hello Bob, the price of AAPL is now $160!
-
 
 // Key TypeScript Changes:
 //   Type Annotations:

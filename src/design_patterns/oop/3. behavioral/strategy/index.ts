@@ -1,6 +1,7 @@
 // Index interface
 interface Index {
   execute(a: number, b: number): number;
+}
 
 // Concrete strategies
 class AddStrategy implements Index {
@@ -17,7 +18,7 @@ class SubtractStrategy implements Index {
 
 // Context class that uses a strategy
 class Context {
-  private strategy: Index;
+  private strategy!: Index;
 
   setStrategy(strategy: Index): void {
     this.strategy = strategy;

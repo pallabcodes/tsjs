@@ -12,64 +12,77 @@
 // Memento Class: Game State Snapshot
 // ==============================
 class GameState {
-    constructor(
-        public readonly playerPosition: { x: number; y: number },
-        public readonly health: number,
-        public readonly inventory: string[],
-        public readonly missionProgress: string
-    ) {}
+  constructor(
+    public readonly playerPosition: Readonly<{ x: number; y: number }>,
+    public readonly health: number,
+    public readonly inventory: ReadonlyArray<string>,
+    public readonly missionProgress: string
+  ) {}
 }
 
 // ==============================
 // Originator: Game
 // ==============================
 class Game {
-    private playerPosition = { x: 0, y: 0 };
-    private health = 100;
-    private inventory: string[] = [];
-    private missionProgress = "Not Started";
+  private playerPosition = { x: 0, y: 0 };
+  private health = 100;
+  private inventory: string[] = [];
+  private missionProgress = 'Not Started';
 
-    setState(position: { x: number; y: number }, health: number, inventory: string[], mission: string): void {
-        this.playerPosition = position;
-        this.health = health;
-        this.inventory = inventory;
-        this.missionProgress = mission;
-    }
+  setState(
+    position: Readonly<{ x: number; y: number }>,
+    health: number,
+    inventory: ReadonlyArray<string>,
+    mission: string
+  ): void {
+    this.playerPosition = { ...position };
+    this.health = health;
+    this.inventory = [...inventory];
+    this.missionProgress = mission;
+  }
 
-    getState(): GameState {
-        return new GameState(this.playerPosition, this.health, this.inventory, this.missionProgress);
-    }
+  getState(): GameState {
+    return new GameState(
+      this.playerPosition,
+      this.health,
+      this.inventory,
+      this.missionProgress
+    );
+  }
 
-    restoreState(state: GameState): void {
-        this.playerPosition = state.playerPosition;
-        this.health = state.health;
-        this.inventory = state.inventory;
-        this.missionProgress = state.missionProgress;
-    }
+  restoreState(state: GameState): void {
+    this.playerPosition = state.playerPosition;
+    this.health = state.health;
+    this.inventory = [...state.inventory];
+    this.missionProgress = state.missionProgress;
+  }
 
-    displayState(): void {
-        console.log("Game State:", {
-            position: this.playerPosition,
-            health: this.health,
-            inventory: this.inventory,
-            mission: this.missionProgress,
-        });
-    }
+  displayState(): void {
+    console.log('Game State:', {
+      position: this.playerPosition,
+      health: this.health,
+      inventory: this.inventory,
+      mission: this.missionProgress,
+    });
+  }
 }
 
 // ==============================
 // Caretaker: Checkpoint Manager
 // ==============================
 class CheckpointManager {
-    private checkpoints: GameState[] = [];
+  private readonly checkpoints: GameState[] = [];
 
-    save(state: GameState): void {
-        this.checkpoints.push(state);
-    }
+  save(state: GameState): void {
+    this.checkpoints.push(state);
+  }
 
-    load(index: number): GameState | null {
-        return this.checkpoints[index] || null;
+  load(index: number): GameState {
+    if (index < 0 || index >= this.checkpoints.length) {
+      throw new Error('Invalid checkpoint index');
     }
+    return this.checkpoints[index]!;
+  }
 }
 
 // ==============================
@@ -79,21 +92,20 @@ const game = new Game();
 const checkpointManager = new CheckpointManager();
 
 // Simulate gameplay and save checkpoints
-game.setState({ x: 10, y: 20 }, 90, ["Sword", "Shield"], "Started Mission");
+game.setState({ x: 10, y: 20 }, 90, ['Sword', 'Shield'], 'Started Mission');
 checkpointManager.save(game.getState());
 
-game.setState({ x: 50, y: 80 }, 70, ["Sword", "Potion"], "Mid Mission");
+game.setState({ x: 50, y: 80 }, 70, ['Sword', 'Potion'], 'Mid Mission');
 checkpointManager.save(game.getState());
 
 game.displayState(); // Shows the latest state
 
 // Restore to a previous checkpoint
-const previousState = checkpointManager.load(0);
-if (previousState) {
-    game.restoreState(previousState);
-    game.displayState(); // Restores to the first checkpoint
+const previousGameState = checkpointManager.load(0);
+if (previousGameState) {
+  game.restoreState(previousGameState);
+  game.displayState(); // Restores to the first checkpoint
 }
-
 
 // ### Example 2: **Web Forms - Save and Restore Partially Filled Forms**
 //
@@ -106,45 +118,47 @@ if (previousState) {
 // Memento Class: Form State Snapshot
 // ==============================
 class FormState {
-    constructor(public readonly values: Record<string, string | number | boolean>) {}
+  constructor(
+    public readonly values: Record<string, string | number | boolean>
+  ) {}
 }
 
 // ==============================
 // Originator: Web Form
 // ==============================
 class WebForm {
-    private values: Record<string, string | number | boolean> = {};
+  private values: Record<string, string | number | boolean> = {};
 
-    setValue(key: string, value: string | number | boolean): void {
-        this.values[key] = value;
-    }
+  setValue(key: string, value: string | number | boolean): void {
+    this.values[key] = value;
+  }
 
-    getState(): FormState {
-        return new FormState({ ...this.values });
-    }
+  getState(): FormState {
+    return new FormState({ ...this.values });
+  }
 
-    restoreState(state: FormState): void {
-        this.values = { ...state.values };
-    }
+  restoreState(state: FormState): void {
+    this.values = { ...state.values };
+  }
 
-    displayState(): void {
-        console.log("Form State:", this.values);
-    }
+  displayState(): void {
+    console.log('Form State:', this.values);
+  }
 }
 
 // ==============================
 // Caretaker: Form Draft Manager
 // ==============================
 class FormDraftManager {
-    private drafts: FormState[] = [];
+  private drafts: FormState[] = [];
 
-    save(state: FormState): void {
-        this.drafts.push(state);
-    }
+  save(state: FormState): void {
+    this.drafts.push(state);
+  }
 
-    load(index: number): FormState | null {
-        return this.drafts[index] || null;
-    }
+  load(index: number): FormState | null {
+    return this.drafts[index] || null;
+  }
 }
 
 // ==============================
@@ -154,20 +168,20 @@ const form = new WebForm();
 const draftManager = new FormDraftManager();
 
 // Fill the form and save drafts
-form.setValue("name", "John Doe");
-form.setValue("email", "john@example.com");
+form.setValue('name', 'John Doe');
+form.setValue('email', 'john@example.com');
 draftManager.save(form.getState());
 
-form.setValue("address", "123 Main St");
+form.setValue('address', '123 Main St');
 draftManager.save(form.getState());
 
 form.displayState(); // Shows the latest form state
 
 // Restore to a previous draft
-const previousDraft = draftManager.load(0);
-if (previousDraft) {
-    form.restoreState(previousDraft);
-    form.displayState(); // Restores to the first draft
+const previousFormDraft = draftManager.load(0);
+if (previousFormDraft) {
+  form.restoreState(previousFormDraft);
+  form.displayState(); // Restores to the first draft
 }
 
 // ### Example 3: **State Management - Redux-like Snapshots**
@@ -181,45 +195,48 @@ if (previousDraft) {
 // Memento Class: Redux State Snapshot
 // ==============================
 class ReduxState {
-    constructor(public readonly state: Record<string, any>) {}
+  constructor(public readonly state: Record<string, any>) {}
 }
 
 // ==============================
 // Originator: Redux Store
 // ==============================
 class ReduxStore {
-    private state: Record<string, any> = {};
+  private state: Record<string, any> = {};
 
-    setState(newState: Record<string, any>): void {
-        this.state = { ...this.state, ...newState };
-    }
+  setState(newState: Record<string, any>): void {
+    this.state = { ...this.state, ...newState };
+  }
 
-    getState(): ReduxState {
-        return new ReduxState({ ...this.state });
-    }
+  getState(): ReduxState {
+    return new ReduxState({ ...this.state });
+  }
 
-    restoreState(state: ReduxState): void {
-        this.state = { ...state.state };
-    }
+  restoreState(state: ReduxState): void {
+    this.state = { ...state.state };
+  }
 
-    displayState(): void {
-        console.log("Redux State:", this.state);
-    }
+  displayState(): void {
+    console.log('Redux State:', this.state);
+  }
 }
 
 // ==============================
 // Caretaker: State History Manager
 // ==============================
 class StateHistoryManager {
-    private history: ReduxState[] = [];
+  private readonly history: ReduxState[] = [];
 
-    save(state: ReduxState): void {
-        this.history.push(state);
-    }
+  save(state: ReduxState): void {
+    this.history.push(state);
+  }
 
-    load(index: number): ReduxState | null {
-        return this.history[index] || null;
+  load(index: number): ReduxState {
+    if (index < 0 || index >= this.history.length) {
+      throw new Error('Invalid history index');
     }
+    return this.history[index]!;
+  }
 }
 
 // ==============================
@@ -229,19 +246,19 @@ const store = new ReduxStore();
 const historyManager = new StateHistoryManager();
 
 // Update the store and save states
-store.setState({ user: "Alice", theme: "dark" });
+store.setState({ user: 'Alice', theme: 'dark' });
 historyManager.save(store.getState());
 
-store.setState({ user: "Bob" });
+store.setState({ user: 'Bob' });
 historyManager.save(store.getState());
 
 store.displayState(); // Shows the latest state
 
 // Restore to a previous state
-const previousState = historyManager.load(0);
-if (previousState) {
-    store.restoreState(previousState);
-    store.displayState(); // Restores to the first state
+const previousReduxState = historyManager.load(0);
+if (previousReduxState) {
+  store.restoreState(previousReduxState);
+  store.displayState(); // Restores to the first state
 }
 
 // ### Do These Examples Cover the Full Power of the Memento Pattern?

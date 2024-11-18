@@ -12,7 +12,7 @@ interface Handler {
 
 // Base class for handlers
 abstract class BaseHandler implements Handler {
-  private nextHandler: Handler;
+  private nextHandler?: Handler;
 
   setNext(handler: Handler): Handler {
     this.nextHandler = handler;
@@ -29,20 +29,20 @@ abstract class BaseHandler implements Handler {
 
 // Concrete handler for handling specific requests
 class ConcreteHandlerA extends BaseHandler {
-  handle(request: string): string | null {
+  override handle(request: string): string | null {
     if (request === 'A') {
       return `Handled by Handler A`;
     }
-    return super.handle(request); // Pass to the next handler
+    return super.handle(request);
   }
 }
 
 class ConcreteHandlerB extends BaseHandler {
-  handle(request: string): string | null {
+  override handle(request: string): string | null {
     if (request === 'B') {
       return `Handled by Handler B`;
     }
-    return super.handle(request); // Pass to the next handler
+    return super.handle(request);
   }
 }
 

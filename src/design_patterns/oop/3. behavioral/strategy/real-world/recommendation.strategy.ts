@@ -1,13 +1,11 @@
-// Index Interface
-class RecommendationStrategy {
-  recommend(userId) {
-    throw new Error('This method should be overridden!');
-  }
+// Base Strategy Interface/Class
+abstract class RecommendationStrategy {
+  abstract recommend(userId: string): void;
 }
 
-// Concrete Index: Popularity-based Recommendation
+// Concrete Strategy: Popularity-based Recommendation
 class PopularityRecommendation extends RecommendationStrategy {
-  recommend(userId) {
+  recommend(userId: string): void {
     console.log(`Recommended products based on popularity for user ${userId}`);
 
     // Logic to get popular products
@@ -17,8 +15,7 @@ class PopularityRecommendation extends RecommendationStrategy {
     });
   }
 
-  // Simulated method to get popular products
-  getPopularProducts() {
+  private getPopularProducts(): Product[] {
     return [
       { name: 'Wireless Headphones', price: 99.99 },
       { name: 'Smartphone', price: 699.99 },
@@ -27,9 +24,16 @@ class PopularityRecommendation extends RecommendationStrategy {
   }
 }
 
-// Concrete Index: User Ratings Recommendation
+// Add interface for Product
+interface Product {
+  name: string;
+  price: number;
+  rating?: number;
+}
+
+// Concrete Strategy: User Ratings Recommendation
 class RatingsRecommendation extends RecommendationStrategy {
-  recommend(userId) {
+  recommend(userId: string): void {
     console.log(
       `Recommended products based on user ratings for user ${userId}`
     );
@@ -43,8 +47,7 @@ class RatingsRecommendation extends RecommendationStrategy {
     });
   }
 
-  // Simulated method to get highly rated products
-  getHighlyRatedProducts() {
+  private getHighlyRatedProducts(): Product[] {
     return [
       { name: 'Bluetooth Speaker', price: 49.99, rating: 4.8 },
       { name: 'Smart Watch', price: 199.99, rating: 4.5 },
@@ -53,9 +56,9 @@ class RatingsRecommendation extends RecommendationStrategy {
   }
 }
 
-// Concrete Index: Purchase History Recommendation
+// Concrete Strategy: Purchase History Recommendation
 class PurchaseHistoryRecommendation extends RecommendationStrategy {
-  recommend(userId) {
+  recommend(userId: string): void {
     console.log(
       `Recommended products based on purchase history for user ${userId}`
     );
@@ -68,8 +71,7 @@ class PurchaseHistoryRecommendation extends RecommendationStrategy {
     });
   }
 
-  // Simulated method to get recommendations based on purchase history
-  getRecommendationsBasedOnHistory(userId) {
+  private getRecommendationsBasedOnHistory(_userId: string): Product[] {
     // Assuming the user has previously bought headphones
     return [
       { name: 'Headphone Stand', price: 29.99 },
@@ -80,15 +82,17 @@ class PurchaseHistoryRecommendation extends RecommendationStrategy {
 
 // Context
 class RecommendationEngine {
+  private recommendationStrategy: RecommendationStrategy | null;
+
   constructor() {
-    this.recommendationStrategy = null; // Initially, no strategy
+    this.recommendationStrategy = null;
   }
 
-  setRecommendationStrategy(strategy) {
-    this.recommendationStrategy = strategy; // Set the recommendation strategy
+  setRecommendationStrategy(strategy: RecommendationStrategy): void {
+    this.recommendationStrategy = strategy;
   }
 
-  recommendProducts(userId) {
+  recommendProducts(userId: string): void {
     if (!this.recommendationStrategy) {
       console.log('Recommendation strategy not set!');
       return;

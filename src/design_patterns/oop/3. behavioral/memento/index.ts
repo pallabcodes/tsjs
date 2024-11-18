@@ -9,7 +9,7 @@ class Index {
 
 // Originator class whose state will be saved
 class Originator {
-  private state: string;
+  private state = '';
 
   setState(state: string): void {
     this.state = state;
@@ -35,7 +35,9 @@ class Caretaker {
   }
 
   getMemento(index: number): Index {
-    return this.mementos[index];
+    const memento = this.mementos[index];
+    if (!memento) throw new Error('Memento not found');
+    return memento;
   }
 }
 

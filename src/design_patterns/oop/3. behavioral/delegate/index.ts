@@ -29,7 +29,7 @@ class CustomView {
 // The ViewController class implements the ButtonTapDelegate interface and provides the functionality for onButtonTap().
 class ViewController implements ButtonTapDelegate {
   onButtonTap(): void {
-    console.log("Button was tapped!");
+    console.log('Button was tapped!');
   }
 }
 // Step 4: Set the Delegate
@@ -48,7 +48,6 @@ customView.buttonTapped(); // This will log "Button was tapped!" to the console
 
 // Delegate in GoF Classification
 // While not explicitly named "delegate" in the Gang of Four (GoF) design patterns, the delegate pattern is closely aligned with Observer, Strategy, and sometimes Command, all of which are behavioral patterns. It can be seen as a tailored approach to implementing these patterns for event-driven scenarios or inter-object communication.
-
 
 // Q: I am assuming the real power of this pattern is that there could be different ViewController and as needed just assign to customView.deleagte and that class's buttonTapped will be caclled, which is much more flexible in a way in this context thatjust extending ? right ?
 
@@ -72,23 +71,29 @@ customView.buttonTapped(); // This will log "Button was tapped!" to the console
 
 class AlertViewController implements ButtonTapDelegate {
   onButtonTap(): void {
-    console.log("Alert: Button was tapped!");
+    console.log('Alert: Button was tapped!');
   }
 }
 
 class NavigationViewController implements ButtonTapDelegate {
   onButtonTap(): void {
-    console.log("Navigate to a new screen!");
+    console.log('Navigate to a new screen!');
   }
 }
 
-// Now, you can assign too as the delegate:
-const customView = new CustomView();
-const alertVC = new AlertViewController();
-const navigationVC = new NavigationViewController();
+// Demonstrate delegate flexibility
+function demonstrateDelegates() {
+  const customView = new CustomView();
+  const alertVC = new AlertViewController();
+  const navigationVC = new NavigationViewController();
 
-customView.delegate = alertVC;
-customView.buttonTapped(); // Logs: "Alert: Button was tapped!"
+  // Using alert delegate
+  customView.delegate = alertVC;
+  customView.buttonTapped(); // Logs: "Alert: Button was tapped!"
 
-customView.delegate = navigationVC;
-customView.buttonTapped(); // Logs: "Navigate to a new screen!"
+  // Switch to navigation delegate
+  customView.delegate = navigationVC;
+  customView.buttonTapped(); // Logs: "Navigate to a new screen!"
+}
+
+demonstrateDelegates();

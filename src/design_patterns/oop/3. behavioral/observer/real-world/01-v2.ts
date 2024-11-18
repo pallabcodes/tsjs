@@ -6,108 +6,121 @@
 // Observer Interface
 // ==========================
 interface Observer {
-    update(temperature: number, humidity: number, pressure: number): void;
+  update(data: WeatherData): void;
+}
+
+interface WeatherData {
+  temperature: number;
+  humidity: number;
+  pressure: number;
 }
 
 // ==========================
 // Concrete Observers
 // ==========================
 class DisplayElement implements Observer {
-    private id: string;
-    private temperature: number;
-    private humidity: number;
-    private pressure: number;
+  private id: string;
+  private data?: WeatherData;
 
-    constructor(id: string) {
-        this.id = id;
-    }
+  constructor(id: string) {
+    this.id = id;
+  }
 
-    update(temperature: number, humidity: number, pressure: number): void {
-        this.temperature = temperature;
-        this.humidity = humidity;
-        this.pressure = pressure;
-        this.display();
-    }
+  update(data: WeatherData): void {
+    this.data = data;
+    this.display();
+  }
 
-    display(): void {
-        console.log(`${this.id} - Temperature: ${this.temperature}°C, Humidity: ${this.humidity}%, Pressure: ${this.pressure} hPa`);
-    }
+  display(): void {
+    if (!this.data) return;
+    console.log(
+      `${this.id} - Temperature: ${this.data.temperature}°C, Humidity: ${this.data.humidity}%, Pressure: ${this.data.pressure} hPa`
+    );
+  }
 }
 
 class AlertSystem implements Observer {
-    private threshold: number;
+  private threshold: number;
 
-    constructor(threshold: number) {
-        this.threshold = threshold;
-    }
+  constructor(threshold: number) {
+    this.threshold = threshold;
+  }
 
-    update(temperature: number, humidity: number, pressure: number): void {
-        if (temperature > this.threshold) {
-            this.sendAlert(temperature);
-        }
+  update(data: WeatherData): void {
+    if (data.temperature > this.threshold) {
+      this.sendAlert(data.temperature);
     }
+  }
 
-    private sendAlert(temperature: number): void {
-        console.log(`ALERT: Temperature exceeds threshold! Current: ${temperature}°C`);
-    }
+  private sendAlert(temperature: number): void {
+    console.log(
+      `ALERT: Temperature exceeds threshold! Current: ${temperature}°C`
+    );
+  }
 }
 
 // ==========================
 // Subject (Weather Station)
 // ==========================
 class WeatherStation {
-    private observers: Observer[] = [];
-    private temperature: number = 0;
-    private humidity: number = 0;
-    private pressure: number = 0;
+  private observers: Observer[] = [];
+  private data: WeatherData = {
+    temperature: 0,
+    humidity: 0,
+    pressure: 0,
+  };
 
-    // Observer priority - observers with higher priority will be notified first
-    private observerPriorities: Map<Observer, number> = new Map();
+  // Observer priority - observers with higher priority will be notified first
+  private observerPriorities: Map<Observer, number> = new Map();
 
-    addObserver(observer: Observer, priority: number = 0): void {
-        this.observers.push(observer);
-        this.observerPriorities.set(observer, priority);
-        this.sortObservers();
+  addObserver(observer: Observer, priority = 0): void {
+    this.observers.push(observer);
+    this.observerPriorities.set(observer, priority);
+    this.sortObservers();
+  }
+
+  removeObserver(observer: Observer): void {
+    this.observers = this.observers.filter(o => o !== observer);
+    this.observerPriorities.delete(observer);
+  }
+
+  notifyObservers(): void {
+    for (const observer of this.observers) {
+      observer.update(this.data);
     }
+  }
 
-    removeObserver(observer: Observer): void {
-        this.observers = this.observers.filter(o => o !== observer);
-        this.observerPriorities.delete(observer);
-    }
+  // Simulate weather data update with async updates
+  async setWeatherData(
+    temperature: number,
+    humidity: number,
+    pressure: number
+  ): Promise<void> {
+    this.data = { temperature, humidity, pressure };
+    console.log(
+      `Weather data updated: Temperature: ${temperature}°C, Humidity: ${humidity}%, Pressure: ${pressure} hPa`
+    );
 
-    notifyObservers(): void {
-        for (const observer of this.observers) {
-            observer.update(this.temperature, this.humidity, this.pressure);
-        }
-    }
+    await this.asyncNotifyObservers();
+  }
 
-    // Simulate weather data update with async updates
-    async setWeatherData(temperature: number, humidity: number, pressure: number): Promise<void> {
-        console.log(`Weather data updated: Temperature: ${temperature}°C, Humidity: ${humidity}%, Pressure: ${pressure} hPa`);
-        this.temperature = temperature;
-        this.humidity = humidity;
-        this.pressure = pressure;
+  private async asyncNotifyObservers(): Promise<void> {
+    const notificationPromises = this.observers.map(async observer => {
+      await new Promise(resolve => setTimeout(resolve, 100));
+      observer.update(this.data);
+    });
 
-        // Simulate asynchronous updates for large-scale systems
-        await this.asyncNotifyObservers();
-    }
+    await Promise.all(notificationPromises);
+  }
 
-    private async asyncNotifyObservers(): Promise<void> {
-        for (const observer of this.observers) {
-            // Simulate async operations like network calls or complex computations
-            await new Promise(resolve => setTimeout(resolve, 100)); // Simulating delay
-            observer.update(this.temperature, this.humidity, this.pressure);
-        }
-    }
-
-    // Sort observers by priority
-    private sortObservers(): void {
-        this.observers.sort((a, b) => {
-            const priorityA = this.observerPriorities.get(a) || 0;
-            const priorityB = this.observerPriorities.get(b) || 0;
-            return priorityB - priorityA; // Higher priority first
-        });
-    }
+  // Sort observers by priority
+  private sortObservers(): void {
+    this.observers.sort((a, b) => {
+      const priorityA = this.observerPriorities.get(a) || 0;
+      const priorityB = this.observerPriorities.get(b) || 0;
+      return priorityB - priorityA; // Higher priority first
+    });
+  }
 }
 
 // ==========================
@@ -116,8 +129,8 @@ class WeatherStation {
 const weatherStation = new WeatherStation();
 
 // Create observers
-const display1 = new DisplayElement("Display 1");
-const display2 = new DisplayElement("Display 2");
+const display1 = new DisplayElement('Display 1');
+const display2 = new DisplayElement('Display 2');
 const alertSystem = new AlertSystem(30); // Alert if temperature exceeds 30°C
 
 // Add observers to the weather station with different priorities
@@ -132,7 +145,6 @@ weatherStation.setWeatherData(32, 70, 1010); // High temperature, alert should t
 // Remove an observer and update again
 weatherStation.removeObserver(display1);
 weatherStation.setWeatherData(28, 60, 1012); // Only display2 and alertSystem should receive updates
-
 
 // ### Key Features and Further Extensions Covered:
 //   1. **Asynchronous Updates**:

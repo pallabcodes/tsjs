@@ -11,103 +11,106 @@
 //
 // We will create a `StockPriceNotifier` class that acts as both the **Mediator** and **Observer**, and manage the stock price updates and notifications efficiently.
 
-
 interface Observer {
-    update(stockSymbol: string, price: number): void;
+  update(stockSymbol: string, price: number): void;
 }
 
 class StockPriceNotifier implements Observer {
-    private users: Set<Observer> = new Set();
-    private priceHistory: Map<string, number> = new Map();
-    private notificationQueue: string[] = [];
-    private failedNotifications: string[] = [];
-    private notificationRateLimit: number = 5; // Limit notifications per minute
-    private notificationTimeout: number = 60000; // 1-minute window for rate-limiting
-    private lastNotificationTime: number = Date.now();
+  private users: Set<Observer> = new Set();
+  private priceHistory: Map<string, number> = new Map();
+  private notificationQueue: string[] = [];
+  private failedNotifications: string[] = [];
+  private notificationRateLimit = 5; // Limit notifications per minute
+  private notificationTimeout = 60000; // 1-minute window for rate-limiting
+  private lastNotificationTime: number = Date.now();
 
-    constructor(private stockSymbol: string) {}
+  constructor(private stockSymbol: string) {}
 
-    // Method to register users as observers
-    registerObserver(user: Observer): void {
-        this.users.add(user);
+  // Method to register users as observers
+  registerObserver(user: Observer): void {
+    this.users.add(user);
+  }
+
+  // Method to unregister users from notifications
+  unregisterObserver(user: Observer): void {
+    this.users.delete(user);
+  }
+
+  // Method to update stock price
+  async updateStockPrice(stockSymbol: string, newPrice: number): Promise<void> {
+    try {
+      // Validate price change (for example, only allow price updates > 0)
+      if (newPrice <= 0) {
+        throw new Error(
+          'Invalid stock price update: Price must be greater than 0'
+        );
+      }
+
+      // Store the new price for historical tracking
+      this.priceHistory.set(stockSymbol, newPrice);
+
+      // Handle rate-limiting and notification
+      const now = Date.now();
+      if (now - this.lastNotificationTime > this.notificationTimeout) {
+        this.notificationQueue = []; // Reset the queue after rate limit window
+      }
+
+      // Check if we can notify users based on the rate limit
+      if (this.notificationQueue.length < this.notificationRateLimit) {
+        this.lastNotificationTime = now;
+        this.notificationQueue.push(stockSymbol);
+        this.notifyUsers(stockSymbol, newPrice);
+      } else {
+        console.log('Rate limit reached: Notifications are delayed.');
+      }
+    } catch (error) {
+      console.error('Error updating stock price:', (error as Error).message);
+      this.retryFailedNotification(stockSymbol, newPrice);
     }
+  }
 
-    // Method to unregister users from notifications
-    unregisterObserver(user: Observer): void {
-        this.users.delete(user);
+  // Method to notify all observers about the stock price change
+  private async notifyUsers(
+    stockSymbol: string,
+    newPrice: number
+  ): Promise<void> {
+    try {
+      // Simulate async behavior (e.g., WebSocket or API call)
+      await new Promise(resolve => setTimeout(resolve, 500)); // Simulate network delay
+
+      this.users.forEach(user => {
+        user.update(stockSymbol, newPrice);
+      });
+    } catch (error) {
+      console.error('Error sending notifications:', (error as Error).message);
+      this.retryFailedNotification(stockSymbol, newPrice);
     }
+  }
 
-    // Method to update stock price
-    async updateStockPrice(stockSymbol: string, newPrice: number): Promise<void> {
-        try {
-            // Validate price change (for example, only allow price updates > 0)
-            if (newPrice <= 0) {
-                throw new Error("Invalid stock price update: Price must be greater than 0");
-            }
+  // Method to retry failed notifications
+  private retryFailedNotification(stockSymbol: string, newPrice: number): void {
+    console.log('Retrying failed notifications...');
 
-            // Store the new price for historical tracking
-            this.priceHistory.set(stockSymbol, newPrice);
+    this.failedNotifications.push(stockSymbol);
+    setTimeout(() => {
+      console.log(`Retrying stock price notification for ${stockSymbol}`);
+      this.updateStockPrice(stockSymbol, newPrice); // Retry sending notification
+    }, 5000); // Retry after 5 seconds
+  }
 
-            // Handle rate-limiting and notification
-            const now = Date.now();
-            if (now - this.lastNotificationTime > this.notificationTimeout) {
-                this.notificationQueue = []; // Reset the queue after rate limit window
-            }
-
-            // Check if we can notify users based on the rate limit
-            if (this.notificationQueue.length < this.notificationRateLimit) {
-                this.lastNotificationTime = now;
-                this.notificationQueue.push(stockSymbol);
-                this.notifyUsers(stockSymbol, newPrice);
-            } else {
-                console.log("Rate limit reached: Notifications are delayed.");
-            }
-
-        } catch (error) {
-            console.error("Error updating stock price:", error.message);
-            this.retryFailedNotification(stockSymbol, newPrice);
-        }
-    }
-
-    // Method to notify all observers about the stock price change
-    private async notifyUsers(stockSymbol: string, newPrice: number): Promise<void> {
-        try {
-            // Simulate async behavior (e.g., WebSocket or API call)
-            await new Promise((resolve) => setTimeout(resolve, 500)); // Simulate network delay
-
-            this.users.forEach((user) => {
-                user.update(stockSymbol, newPrice);
-            });
-        } catch (error) {
-            console.error("Error sending notifications:", error.message);
-            this.retryFailedNotification(stockSymbol, newPrice);
-        }
-    }
-
-    // Method to retry failed notifications
-    private retryFailedNotification(stockSymbol: string, newPrice: number): void {
-        console.log("Retrying failed notifications...");
-
-        this.failedNotifications.push(stockSymbol);
-        setTimeout(() => {
-            console.log(`Retrying stock price notification for ${stockSymbol}`);
-            this.updateStockPrice(stockSymbol, newPrice); // Retry sending notification
-        }, 5000); // Retry after 5 seconds
-    }
-
-    // Observer pattern implementation: Each user is notified of stock price changes
-    update(stockSymbol: string, price: number): void {
-        console.log(`Stock Price Update - ${stockSymbol}: $${price}`);
-    }
+  // Observer pattern implementation: Each user is notified of stock price changes
+  update(stockSymbol: string, price: number): void {
+    console.log(`Stock Price Update - ${stockSymbol}: $${price}`);
+  }
 }
 
 // Example of User class implementing Observer interface
 class User implements Observer {
-    constructor(private name: string) {}
+  constructor(private name: string) {}
 
-    update(stockSymbol: string, price: number): void {
-        console.log(`${this.name} received update - ${stockSymbol}: $${price}`);
-    }
+  update(stockSymbol: string, price: number): void {
+    console.log(`${this.name} received update - ${stockSymbol}: $${price}`);
+  }
 }
 
 // Example usage:
@@ -125,12 +128,12 @@ stockNotifier.registerObserver(user3);
 
 // Simulate stock price updates
 (async () => {
-    await stockNotifier.updateStockPrice('AAPL', 150);
-    await stockNotifier.updateStockPrice('AAPL', 155);
-    await stockNotifier.updateStockPrice('AAPL', 160); // More updates within the rate limit window
-    await stockNotifier.updateStockPrice('AAPL', 165);
-    await stockNotifier.updateStockPrice('AAPL', 170);
-    await stockNotifier.updateStockPrice('AAPL', 175); // Should hit rate-limiting
+  await stockNotifier.updateStockPrice('AAPL', 150);
+  await stockNotifier.updateStockPrice('AAPL', 155);
+  await stockNotifier.updateStockPrice('AAPL', 160); // More updates within the rate limit window
+  await stockNotifier.updateStockPrice('AAPL', 165);
+  await stockNotifier.updateStockPrice('AAPL', 170);
+  await stockNotifier.updateStockPrice('AAPL', 175); // Should hit rate-limiting
 })();
 
 // ### Key Features and How They're Implemented:

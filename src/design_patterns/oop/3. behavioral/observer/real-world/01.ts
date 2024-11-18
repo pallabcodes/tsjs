@@ -18,83 +18,110 @@
 // Observer Interface
 // ==========================
 interface Observer {
-    update(temperature: number, humidity: number, pressure: number): void;
+  update(temperature: number, humidity: number, pressure: number): void;
+}
+
+// Add interface for the subject
+interface Subject {
+  addObserver(observer: Observer): void;
+  removeObserver(observer: Observer): void;
+  notifyObservers(): void;
 }
 
 // ==========================
 // Concrete Observers
 // ==========================
 class DisplayElement implements Observer {
-    private id: string;
-    private temperature: number;
-    private humidity: number;
-    private pressure: number;
+  private id: string;
+  private temperature = 0;
+  private humidity = 0;
+  private pressure = 0;
 
-    constructor(id: string) {
-        this.id = id;
-    }
+  constructor(id: string) {
+    this.id = id;
+  }
 
-    update(temperature: number, humidity: number, pressure: number): void {
-        this.temperature = temperature;
-        this.humidity = humidity;
-        this.pressure = pressure;
-        this.display();
-    }
+  update(temperature: number, humidity: number, pressure: number): void {
+    this.temperature = temperature;
+    this.humidity = humidity;
+    this.pressure = pressure;
+    this.display();
+  }
 
-    display(): void {
-        console.log(`${this.id} - Temperature: ${this.temperature}°C, Humidity: ${this.humidity}%, Pressure: ${this.pressure} hPa`);
-    }
+  display(): void {
+    console.log(
+      `${this.id} - Temperature: ${this.temperature}°C, Humidity: ${this.humidity}%, Pressure: ${this.pressure} hPa`
+    );
+  }
 }
 
 class AlertSystem implements Observer {
-    private threshold: number;
+  private threshold: number;
 
-    constructor(threshold: number) {
-        this.threshold = threshold;
-    }
+  constructor(threshold: number) {
+    this.threshold = threshold;
+  }
 
-    update(temperature: number, humidity: number, pressure: number): void {
-        if (temperature > this.threshold) {
-            this.sendAlert(temperature);
-        }
+  update(temperature: number, _humidity: number, _pressure: number): void {
+    if (temperature > this.threshold) {
+      this.sendAlert(temperature);
     }
+  }
 
-    private sendAlert(temperature: number): void {
-        console.log(`ALERT: Temperature exceeds threshold! Current: ${temperature}°C`);
-    }
+  private sendAlert(temperature: number): void {
+    console.log(
+      `ALERT: Temperature exceeds threshold! Current: ${temperature}°C`
+    );
+  }
 }
 
 // ==========================
 // Subject (Weather Station)
 // ==========================
-class WeatherStation {
-    private observers: Observer[] = [];
-    private temperature: number = 0;
-    private humidity: number = 0;
-    private pressure: number = 0;
+class WeatherStation implements Subject {
+  private observers: Set<Observer> = new Set(); // Use Set instead of Array
+  private temperature = 0;
+  private humidity = 0;
+  private pressure = 0;
 
-    addObserver(observer: Observer): void {
-        this.observers.push(observer);
+  addObserver(observer: Observer): void {
+    if (!observer) throw new Error('Observer cannot be null');
+    this.observers.add(observer);
+  }
+
+  removeObserver(observer: Observer): void {
+    this.observers.delete(observer);
+  }
+
+  notifyObservers(): void {
+    this.observers.forEach(observer => {
+      observer.update(this.temperature, this.humidity, this.pressure);
+    });
+  }
+
+  setWeatherData(
+    temperature: number,
+    humidity: number,
+    pressure: number
+  ): void {
+    // Add input validation
+    if (
+      !Number.isFinite(temperature) ||
+      !Number.isFinite(humidity) ||
+      !Number.isFinite(pressure)
+    ) {
+      throw new Error('Invalid weather data values');
     }
 
-    removeObserver(observer: Observer): void {
-        this.observers = this.observers.filter(o => o !== observer);
-    }
+    console.log(
+      `Weather data updated: Temperature: ${temperature}°C, Humidity: ${humidity}%, Pressure: ${pressure} hPa`
+    );
 
-    notifyObservers(): void {
-        for (const observer of this.observers) {
-            observer.update(this.temperature, this.humidity, this.pressure);
-        }
-    }
-
-    // Simulate weather data update
-    setWeatherData(temperature: number, humidity: number, pressure: number): void {
-        console.log(`Weather data updated: Temperature: ${temperature}°C, Humidity: ${humidity}%, Pressure: ${pressure} hPa`);
-        this.temperature = temperature;
-        this.humidity = humidity;
-        this.pressure = pressure;
-        this.notifyObservers();
-    }
+    this.temperature = temperature;
+    this.humidity = humidity;
+    this.pressure = pressure;
+    this.notifyObservers();
+  }
 }
 
 // ==========================
@@ -103,8 +130,8 @@ class WeatherStation {
 const weatherStation = new WeatherStation();
 
 // Create observers
-const display1 = new DisplayElement("Display 1");
-const display2 = new DisplayElement("Display 2");
+const display1 = new DisplayElement('Display 1');
+const display2 = new DisplayElement('Display 2');
 const alertSystem = new AlertSystem(30); // Alert if temperature exceeds 30°C
 
 // Add observers to the weather station
@@ -119,7 +146,6 @@ weatherStation.setWeatherData(32, 70, 1010); // High temperature, alert should t
 // Remove an observer and update again
 weatherStation.removeObserver(display1);
 weatherStation.setWeatherData(28, 60, 1012); // Only display2 and alertSystem should receive updates
-
 
 // ### Key Concepts Covered by This Example:
 //

@@ -55,17 +55,16 @@ class CryptoPayment implements PaymentStrategy {
 // Context Class
 // ==============================
 class PaymentProcessor {
-  private strategy: PaymentStrategy;
-
-  constructor(strategy: PaymentStrategy) {
-    this.strategy = strategy;
-  }
+  constructor(private strategy: PaymentStrategy) {}
 
   setStrategy(strategy: PaymentStrategy): void {
     this.strategy = strategy;
   }
 
   process(amount: number): string {
+    if (amount <= 0) {
+      throw new Error('Amount must be greater than 0');
+    }
     return this.strategy.processPayment(amount);
   }
 }
@@ -73,9 +72,9 @@ class PaymentProcessor {
 // ==============================
 // Usage Example
 // ==============================
-const creditCardPayment = new CreditCardPayment("1234-5678-9012-3456");
-const payPalPayment = new PayPalPayment("user@example.com");
-const cryptoPayment = new CryptoPayment("0xabc123...");
+const creditCardPayment = new CreditCardPayment('1234-5678-9012-3456');
+const payPalPayment = new PayPalPayment('user@example.com');
+const cryptoPayment = new CryptoPayment('0xabc123...');
 
 // Context initialization with default strategy
 const paymentProcessor = new PaymentProcessor(creditCardPayment);
@@ -112,7 +111,6 @@ console.log(paymentProcessor.process(300)); // Output: Processed payment of $300
 //   File Export:
 //   Generate reports in PDF, Excel, or CSV formats.
 
-
 // Does This Example Fully Show the Power of Strategy Pattern?
 //   Yes, this example is sufficient for most real-world cases in product-based standards because:
 //   It demonstrates dynamic behavior selection, extensibility, and encapsulation of algorithms.
@@ -122,11 +120,9 @@ console.log(paymentProcessor.process(300)); // Output: Processed payment of $300
 //   Consider integrations with frameworks or libraries in actual projects to see how the Strategy Pattern interacts with larger systems.
 //   By combining this example with the outlined scenarios, you'll have a solid understanding of the Strategy Pattern and how to apply it in real-world product-based applications.
 
-
 // ### Strategy Pattern in Additional Domains
 
 // To expand the perspective on the **Strategy Pattern**, let's implement it in different domains, focusing on sorting, compression, and authentication. This demonstrates its applicability and flexibility in various real-world contexts. We'll also consider framework integrations to showcase how the pattern works in larger systems.
-
 
 // ### 1. **Sorting Algorithms**
 
@@ -134,46 +130,48 @@ console.log(paymentProcessor.process(300)); // Output: Processed payment of $300
 
 // Strategy Interface
 interface SortStrategy {
-    sort(data: number[]): number[];
+  sort(data: number[]): number[];
 }
 
 // Concrete Strategies
 class QuickSort implements SortStrategy {
-    sort(data: number[]): number[] {
-        // Simplified quicksort logic
-        return data.sort((a, b) => a - b);
-    }
+  sort(data: number[]): number[] {
+    // Simplified quicksort logic
+    return data.sort((a, b) => a - b);
+  }
 }
 
 class BubbleSort implements SortStrategy {
-    sort(data: number[]): number[] {
-        // Simplified bubble sort logic
-        for (let i = 0; i < data.length; i++) {
-            for (let j = 0; j < data.length - i - 1; j++) {
-                if (data[j] > data[j + 1]) {
-                    [data[j], data[j + 1]] = [data[j + 1], data[j]];
-                }
-            }
+  sort(data: number[]): number[] {
+    const sortedData = [...data];
+    for (let i = 0; i < sortedData.length; i++) {
+      for (let j = 0; j < sortedData.length - i - 1; j++) {
+        if (sortedData[j]! > sortedData[j + 1]!) {
+          const temp = sortedData[j]!;
+          sortedData[j] = sortedData[j + 1]!;
+          sortedData[j + 1] = temp;
         }
-        return data;
+      }
     }
+    return sortedData;
+  }
 }
 
 // Context Class
 class SortingContext {
-    private strategy: SortStrategy;
+  private strategy: SortStrategy;
 
-    constructor(strategy: SortStrategy) {
-        this.strategy = strategy;
-    }
+  constructor(strategy: SortStrategy) {
+    this.strategy = strategy;
+  }
 
-    setStrategy(strategy: SortStrategy): void {
-        this.strategy = strategy;
-    }
+  setStrategy(strategy: SortStrategy): void {
+    this.strategy = strategy;
+  }
 
-    sort(data: number[]): number[] {
-        return this.strategy.sort(data);
-    }
+  sort(data: number[]): number[] {
+    return this.strategy.sort(data);
+  }
 }
 
 // Usage Example
@@ -191,37 +189,37 @@ console.log('QuickSort:', context.sort(data)); // Output: [1, 2, 5, 5, 6, 9]
 
 // Strategy Interface
 interface CompressionStrategy {
-    compress(files: string[]): string;
+  compress(files: string[]): string;
 }
 
 // Concrete Strategies
 class ZipCompression implements CompressionStrategy {
-    compress(files: string[]): string {
-        return `Compressed ${files.length} files into a ZIP archive.`;
-    }
+  compress(files: string[]): string {
+    return `Compressed ${files.length} files into a ZIP archive.`;
+  }
 }
 
 class GzipCompression implements CompressionStrategy {
-    compress(files: string[]): string {
-        return `Compressed ${files.length} files into a GZIP archive.`;
-    }
+  compress(files: string[]): string {
+    return `Compressed ${files.length} files into a GZIP archive.`;
+  }
 }
 
 // Context Class
 class CompressionContext {
-    private strategy: CompressionStrategy;
+  private strategy: CompressionStrategy;
 
-    constructor(strategy: CompressionStrategy) {
-        this.strategy = strategy;
-    }
+  constructor(strategy: CompressionStrategy) {
+    this.strategy = strategy;
+  }
 
-    setStrategy(strategy: CompressionStrategy): void {
-        this.strategy = strategy;
-    }
+  setStrategy(strategy: CompressionStrategy): void {
+    this.strategy = strategy;
+  }
 
-    compressFiles(files: string[]): string {
-        return this.strategy.compress(files);
-    }
+  compressFiles(files: string[]): string {
+    return this.strategy.compress(files);
+  }
 }
 
 // Usage Example
@@ -233,50 +231,49 @@ console.log(compressionContext.compressFiles(files)); // Output: Compressed 3 fi
 compressionContext.setStrategy(new GzipCompression());
 console.log(compressionContext.compressFiles(files)); // Output: Compressed 3 files into a GZIP archive.
 
-
 // ### 3. **Authentication Mechanisms**
 
 // Switching between different authentication methods like JWT, OAuth2, or Session-Based Authentication.
 
 // Strategy Interface
 interface AuthStrategy {
-    authenticate(user: string, password: string): string;
+  authenticate(user: string, password: string): string;
 }
 
 // Concrete Strategies
 class JwtAuth implements AuthStrategy {
-    authenticate(user: string, password: string): string {
-        return `${user} authenticated using JWT.`;
-    }
+  authenticate(user: string, _password: string): string {
+    return `${user} authenticated using JWT.`;
+  }
 }
 
 class OAuth2Auth implements AuthStrategy {
-    authenticate(user: string, password: string): string {
-        return `${user} authenticated using OAuth2.`;
-    }
+  authenticate(user: string, _password: string): string {
+    return `${user} authenticated using OAuth2.`;
+  }
 }
 
 class SessionAuth implements AuthStrategy {
-    authenticate(user: string, password: string): string {
-        return `${user} authenticated using Session-Based Authentication.`;
-    }
+  authenticate(user: string, _password: string): string {
+    return `${user} authenticated using Session-Based Authentication.`;
+  }
 }
 
 // Context Class
 class AuthContext {
-    private strategy: AuthStrategy;
+  private strategy: AuthStrategy;
 
-    constructor(strategy: AuthStrategy) {
-        this.strategy = strategy;
-    }
+  constructor(strategy: AuthStrategy) {
+    this.strategy = strategy;
+  }
 
-    setStrategy(strategy: AuthStrategy): void {
-        this.strategy = strategy;
-    }
+  setStrategy(strategy: AuthStrategy): void {
+    this.strategy = strategy;
+  }
 
-    authenticateUser(user: string, password: string): string {
-        return this.strategy.authenticate(user, password);
-    }
+  authenticateUser(user: string, password: string): string {
+    return this.strategy.authenticate(user, password);
+  }
 }
 
 // Usage Example
@@ -338,22 +335,38 @@ console.log(authContext.authenticateUser('Charlie', 'password789')); // Output: 
 //   }
 // }
 
+// Add this service class before the SortComponent
+class SortService {
+  private strategy: SortStrategy;
+
+  constructor() {
+    this.strategy = new QuickSort(); // Default strategy
+  }
+
+  setStrategy(strategy: SortStrategy): void {
+    this.strategy = strategy;
+  }
+
+  sort(data: number[]): number[] {
+    return this.strategy.sort(data);
+  }
+}
 
 export class SortComponent {
-    data = [5, 2, 9, 1, 5, 6];
-    sortedData: number[] = [];
+  private data: number[] = [5, 2, 9, 1, 5, 6];
+  private sortedData: number[] = [];
 
-    constructor(private sortService: SortService) {}
+  constructor(private readonly sortService: SortService) {}
 
-    useQuickSort() {
-        this.sortService.setStrategy(new QuickSort());
-        this.sortedData = this.sortService.sort(this.data);
-    }
+  useQuickSort(): void {
+    this.sortService.setStrategy(new QuickSort());
+    this.sortedData = this.sortService.sort([...this.data]);
+  }
 
-    useBubbleSort() {
-        this.sortService.setStrategy(new BubbleSort());
-        this.sortedData = this.sortService.sort(this.data);
-    }
+  useBubbleSort(): void {
+    this.sortService.setStrategy(new BubbleSort());
+    this.sortedData = this.sortService.sort([...this.data]);
+  }
 }
 
 //

@@ -13,65 +13,65 @@
 // Memento Class: State Snapshot
 // ==============================
 class TextEditorMemento {
-    constructor(public readonly content: string) {}
+  constructor(public readonly content: string) {}
 }
 
 // ==============================
 // Originator: Text Editor
 // ==============================
 class TextEditor {
-    private content: string = "";
+  private content = '';
 
-    write(text: string): void {
-        this.content += text;
-    }
+  write(text: string): void {
+    this.content += text;
+  }
 
-    deleteLastNChars(n: number): void {
-        this.content = this.content.slice(0, -n);
-    }
+  deleteLastNChars(n: number): void {
+    this.content = this.content.slice(0, -n);
+  }
 
-    getContent(): string {
-        return this.content;
-    }
+  getContent(): string {
+    return this.content;
+  }
 
-    save(): TextEditorMemento {
-        return new TextEditorMemento(this.content);
-    }
+  save(): TextEditorMemento {
+    return new TextEditorMemento(this.content);
+  }
 
-    restore(memento: TextEditorMemento): void {
-        this.content = memento.content;
-    }
+  restore(memento: TextEditorMemento): void {
+    this.content = memento.content;
+  }
 }
 
 // ==============================
 // Caretaker: Manages Mementos
 // ==============================
 class UndoRedoManager {
-    private history: TextEditorMemento[] = [];
-    private redoStack: TextEditorMemento[] = [];
+  private history: TextEditorMemento[] = [];
+  private redoStack: TextEditorMemento[] = [];
 
-    save(memento: TextEditorMemento): void {
-        this.history.push(memento);
-        this.redoStack = []; // Clear redo stack on new changes
-    }
+  save(memento: TextEditorMemento): void {
+    this.history.push(memento);
+    this.redoStack = []; // Clear redo stack on new changes
+  }
 
-    undo(): TextEditorMemento | null {
-        if (this.history.length > 0) {
-            const memento = this.history.pop()!;
-            this.redoStack.push(memento);
-            return memento;
-        }
-        return null;
+  undo(): TextEditorMemento | null {
+    if (this.history.length > 0) {
+      const memento = this.history.pop()!;
+      this.redoStack.push(memento);
+      return memento;
     }
+    return null;
+  }
 
-    redo(): TextEditorMemento | null {
-        if (this.redoStack.length > 0) {
-            const memento = this.redoStack.pop()!;
-            this.history.push(memento);
-            return memento;
-        }
-        return null;
+  redo(): TextEditorMemento | null {
+    if (this.redoStack.length > 0) {
+      const memento = this.redoStack.pop()!;
+      this.history.push(memento);
+      return memento;
     }
+    return null;
+  }
 }
 
 // ==============================
@@ -80,31 +80,30 @@ class UndoRedoManager {
 const editor = new TextEditor();
 const undoRedoManager = new UndoRedoManager();
 
-editor.write("Hello, ");
+editor.write('Hello, ');
 undoRedoManager.save(editor.save());
 
-editor.write("world!");
+editor.write('world!');
 undoRedoManager.save(editor.save());
 
-console.log("Content after writing:", editor.getContent()); // "Hello, world!"
+console.log('Content after writing:', editor.getContent()); // "Hello, world!"
 
 editor.deleteLastNChars(6);
-console.log("Content after deletion:", editor.getContent()); // "Hello, "
+console.log('Content after deletion:', editor.getContent()); // "Hello, "
 
 // Undo the deletion
 const undoState = undoRedoManager.undo();
 if (undoState) {
-    editor.restore(undoState);
-    console.log("Content after undo:", editor.getContent()); // "Hello, world!"
+  editor.restore(undoState);
+  console.log('Content after undo:', editor.getContent()); // "Hello, world!"
 }
 
 // Redo the deletion
 const redoState = undoRedoManager.redo();
 if (redoState) {
-    editor.restore(redoState);
-    console.log("Content after redo:", editor.getContent()); // "Hello, "
+  editor.restore(redoState);
+  console.log('Content after redo:', editor.getContent()); // "Hello, "
 }
-
 
 // ### Explanation of the Example
 //
@@ -126,7 +125,6 @@ if (redoState) {
 // - **Encapsulation**: State is saved and restored without exposing the internals of the originator.
 // - **Robustness**: Undo/redo logic is handled in a separate class (`UndoRedoManager`), adhering to the **Single Responsibility Principle**.
 
-
 // ### Why This Example Covers the Full Power of the Memento Pattern
 // 1. **Core Features of Memento Pattern:**
 // - **Saving State**: `TextEditorMemento` captures snapshots.
@@ -139,7 +137,6 @@ if (redoState) {
 // 3. **Extension for More Complexity:**
 // - Easily scalable to include more attributes in the state, like cursor position, selected text, or formatting.
 // - Can integrate with distributed systems for collaborative editing (e.g., version history in Google Docs).
-
 
 // ### Is This Example Enough?
 

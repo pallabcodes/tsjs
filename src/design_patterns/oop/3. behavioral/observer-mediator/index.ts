@@ -12,7 +12,6 @@
 
 // In a **chat application**, we can apply both the **Observer** and **Mediator** patterns to manage the communication between users and update their statuses. The **Mediator** coordinates interactions between users, and the **Observer** pattern is used to notify users about other users' status changes.
 
-
 // ### Full Example: Chat Application with User Status Updates
 // We will simulate a chat application where users can change their statuses (online, offline, busy), and the **Mediator** will coordinate the interactions and notifications between users. The **Observer** will allow users to observe the status of other users in the system.
 
@@ -24,48 +23,45 @@
 
 // The **ChatRoom** will act as the mediator, coordinating the status updates between users.
 
-
 // #### **Step 1: Define the Observer (User) Class**
 
-
 interface UserObserver {
-    update(userStatus: string): void;
+  update(userStatus: string): void;
 }
 
 class User implements UserObserver {
-    private status: string;
-    private username: string;
+  private status: string;
+  private username: string;
 
-    constructor(username: string) {
-        this.username = username;
-        this.status = 'offline'; // default status
-    }
+  constructor(username: string) {
+    this.username = username;
+    this.status = 'offline'; // default status
+  }
 
-    // Implementing the update method from UserObserver
-    update(userStatus: string): void {
-        this.status = userStatus;
-        console.log(`${this.username}'s status has been updated to: ${this.status}`);
+  // Implementing the update method from UserObserver
+  update(userStatus: string): void {
+    this.status = userStatus;
+    console.log(
+      `${this.username}'s status has been updated to: ${this.status}`
+    );
+  }
+
+  // Method to change user status
+  changeStatus(newStatus: string) {
+    this.status = newStatus;
+  }
+
+  getStatus() {
+    return this.status;
+  }
+
+  getUsername() {
+    return this.username;
+  }
 }
-
-// Method to change user status
-changeStatus(newStatus: string) {
-  this.status = newStatus;
-}
-
-getStatus() {
-  return this.status;
-}
-
-getUsername() {
-  return this.username;
-}
-
-}
-
 
 // - **User Class**: Each user has a status and can observe changes in other users' statuses. When a user's status changes, all observers (other users) will be notified.
 // #### **Step 2: Define the Mediator (ChatRoom) Class**
-
 
 interface Mediator {
   registerUser(user: User): void;
@@ -82,7 +78,7 @@ class ChatRoom implements Mediator {
 
   // Notify all users about a status change
   notifyUsers(changedUser: User, newStatus: string): void {
-    for (let user of this.users) {
+    for (const user of this.users) {
       // Don't notify the user who changed the status
       if (user !== changedUser) {
         user.update(newStatus);

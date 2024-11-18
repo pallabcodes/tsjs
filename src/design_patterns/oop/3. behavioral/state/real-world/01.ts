@@ -16,137 +16,144 @@
 // - Encapsulation of state-specific logic within individual classes.
 // - Compliance with product-based development standards by separating concerns and ensuring extensibility.
 
-
 // ### Complete Example: Order Management with State Pattern
 
 // ==========================
 // State Interface
 // ==========================
 interface OrderState {
-    proceed(): void;
-    cancel(): void;
-    getStatus(): string;
+  proceed(): void;
+  cancel(): void;
+  getStatus(): string;
 }
 
 // ==========================
 // Context Class
 // ==========================
 class Order {
-    private state: OrderState;
+  private state: OrderState;
 
-    constructor(initialState: OrderState) {
-        this.state = initialState;
-    }
+  constructor(initialState: OrderState) {
+    this.state = initialState;
+  }
 
-    setState(state: OrderState): void {
-        this.state = state;
-    }
+  setState(state: OrderState): void {
+    this.state = state;
+  }
 
-    proceed(): void {
-        this.state.proceed();
-    }
+  proceed(): void {
+    this.state.proceed();
+  }
 
-    cancel(): void {
-        this.state.cancel();
-    }
+  cancel(): void {
+    this.state.cancel();
+  }
 
-    getStatus(): string {
-        return this.state.getStatus();
-    }
+  getStatus(): string {
+    return this.state.getStatus();
+  }
 }
 
 // ==========================
 // Concrete State Classes
 // ==========================
 class PendingState implements OrderState {
-    constructor(private order: Order) {}
+  private order?: Order;
 
-    proceed(): void {
-        console.log("Order is now being processed.");
-        this.order.setState(new ProcessingState(this.order));
-    }
+  setOrder(order: Order) {
+    this.order = order;
+  }
 
-    cancel(): void {
-        console.log("Order has been cancelled.");
-        this.order.setState(new CancelledState(this.order));
-    }
+  proceed(): void {
+    if (!this.order) throw new Error('Order not set');
+    console.log('Order is now being processed.');
+    this.order.setState(new ProcessingState(this.order));
+  }
 
-    getStatus(): string {
-        return "Pending";
-    }
+  cancel(): void {
+    if (!this.order) throw new Error('Order not set');
+    console.log('Order has been cancelled.');
+    this.order.setState(new CancelledState(this.order));
+  }
+
+  getStatus(): string {
+    return 'Pending';
+  }
 }
 
 class ProcessingState implements OrderState {
-    constructor(private order: Order) {}
+  constructor(private order: Order) {}
 
-    proceed(): void {
-        console.log("Order has been shipped.");
-        this.order.setState(new ShippedState(this.order));
-    }
+  proceed(): void {
+    console.log('Order has been shipped.');
+    this.order.setState(new ShippedState(this.order));
+  }
 
-    cancel(): void {
-        console.log("Order has been cancelled.");
-        this.order.setState(new CancelledState(this.order));
-    }
+  cancel(): void {
+    console.log('Order has been cancelled.');
+    this.order.setState(new CancelledState(this.order));
+  }
 
-    getStatus(): string {
-        return "Processing";
-    }
+  getStatus(): string {
+    return 'Processing';
+  }
 }
 
 class ShippedState implements OrderState {
-    constructor(private order: Order) {}
+  constructor(private order: Order) {}
 
-    proceed(): void {
-        console.log("Order has been delivered.");
-        this.order.setState(new DeliveredState(this.order));
-    }
+  proceed(): void {
+    console.log('Order has been delivered.');
+    this.order.setState(new DeliveredState(this.order));
+  }
 
-    cancel(): void {
-        console.log("Order cannot be cancelled after it has been shipped.");
-    }
+  cancel(): void {
+    console.log('Order cannot be cancelled after it has been shipped.');
+  }
 
-    getStatus(): string {
-        return "Shipped";
-    }
+  getStatus(): string {
+    return 'Shipped';
+  }
 }
 
 class DeliveredState implements OrderState {
-    constructor(private order: Order) {}
+  constructor(private order: Order) {}
 
-    proceed(): void {
-        console.log("Order is already delivered. No further actions can be taken.");
-    }
+  proceed(): void {
+    console.log('Order is already delivered. No further actions can be taken.');
+  }
 
-    cancel(): void {
-        console.log("Order cannot be cancelled after delivery.");
-    }
+  cancel(): void {
+    console.log('Order cannot be cancelled after delivery.');
+  }
 
-    getStatus(): string {
-        return "Delivered";
-    }
+  getStatus(): string {
+    return 'Delivered';
+  }
 }
 
 class CancelledState implements OrderState {
-    constructor(private order: Order) {}
+  constructor(private order: Order) {}
 
-    proceed(): void {
-        console.log("Cancelled orders cannot be processed further.");
-    }
+  proceed(): void {
+    console.log('Cancelled orders cannot be processed further.');
+  }
 
-    cancel(): void {
-        console.log("Order is already cancelled.");
-    }
+  cancel(): void {
+    console.log('Order is already cancelled.');
+  }
 
-    getStatus(): string {
-        return "Cancelled";
-    }
+  getStatus(): string {
+    return 'Cancelled';
+  }
 }
 
 // ==========================
 // Usage Example
 // ==========================
-const order = new Order(new PendingState(order));
+const initialState = new PendingState();
+const order = new Order(initialState);
+initialState.setOrder(order);
 
 console.log(`Initial State: ${order.getStatus()}`);
 order.proceed(); // Proceed to Processing
@@ -157,7 +164,6 @@ order.cancel(); // Attempt to cancel after shipment
 console.log(`Current State: ${order.getStatus()}`);
 order.proceed(); // Proceed to Delivered
 console.log(`Current State: ${order.getStatus()}`);
-
 
 // ### Breakdown of Concepts in the Example:
 //
@@ -178,7 +184,6 @@ console.log(`Current State: ${order.getStatus()}`);
 // 5. **Real-World Context**:
 // - Systems like **e-commerce platforms**, **ticket booking systems**, and **workflow management tools** commonly use the State Pattern for managing the life cycle of orders, tickets, or tasks.
 
-
 // ### Does This Cover the Full Power of the State Pattern?
 //
 //   This example demonstrates the core principles and the "full power" of the **State Pattern** in real-world scenarios:
@@ -188,7 +193,7 @@ console.log(`Current State: ${order.getStatus()}`);
 // - It demonstrates the dynamic behavior of the context object as its state changes.
 // - It can handle multiple states and transitions without cluttering the code.
 //
-// ### Extensions for Product-Based Standards:
+// ### Extensions for Product-Based Standards**:
 //
 //   While this example is solid, here are some ways you could further enhance it:
 //
@@ -212,6 +217,3 @@ console.log(`Current State: ${order.getStatus()}`);
 // ### Conclusion
 //
 // This example, with its extensions, provides a comprehensive look at the **State Pattern** and how it can be applied in real-world, product-based scenarios. It’s sufficient to cover the key aspects and demonstrates the pattern's full power. If implemented with the suggested enhancements, it aligns well with industry standards for product-based development.
-
-
-

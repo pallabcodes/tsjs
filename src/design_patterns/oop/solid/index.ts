@@ -1,5 +1,5 @@
 // Scenario:
-//   We’re building a Product Management System that supports managing product information, applying discounts, and generating reports based on the products in a catalog. We want to ensure our system is flexible and maintainable, and follows the SOLID principles.
+// We’re building a Product Management System that supports managing product information, applying discounts, and generating reports based on the products in a catalog. We want to ensure our system is flexible and maintainable, and follows the SOLID principles.
 //
 //   SOLID Principles Overview:
 //   Single Responsibility Principle: A class should have only one reason to change.
@@ -54,7 +54,7 @@ class PercentageDiscount implements DiscountStrategy {
   constructor(private percentage: number) {}
 
   applyDiscount(product: Product): void {
-    product.price -= (product.price * (this.percentage / 100));
+    product.price -= product.price * (this.percentage / 100);
   }
 }
 
@@ -83,7 +83,9 @@ class ProductDiscount {
 }
 
 // Any subclass of DiscountStrategy can be used here without breaking the code
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const percentageDiscount = new ProductDiscount(new PercentageDiscount(10));
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const fixedDiscount = new ProductDiscount(new FixedDiscount(50));
 
 // ==========================
@@ -140,8 +142,17 @@ class ProductService {
     this.logger = logger;
   }
 
-  createAndSaveProduct(name: string, price: number, description: string): Product {
-    const product = new Product(Math.floor(Math.random() * 1000), name, price, description);  // Random ID for simplicity
+  createAndSaveProduct(
+    name: string,
+    price: number,
+    description: string
+  ): Product {
+    const product = new Product(
+      Math.floor(Math.random() * 1000),
+      name,
+      price,
+      description
+    ); // Random ID for simplicity
     this.productRepository.addProduct(product);
     this.logger.log(`Product created: ${product.name}`);
     return product;
@@ -157,20 +168,34 @@ class ProductService {
 // ==========================
 const productRepo = new ProductRepository();
 const consoleLogger = new ConsoleLogger();
+const productCreationService = new ProductCreationServiceImpl();
+
+// Create a product using the creation service
+const newProduct = productCreationService.createProduct(
+  'Product 2',
+  150,
+  'Another Sample Product'
+);
+productRepo.addProduct(newProduct);
 
 const productService = new ProductService(productRepo, consoleLogger);
 
 // Create and save a product
-const product = productService.createAndSaveProduct("Product 1", 100, "Sample Product");
+const product = productService.createAndSaveProduct(
+  'Product 1',
+  100,
+  'Sample Product'
+);
 
-console.log("Before Discount:", product);
+console.log('Before Discount:', product);
 
 // Apply a discount to the product
-const discountService = new DiscountApplicationServiceImpl(new PercentageDiscount(20));
+const discountService = new DiscountApplicationServiceImpl(
+  new PercentageDiscount(20)
+);
 discountService.applyDiscount(product);
 
-console.log("After Discount:", product);
-
+console.log('After Discount:', product);
 
 // SOLID Breakdown:
 //   1. Single Responsibility Principle (SRP):

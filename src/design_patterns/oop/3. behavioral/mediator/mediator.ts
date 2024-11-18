@@ -5,8 +5,8 @@ interface Mediator {
 
 // Concrete mediator to handle communication between components
 class ConcreteMediator implements Mediator {
-  private componentA: ComponentA;
-  private componentB: ComponentB;
+  private componentA!: ComponentA;
+  private componentB!: ComponentB;
 
   setComponentA(component: ComponentA) {
     this.componentA = component;
