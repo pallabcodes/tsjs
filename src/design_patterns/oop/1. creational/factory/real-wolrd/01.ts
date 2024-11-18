@@ -1,5 +1,3 @@
-// @ts-nocheck
-
 // While the example I provided is solid and covers various aspects of the **Factory Pattern** in the context of a configuration-driven system (like creating different components for database connections, API clients, and loggers), there are still areas where this example could be expanded to better represent the full range of **real-world scenarios** and **product-based standards** in a more complex system.
 
 // ### Additional Considerations for Factory Pattern in Real-World Product-Based Scenarios
@@ -8,7 +6,7 @@
 
 // 1. **Abstracting Dependencies and Frameworks:**
 //    - Often, products involve third-party frameworks or services (e.g., AWS SDKs, external payment providers, etc.). Factories can abstract the creation of these dependencies, ensuring the system is decoupled from specific third-party implementations.
-   
+
 // 2. **Dynamic Configuration Changes:**
 //    - The configuration used by the factory might change over time or be dependent on the runtime environment (e.g., cloud vs. on-prem, staging vs. production). Factories need to handle such changes dynamically.
 
@@ -19,7 +17,7 @@
 //    - For resource-heavy components like database connections, caching systems, or API clients, factories may handle object pooling to optimize resource usage.
 
 // 5. **Factory Method Variation for Scalability:**
-//    - You might need different factories for different types of components (e.g., one factory for managing database connections, another for managing external integrations). 
+//    - You might need different factories for different types of components (e.g., one factory for managing database connections, another for managing external integrations).
 
 // 6. **Error Handling and Logging:**
 //    - Factories often need to log creation errors, throw exceptions when invalid configurations are provided, or handle retries for resource creation.
@@ -41,150 +39,169 @@
 // Abstract Product Interfaces
 // ==========================
 interface DatabaseConnection {
-    connect(): void;
-    close(): void;
+  connect(): void;
+  close(): void;
 }
 
 interface APIClient {
-    makeRequest(endpoint: string): void;
+  makeRequest(endpoint: string): void;
 }
 
 interface Logger {
-    log(message: string): void;
+  log(message: string): void;
 }
 
 // ==========================
 // Concrete Products (Database Connections, API Clients, and Loggers)
 // ==========================
 class MySQLConnection implements DatabaseConnection {
-    connect() { console.log("Connected to MySQL"); }
-    close() { console.log("Closed MySQL connection"); }
+  connect() {
+    console.log('Connected to MySQL');
+  }
+  close() {
+    console.log('Closed MySQL connection');
+  }
 }
 
 class PostgreSQLConnection implements DatabaseConnection {
-    connect() { console.log("Connected to PostgreSQL"); }
-    close() { console.log("Closed PostgreSQL connection"); }
+  connect() {
+    console.log('Connected to PostgreSQL');
+  }
+  close() {
+    console.log('Closed PostgreSQL connection');
+  }
 }
 
 class RESTAPIClient implements APIClient {
-    makeRequest(endpoint: string) { console.log(`REST request to ${endpoint}`); }
+  makeRequest(endpoint: string) {
+    console.log(`REST request to ${endpoint}`);
+  }
 }
 
 class GraphQLAPIClient implements APIClient {
-    makeRequest(endpoint: string) { console.log(`GraphQL request to ${endpoint}`); }
+  makeRequest(endpoint: string) {
+    console.log(`GraphQL request to ${endpoint}`);
+  }
 }
 
 class ConsoleLogger implements Logger {
-    log(message: string) { console.log(`Console log: ${message}`); }
+  log(message: string) {
+    console.log(`Console log: ${message}`);
+  }
 }
 
 class FileLogger implements Logger {
-    log(message: string) { console.log(`File log: ${message}`); }
+  log(message: string) {
+    console.log(`File log: ${message}`);
+  }
 }
 
 // ==========================
 // Abstract Factory Interface
 // ==========================
 interface SystemComponentFactory {
-    createDatabaseConnection(): DatabaseConnection;
-    createAPIClient(): APIClient;
-    createLogger(): Logger;
+  createDatabaseConnection(): DatabaseConnection;
+  createAPIClient(): APIClient;
+  createLogger(): Logger;
 }
 
 // ==========================
 // Concrete Factory for Cloud Environment
 // ==========================
 class CloudSystemFactory implements SystemComponentFactory {
-    createDatabaseConnection(): DatabaseConnection {
-        return new PostgreSQLConnection(); // Cloud defaults to PostgreSQL
-    }
+  createDatabaseConnection(): DatabaseConnection {
+    return new PostgreSQLConnection(); // Cloud defaults to PostgreSQL
+  }
 
-    createAPIClient(): APIClient {
-        return new GraphQLAPIClient(); // Cloud defaults to GraphQL
-    }
+  createAPIClient(): APIClient {
+    return new GraphQLAPIClient(); // Cloud defaults to GraphQL
+  }
 
-    createLogger(): Logger {
-        return new FileLogger(); // Log to file in cloud environments
-    }
+  createLogger(): Logger {
+    return new FileLogger(); // Log to file in cloud environments
+  }
 }
 
 // ==========================
 // Concrete Factory for On-Premise Environment
 // ==========================
 class OnPremiseSystemFactory implements SystemComponentFactory {
-    createDatabaseConnection(): DatabaseConnection {
-        return new MySQLConnection(); // On-premise defaults to MySQL
-    }
+  createDatabaseConnection(): DatabaseConnection {
+    return new MySQLConnection(); // On-premise defaults to MySQL
+  }
 
-    createAPIClient(): APIClient {
-        return new RESTAPIClient(); // On-premise uses REST API
-    }
+  createAPIClient(): APIClient {
+    return new RESTAPIClient(); // On-premise uses REST API
+  }
 
-    createLogger(): Logger {
-        return new ConsoleLogger(); // Log to console in on-premise environments
-    }
+  createLogger(): Logger {
+    return new ConsoleLogger(); // Log to console in on-premise environments
+  }
 }
 
 // ==========================
 // Factory for Specific Use Case (e.g., External Service Integration)
 // ==========================
 class ExternalServiceIntegrationFactory implements SystemComponentFactory {
-    private integrationType: string;
+  private integrationType: string;
 
-    constructor(integrationType: string) {
-        this.integrationType = integrationType;
-    }
+  constructor(integrationType: string) {
+    this.integrationType = integrationType;
+  }
 
-    createDatabaseConnection(): DatabaseConnection {
-        throw new Error("External integration doesn't require direct database connection.");
-    }
+  createDatabaseConnection(): DatabaseConnection {
+    throw new Error(
+      "External integration doesn't require direct database connection."
+    );
+  }
 
-    createAPIClient(): APIClient {
-        if (this.integrationType === 'PaymentGateway') {
-            return new RESTAPIClient(); // Payment Gateway uses REST API
-        } else if (this.integrationType === 'CRM') {
-            return new GraphQLAPIClient(); // CRM integration uses GraphQL
-        }
-        throw new Error("Unsupported external service");
+  createAPIClient(): APIClient {
+    if (this.integrationType === 'PaymentGateway') {
+      return new RESTAPIClient(); // Payment Gateway uses REST API
+    } else if (this.integrationType === 'CRM') {
+      return new GraphQLAPIClient(); // CRM integration uses GraphQL
     }
+    throw new Error('Unsupported external service');
+  }
 
-    createLogger(): Logger {
-        return new FileLogger(); // Log external service events to a file
-    }
+  createLogger(): Logger {
+    return new FileLogger(); // Log external service events to a file
+  }
 }
 
 // ==========================
 // Client Code to Demonstrate Usage
 // ==========================
 function configureSystem(factory: SystemComponentFactory) {
-    const dbConnection = factory.createDatabaseConnection();
-    const apiClient = factory.createAPIClient();
-    const logger = factory.createLogger();
+  const dbConnection = factory.createDatabaseConnection();
+  const apiClient = factory.createAPIClient();
+  const logger = factory.createLogger();
 
-    dbConnection.connect();
-    apiClient.makeRequest("/getData");
-    logger.log("System configured successfully.");
+  dbConnection.connect();
+  apiClient.makeRequest('/getData');
+  logger.log('System configured successfully.');
 }
 
 // ==========================
 // Example Usage
 // ==========================
-console.log("Configuring Cloud System:");
+console.log('Configuring Cloud System:');
 const cloudFactory = new CloudSystemFactory();
 configureSystem(cloudFactory);
 
-console.log("\nConfiguring On-Premise System:");
+console.log('\nConfiguring On-Premise System:');
 const onPremFactory = new OnPremiseSystemFactory();
 configureSystem(onPremFactory);
 
-console.log("\nConfiguring External Service (Payment Gateway):");
-const paymentGatewayFactory = new ExternalServiceIntegrationFactory("PaymentGateway");
+console.log('\nConfiguring External Service (Payment Gateway):');
+const paymentGatewayFactory = new ExternalServiceIntegrationFactory(
+  'PaymentGateway'
+);
 configureSystem(paymentGatewayFactory);
 
-console.log("\nConfiguring External Service (CRM):");
-const crmFactory = new ExternalServiceIntegrationFactory("CRM");
+console.log('\nConfiguring External Service (CRM):');
+const crmFactory = new ExternalServiceIntegrationFactory('CRM');
 configureSystem(crmFactory);
-
 
 // ### Key Enhancements in This Example
 

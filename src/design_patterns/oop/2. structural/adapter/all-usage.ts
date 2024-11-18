@@ -87,16 +87,16 @@ class XmlToJsonAdapter implements JsonData {
 const xmlLibrary = new XmlLibrary();
 const adapter = new XmlToJsonAdapter(xmlLibrary);
 console.log(adapter.name); // Output: John
-console.log(adapter.age);  // Output: 30
+console.log(adapter.age); // Output: 30
 
 // #### 3. **Data Conversion**
 // - **Scenario**: A database returns data in a format that your application doesn't support. You need to adapt it to match your data models.
 // - **Adapter Use**: Convert the raw database result into the expected model format.
 // Raw Database Data (e.g., from a query)
 class RawDbData {
-  public userId: string = '123';
-  public userAge: string = '30';
-  public userName: string = 'John';
+  public userId = '123';
+  public userAge = '30';
+  public userName = 'John';
 }
 
 // Application's expected data format
@@ -130,9 +130,9 @@ class UserAdapter implements User {
 // Usage
 const rawDbData = new RawDbData();
 const userAdapter = new UserAdapter(rawDbData);
-console.log(userAdapter.id);   // Output: 123
+console.log(userAdapter.id); // Output: 123
 console.log(userAdapter.name); // Output: John
-console.log(userAdapter.age);  // Output: 30
+console.log(userAdapter.age); // Output: 30
 
 // #### 4. **Cross-Platform Compatibility**
 // - **Scenario**: Your application needs to communicate with multiple services (one using a REST API and another using GraphQL). You want to provide a unified interface.
@@ -189,7 +189,7 @@ const graphqlApi = new GraphqlApiService();
 const restAdapter = new RestApiAdapter(restApi);
 const graphqlAdapter = new GraphqlApiAdapter(graphqlApi);
 
-console.log(restAdapter.fetchData());   // Output: Data from REST API
+console.log(restAdapter.fetchData()); // Output: Data from REST API
 console.log(graphqlAdapter.fetchData()); // Output: Data from GraphQL API
 
 // #### 5. **External Service Adaptation**
@@ -232,8 +232,7 @@ const externalService = new ExternalWeatherService();
 const weatherAdapter = new WeatherAdapter(externalService);
 
 console.log(`Temperature: ${weatherAdapter.temperature}°C`); // Output: Temperature: 22°C
-console.log(`Humidity: ${weatherAdapter.humidity}%`);       // Output: Humidity: 75%
-
+console.log(`Humidity: ${weatherAdapter.humidity}%`); // Output: Humidity: 75%
 
 // ### Conclusion:
 // The **Adapter Pattern** is highly flexible and can be used in various real-world product scenarios, such as:

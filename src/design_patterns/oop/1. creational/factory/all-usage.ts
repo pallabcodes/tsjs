@@ -35,30 +35,30 @@ interface MealPlan {
 // Concrete Meal Plans
 class VeganMealPlan implements MealPlan {
   getDetails() {
-    return "Vegan meal plan with plant-based ingredients.";
+    return 'Vegan meal plan with plant-based ingredients.';
   }
 }
 
 class HealthyMealPlan implements MealPlan {
   getDetails() {
-    return "Healthy meal plan with low-fat and high-protein meals.";
+    return 'Healthy meal plan with low-fat and high-protein meals.';
   }
 }
 
 class MealPlanFactory {
   static createMealPlan(type: string): MealPlan {
-    if (type === "vegan") {
+    if (type === 'vegan') {
       return new VeganMealPlan();
-    } else if (type === "healthy") {
+    } else if (type === 'healthy') {
       return new HealthyMealPlan();
     } else {
-      throw new Error("Invalid meal plan type");
+      throw new Error('Invalid meal plan type');
     }
   }
 }
 
 // Usage example
-const veganPlan = MealPlanFactory.createMealPlan("vegan");
+const veganPlan = MealPlanFactory.createMealPlan('vegan');
 console.log(veganPlan.getDetails()); // "Vegan meal plan with plant-based ingredients."
 
 // #### 2. **Encapsulating Object Creation Logic**
@@ -76,18 +76,23 @@ class Meal {
 
 class MealFactory {
   static createMeal(type: string): Meal {
-    if (type === "vegan") {
-      return new Meal("Salad", "Veggie Stir Fry", "Vegan Pudding", "Vegan Shake");
-    } else if (type === "healthy") {
-      return new Meal("Fruit Salad", "Grilled Chicken", "Ice Cream", "Water");
+    if (type === 'vegan') {
+      return new Meal(
+        'Salad',
+        'Veggie Stir Fry',
+        'Vegan Pudding',
+        'Vegan Shake'
+      );
+    } else if (type === 'healthy') {
+      return new Meal('Fruit Salad', 'Grilled Chicken', 'Ice Cream', 'Water');
     } else {
-      throw new Error("Unknown meal type");
+      throw new Error('Unknown meal type');
     }
   }
 }
 
 // Usage example
-const healthyMeal = MealFactory.createMeal("healthy");
+const healthyMeal = MealFactory.createMeal('healthy');
 console.log(healthyMeal); // Meal { starter: 'Fruit Salad', main: 'Grilled Chicken', dessert: 'Ice Cream', drink: 'Water' }
 
 // #### 3. **Avoiding Direct Instantiation of Objects**
@@ -100,30 +105,30 @@ interface Shape {
 
 class Circle implements Shape {
   draw() {
-    console.log("Drawing a Circle");
+    console.log('Drawing a Circle');
   }
 }
 
 class Rectangle implements Shape {
   draw() {
-    console.log("Drawing a Rectangle");
+    console.log('Drawing a Rectangle');
   }
 }
 
 class ShapeFactory {
   static createShape(type: string): Shape {
-    if (type === "circle") {
+    if (type === 'circle') {
       return new Circle();
-    } else if (type === "rectangle") {
+    } else if (type === 'rectangle') {
       return new Rectangle();
     } else {
-      throw new Error("Invalid shape type");
+      throw new Error('Invalid shape type');
     }
   }
 }
 
 // Usage example
-const circle = ShapeFactory.createShape("circle");
+const circle = ShapeFactory.createShape('circle');
 circle.draw(); // "Drawing a Circle"
 
 // #### 4. **Creating Objects of Subclasses or Concrete Implementations**
@@ -148,18 +153,18 @@ class PayPalPayment implements PaymentMethod {
 
 class PaymentFactory {
   static createPaymentMethod(method: string): PaymentMethod {
-    if (method === "creditCard") {
+    if (method === 'creditCard') {
       return new CreditCardPayment();
-    } else if (method === "paypal") {
+    } else if (method === 'paypal') {
       return new PayPalPayment();
     } else {
-      throw new Error("Invalid payment method");
+      throw new Error('Invalid payment method');
     }
   }
 }
 
 // Usage example
-const payment = PaymentFactory.createPaymentMethod("creditCard");
+const payment = PaymentFactory.createPaymentMethod('creditCard');
 payment.processPayment(100); // "Processing payment of $100 through Credit Card"
 
 // #### 5. **Supporting Multiple Types of Objects (Product Families)**
@@ -173,30 +178,30 @@ interface ServiceProduct {
 
 class BasicService implements ServiceProduct {
   getDetails() {
-    return "Basic service plan with limited features.";
+    return 'Basic service plan with limited features.';
   }
 }
 
 class PremiumService implements ServiceProduct {
   getDetails() {
-    return "Premium service plan with extended features and support.";
+    return 'Premium service plan with extended features and support.';
   }
 }
 
 class ServiceFactory {
   static createService(type: string): ServiceProduct {
-    if (type === "basic") {
+    if (type === 'basic') {
       return new BasicService();
-    } else if (type === "premium") {
+    } else if (type === 'premium') {
       return new PremiumService();
     } else {
-      throw new Error("Unknown service type");
+      throw new Error('Unknown service type');
     }
   }
 }
 
 // Usage example
-const premiumService = ServiceFactory.createService("premium");
+const premiumService = ServiceFactory.createService('premium');
 console.log(premiumService.getDetails()); // "Premium service plan with extended features and support."
 
 // #### 6. **Deferred Instantiation (Lazy Loading)**
@@ -207,8 +212,8 @@ class DatabaseConnection {
   private connection: string;
 
   constructor() {
-    console.log("Establishing database connection...");
-    this.connection = "Connected to database";
+    console.log('Establishing database connection...');
+    this.connection = 'Connected to database';
   }
 
   getConnection() {

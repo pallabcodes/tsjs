@@ -12,14 +12,12 @@
  * Instead of modifying the base class, we will use decorators to wrap and extend its functionality.
  * */
 
-
 // Step 1: Define the Notification Interface
 
 // Base Interface for Notifications
 interface Notification {
   send(message: string): void;
 }
-
 
 // Concrete Implementation
 class SimpleNotification implements Notification {
@@ -44,12 +42,11 @@ abstract class NotificationDecorator implements Notification {
   }
 }
 
-
 // Step 4: Implement Concrete Decorators
 // Each decorator adds a specific feature to the notification system.
 
 class EmailNotificationDecorator extends NotificationDecorator {
-  send(message: string): void {
+  override send(message: string): void {
     super.send(message); // Send base notification
     this.sendEmail(message); // Add email functionality
   }
@@ -61,7 +58,7 @@ class EmailNotificationDecorator extends NotificationDecorator {
 
 // # SMS Notification
 class SMSNotificationDecorator extends NotificationDecorator {
-  send(message: string): void {
+  override send(message: string): void {
     super.send(message); // Send base notification
     this.sendSMS(message); // Add SMS functionality
   }
@@ -73,7 +70,7 @@ class SMSNotificationDecorator extends NotificationDecorator {
 
 // # Push Notification
 class PushNotificationDecorator extends NotificationDecorator {
-  send(message: string): void {
+  override send(message: string): void {
     super.send(message); // Send base notification
     this.sendPush(message); // Add push notification functionality
   }
@@ -85,7 +82,7 @@ class PushNotificationDecorator extends NotificationDecorator {
 
 // # Logging Decorator
 class LoggingDecorator extends NotificationDecorator {
-  send(message: string): void {
+  override send(message: string): void {
     super.send(message); // Send base notification
     this.logMessage(message); // Add logging
   }
@@ -97,7 +94,7 @@ class LoggingDecorator extends NotificationDecorator {
 
 // # Encryption Decorator
 class EncryptionDecorator extends NotificationDecorator {
-  send(message: string): void {
+  override send(message: string): void {
     const encryptedMessage = this.encrypt(message);
     super.send(encryptedMessage); // Send encrypted message
   }
@@ -107,20 +104,20 @@ class EncryptionDecorator extends NotificationDecorator {
   }
 }
 
-
 // # Step 5: Usage Example
-// Create a base notification
+// Create a base notification with decorators in the correct order
 let notification: Notification = new SimpleNotification();
 
-// Wrap with decorators for additional features
+// Apply encryption first (innermost decorator)
+notification = new EncryptionDecorator(notification);
+// Then add other decorators
+notification = new LoggingDecorator(notification);
 notification = new EmailNotificationDecorator(notification);
 notification = new SMSNotificationDecorator(notification);
 notification = new PushNotificationDecorator(notification);
-notification = new LoggingDecorator(notification);
-notification = new EncryptionDecorator(notification);
 
 // Send the notification
-notification.send("Hello, this is a test notification!");
+notification.send('Hello, this is a test notification!');
 
 // # OUTPUT
 

@@ -7,10 +7,10 @@
 // Subsystem 1: Lighting
 class LightingSystem {
   turnOn(): void {
-    console.log("Lights are ON");
+    console.log('Lights are ON');
   }
   turnOff(): void {
-    console.log("Lights are OFF");
+    console.log('Lights are OFF');
   }
   dim(level: number): void {
     console.log(`Lights dimmed to ${level}%`);
@@ -23,20 +23,20 @@ class HvacSystem {
     console.log(`HVAC temperature set to ${temp}°C`);
   }
   turnOn(): void {
-    console.log("HVAC is ON");
+    console.log('HVAC is ON');
   }
   turnOff(): void {
-    console.log("HVAC is OFF");
+    console.log('HVAC is OFF');
   }
 }
 
 // Subsystem 3: Entertainment
 class EntertainmentSystem {
   turnOn(): void {
-    console.log("Entertainment system is ON");
+    console.log('Entertainment system is ON');
   }
   turnOff(): void {
-    console.log("Entertainment system is OFF");
+    console.log('Entertainment system is OFF');
   }
   setMode(mode: string): void {
     console.log(`Entertainment system set to ${mode} mode`);
@@ -58,7 +58,7 @@ class HomeAutomationFacade {
   }
 
   morningRoutine(): void {
-    console.log("Starting morning routine...");
+    console.log('Starting morning routine...');
     this.lighting.turnOn();
     this.lighting.dim(75);
     this.hvac.setTemperature(22);
@@ -66,15 +66,15 @@ class HomeAutomationFacade {
   }
 
   eveningRoutine(): void {
-    console.log("Starting evening routine...");
+    console.log('Starting evening routine...');
     this.lighting.dim(50);
     this.hvac.setTemperature(24);
     this.entertainment.turnOn();
-    this.entertainment.setMode("Movie");
+    this.entertainment.setMode('Movie');
   }
 
   nightRoutine(): void {
-    console.log("Starting night routine...");
+    console.log('Starting night routine...');
     this.lighting.turnOff();
     this.hvac.turnOff();
     this.entertainment.turnOff();

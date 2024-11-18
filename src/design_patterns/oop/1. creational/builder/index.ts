@@ -1,7 +1,17 @@
 // Meal components using union types and object literals
-type Starter = 'Salad' | 'Soup' | 'Bruschetta' | 'Veggie Sticks' | 'Chicken Wings';
+type Starter =
+  | 'Salad'
+  | 'Soup'
+  | 'Bruschetta'
+  | 'Veggie Sticks'
+  | 'Chicken Wings';
 type Main = 'Grilled Chicken' | 'Pasta' | 'Veggie Stir Fry' | 'Fish' | 'Pizza';
-type Dessert = 'Fruit Salad' | 'Ice Cream' | 'Chocolate Cake' | 'Vegan Pudding' | 'Cheesecake';
+type Dessert =
+  | 'Fruit Salad'
+  | 'Ice Cream'
+  | 'Chocolate Cake'
+  | 'Vegan Pudding'
+  | 'Cheesecake';
 type Drink = 'Water' | 'Vegan Shake' | 'Soda' | 'Fruit Juice';
 
 // Define the MealBuilder interface
@@ -12,7 +22,6 @@ interface MealBuilder {
   setDrink(drink: Drink): this;
   build(): Meal;
 }
-
 
 // Meal class (Immutable with getters)
 class Meal {
@@ -111,7 +120,6 @@ class Director {
     return builder.build();
   }
 }
-
 
 // Usage Example
 

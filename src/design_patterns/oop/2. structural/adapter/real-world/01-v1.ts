@@ -1,106 +1,131 @@
-// Further extensions: I mentioned and integrate them into the existing Adapter Pattern example for better understanding. These extensions will help demonstrate more advanced uses of the Adapter pattern in a product-based environment.
+// Move these to the top of the file
+interface PaymentGateway {
+  processPayment(amount: number, currency: string): boolean;
+}
+
+class PayPalPayment {
+  processPayPalPayment(amount: number, currency: string): boolean {
+    console.log(`Processing ${amount} ${currency} via PayPal.`);
+    return true;
+  }
+}
+
+class StripePayment {
+  processStripePayment(amount: number, currency: string): boolean {
+    console.log(`Processing ${amount} ${currency} via Stripe.`);
+    return true;
+  }
+}
+
+class SquarePayment {
+  processSquarePayment(amount: number, currency: string): boolean {
+    console.log(`Processing ${amount} ${currency} via Square.`);
+    return true;
+  }
+}
 
 // Logging Service
 // First, let's create a logging service that handles logging.
-
 
 // 1. Add Logging or Metrics within the Adapter
 // We can integrate logging functionality into each adapter to track which payment gateway is being used and how often. This would be useful for debugging or analytics purposes.
 
 // Here’s how we can add logging:
 
-// @ts-ignore
 class Logger {
-    log(message: string): void {
-        console.log(`[Log]: ${message}`);
-    }
+  log(message: string): void {
+    console.log(`[Log]: ${message}`);
+  }
 }
 
 // Updated Adapters with Logging
 // Now, we modify each adapter to include logging functionality.
 
-// @ts-ignore
 class StripePaymentAdapter implements PaymentGateway {
-    // @ts-ignore
-    private stripePayment: StripePayment;
-    private logger: Logger;
+  private stripePayment: StripePayment;
+  private logger: Logger;
 
-    // @ts-ignore
-    constructor(stripePayment: StripePayment, logger: Logger) {
-        this.stripePayment = stripePayment;
-        this.logger = logger;
-    }
+  constructor(stripePayment: StripePayment, logger: Logger) {
+    this.stripePayment = stripePayment;
+    this.logger = logger;
+  }
 
-    processPayment(amount: number, currency: string): boolean {
-        this.logger.log(`Processing payment via Stripe: ${amount} ${currency}`);
-        return this.stripePayment.processStripePayment(amount, currency);
-    }
+  processPayment(amount: number, currency: string): boolean {
+    this.logger.log(`Processing payment via Stripe: ${amount} ${currency}`);
+    return this.stripePayment.processStripePayment(amount, currency);
+  }
 }
 
-// @ts-ignore
 class PayPalPaymentAdapter implements PaymentGateway {
-    // @ts-ignore
-    private paypalPayment: PayPalPayment;
-    private logger: Logger;
+  private paypalPayment: PayPalPayment;
+  private logger: Logger;
 
-    // @ts-ignore
-    constructor(paypalPayment: PayPalPayment, logger: Logger) {
-        this.paypalPayment = paypalPayment;
-        this.logger = logger;
-    }
+  constructor(paypalPayment: PayPalPayment, logger: Logger) {
+    this.paypalPayment = paypalPayment;
+    this.logger = logger;
+  }
 
-    processPayment(amount: number, currency: string): boolean {
-        this.logger.log(`Processing payment via PayPal: ${amount} ${currency}`);
-        return this.paypalPayment.processPayPalPayment(amount, currency);
-    }
+  processPayment(amount: number, currency: string): boolean {
+    this.logger.log(`Processing payment via PayPal: ${amount} ${currency}`);
+    return this.paypalPayment.processPayPalPayment(amount, currency);
+  }
 }
 
-// @ts-ignore
 class SquarePaymentAdapter implements PaymentGateway {
-    // @ts-ignore
-    private squarePayment: SquarePayment;
-    private logger: Logger;
+  private squarePayment: SquarePayment;
+  private logger: Logger;
 
-    // @ts-ignore
-    constructor(squarePayment: SquarePayment, logger: Logger) {
-        this.squarePayment = squarePayment;
-        this.logger = logger;
-    }
+  constructor(squarePayment: SquarePayment, logger: Logger) {
+    this.squarePayment = squarePayment;
+    this.logger = logger;
+  }
 
-    processPayment(amount: number, currency: string): boolean {
-        this.logger.log(`Processing payment via Square: ${amount} ${currency}`);
-        return this.squarePayment.processSquarePayment(amount, currency);
-    }
+  processPayment(amount: number, currency: string): boolean {
+    this.logger.log(`Processing payment via Square: ${amount} ${currency}`);
+    return this.squarePayment.processSquarePayment(amount, currency);
+  }
 }
 
+// Add the missing interface for PaymentGateway
+interface PaymentGateway {
+  processPayment(amount: number, currency: string): boolean;
+}
+
+// Add the missing PaymentProcessor class
+class PaymentProcessor {
+  private paymentGateway: PaymentGateway;
+
+  constructor(paymentGateway: PaymentGateway) {
+    this.paymentGateway = paymentGateway;
+  }
+
+  process(amount: number, currency: string): void {
+    const success = this.paymentGateway.processPayment(amount, currency);
+    if (success) {
+      console.log('Payment processed successfully.');
+    } else {
+      console.log('Payment failed.');
+    }
+  }
+}
 
 // Usage with Logging
-// Now, we use the logging service when creating the adapters.
-
 const logger = new Logger();
-
-// @ts-ignore
 const stripePayment = new StripePayment();
-
 const stripeAdapter = new StripePaymentAdapter(stripePayment, logger);
 
-// @ts-ignore
 const paypalPayment = new PayPalPayment();
 const paypalAdapter = new PayPalPaymentAdapter(paypalPayment, logger);
 
-// @ts-ignore
 const squarePayment = new SquarePayment();
 const squareAdapter = new SquarePaymentAdapter(squarePayment, logger);
 
-// @ts-ignore
 const paymentProcessor1 = new PaymentProcessor(stripeAdapter);
 paymentProcessor1.process(100, 'USD');
 
-// @ts-ignore
 const paymentProcessor2 = new PaymentProcessor(paypalAdapter);
 paymentProcessor2.process(200, 'EUR');
 
-// @ts-ignore
 const paymentProcessor3 = new PaymentProcessor(squareAdapter);
 paymentProcessor3.process(150, 'GBP');
 

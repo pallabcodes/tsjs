@@ -2,7 +2,6 @@
 
 // Imagine a Vehicle Configuration Builder for a car dealership. The builder constructs complex objects like a car, which has multiple parts (engine, wheels, seats, etc.). Each part might have its own builder.
 
-
 // Define parts of the vehicle
 class Engine {
   constructor(public model: string, public horsepower: number) {}
@@ -85,7 +84,6 @@ const sportsCar = director.constructSportsCar(new CarBuilder());
 
 console.log(luxuryCar);
 console.log(sportsCar);
-
 
 // What's Improved:
 // 1. Nested Object Construction: The car consists of parts (engine, wheels, seats), and each part is created using its own builder.

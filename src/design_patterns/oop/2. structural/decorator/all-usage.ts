@@ -13,28 +13,33 @@
 
 // Base Component (Product)
 interface ICar {
-    drive(): string;
+  drive(): string;
+  getDescription?(): string;
 }
 
 class Car implements ICar {
-    drive(): string {
-        return 'Driving the car';
-    }
+  drive(): string {
+    return 'Driving the car';
+  }
 }
 
 // Decorator to add logging behavior
 class CarWithLogging implements ICar {
-    private car: ICar;
+  private car: ICar;
 
-    constructor(car: ICar) {
-        this.car = car;
-    }
+  constructor(car: ICar) {
+    this.car = car;
+  }
 
-    drive(): string {
-        const message = this.car.drive();
-        console.log(`Logging: ${message}`);  // Adds logging behavior dynamically
-        return message;
-    }
+  drive(): string {
+    const message = this.car.drive();
+    console.log(`Logging: ${message}`); // Adds logging behavior dynamically
+    return message;
+  }
+
+  getDescription(): string {
+    return this.car.getDescription?.() || 'Car';
+  }
 }
 
 // Usage
@@ -47,60 +52,83 @@ console.log(myCarWithLogging.drive());
 // #### 2. **Complex Object Configuration**
 // - **Scenario**: A `Coffee` class where decorators dynamically add different types of milk, sugar, or syrups.
 
-// Base Coffee class
-abstract class Coffee {
-    abstract cost(): number;
+// Add description to base interface
+interface ICoffee {
+  cost(): number;
+  getDescription(): string;
+}
+
+// Make base Coffee class implement a common interface
+abstract class Coffee implements ICoffee {
+  abstract cost(): number;
+  abstract getDescription(): string;
 }
 
 class BasicCoffee extends Coffee {
-    cost(): number {
-        return 5;  // Base cost of coffee
-    }
+  cost(): number {
+    return 5;
+  }
+
+  getDescription(): string {
+    return 'Basic Coffee';
+  }
 }
 
 // Decorators
 class MilkDecorator extends Coffee {
-    private coffee: Coffee;
+  private coffee: Coffee;
 
-    constructor(coffee: Coffee) {
-        super();
-        this.coffee = coffee;
-    }
+  constructor(coffee: Coffee) {
+    super();
+    this.coffee = coffee;
+  }
 
-    cost(): number {
-        return this.coffee.cost() + 1;  // Adds cost of milk
-    }
+  cost(): number {
+    return this.coffee.cost() + 1;
+  }
+
+  getDescription(): string {
+    return `${this.coffee.getDescription()} + Milk`;
+  }
 }
 
 class SugarDecorator extends Coffee {
-    private coffee: Coffee;
+  private coffee: Coffee;
 
-    constructor(coffee: Coffee) {
-        super();
-        this.coffee = coffee;
-    }
+  constructor(coffee: Coffee) {
+    super();
+    this.coffee = coffee;
+  }
 
-    cost(): number {
-        return this.coffee.cost() + 0.5;  // Adds cost of sugar
-    }
+  cost(): number {
+    return this.coffee.cost() + 0.5;
+  }
+
+  getDescription(): string {
+    return `${this.coffee.getDescription()} + Sugar`;
+  }
 }
 
 class SyrupDecorator extends Coffee {
-    private coffee: Coffee;
+  private coffee: Coffee;
 
-    constructor(coffee: Coffee) {
-        super();
-        this.coffee = coffee;
-    }
+  constructor(coffee: Coffee) {
+    super();
+    this.coffee = coffee;
+  }
 
-    cost(): number {
-        return this.coffee.cost() + 1.5;  // Adds cost of syrup
-    }
+  cost(): number {
+    return this.coffee.cost() + 1.5;
+  }
+
+  getDescription(): string {
+    return `${this.coffee.getDescription()} + Syrup`;
+  }
 }
 
 // Usage
 let myCoffee = new BasicCoffee();
-myCoffee = new MilkDecorator(myCoffee);  // Add milk
+myCoffee = new MilkDecorator(myCoffee); // Add milk
 myCoffee = new SugarDecorator(myCoffee); // Add sugar
 myCoffee = new SyrupDecorator(myCoffee); // Add syrup
 
@@ -112,40 +140,40 @@ console.log(`Total cost: $${myCoffee.cost()}`);
 
 // Base Notification
 interface INotification {
-    send(message: string): string;
+  send(message: string): string;
 }
 
 class BaseNotification implements INotification {
-    send(message: string): string {
-        return 'Sending base notification';
-    }
+  send(_message: string): string {
+    return 'Sending base notification';
+  }
 }
 
 // Decorators for different notifications
 class EmailNotification implements INotification {
-    private notification: INotification;
+  private notification: INotification;
 
-    constructor(notification: INotification) {
-        this.notification = notification;
-    }
+  constructor(notification: INotification) {
+    this.notification = notification;
+  }
 
-    send(message: string): string {
-        const baseMessage = this.notification.send(message);
-        return `${baseMessage} via Email`;
-    }
+  send(message: string): string {
+    const baseMessage = this.notification.send(message);
+    return `${baseMessage} via Email`;
+  }
 }
 
 class SMSNotification implements INotification {
-    private notification: INotification;
+  private notification: INotification;
 
-    constructor(notification: INotification) {
-        this.notification = notification;
-    }
+  constructor(notification: INotification) {
+    this.notification = notification;
+  }
 
-    send(message: string): string {
-        const baseMessage = this.notification.send(message);
-        return `${baseMessage} via SMS`;
-    }
+  send(message: string): string {
+    const baseMessage = this.notification.send(message);
+    return `${baseMessage} via SMS`;
+  }
 }
 
 // Usage
@@ -162,57 +190,57 @@ console.log(notification.send('Test message'));
 
 // Base Logger
 interface ILogger {
-    log(message: string): void;
+  log(message: string): void;
 }
 
 class BaseLogger implements ILogger {
-    log(message: string): void {
-        console.log(message);
-    }
+  log(message: string): void {
+    console.log(message);
+  }
 }
 
 // Decorators to extend functionality
 class ErrorLogger implements ILogger {
-    private logger: ILogger;
+  private logger: ILogger;
 
-    constructor(logger: ILogger) {
-        this.logger = logger;
-    }
+  constructor(logger: ILogger) {
+    this.logger = logger;
+  }
 
-    log(message: string): void {
-        this.logger.log(`[Error]: ${message}`);  // Add error log behavior
-    }
+  log(message: string): void {
+    this.logger.log(`[Error]: ${message}`); // Add error log behavior
+  }
 }
 
 class InfoLogger implements ILogger {
-    private logger: ILogger;
+  private logger: ILogger;
 
-    constructor(logger: ILogger) {
-        this.logger = logger;
-    }
+  constructor(logger: ILogger) {
+    this.logger = logger;
+  }
 
-    log(message: string): void {
-        this.logger.log(`[Info]: ${message}`);  // Add info log behavior
-    }
+  log(message: string): void {
+    this.logger.log(`[Info]: ${message}`); // Add info log behavior
+  }
 }
 
 class EmailAlertLogger implements ILogger {
-    private logger: ILogger;
+  private logger: ILogger;
 
-    constructor(logger: ILogger) {
-        this.logger = logger;
-    }
+  constructor(logger: ILogger) {
+    this.logger = logger;
+  }
 
-    log(message: string): void {
-        this.logger.log(message);
-        console.log(`Sending email alert: ${message}`);  // Add email alert behavior
-    }
+  log(message: string): void {
+    this.logger.log(message);
+    console.log(`Sending email alert: ${message}`); // Add email alert behavior
+  }
 }
 
 // Usage
 let logger: ILogger = new BaseLogger();
-logger = new ErrorLogger(logger);  // Add error logging
-logger = new InfoLogger(logger);   // Add info logging
+logger = new ErrorLogger(logger); // Add error logging
+logger = new InfoLogger(logger); // Add info logging
 logger = new EmailAlertLogger(logger); // Add email alert functionality
 
 logger.log('This is a test message');
@@ -223,61 +251,61 @@ logger.log('This is a test message');
 
 // Base FileSystem service
 interface IFileSystem {
-    readFile(fileName: string): string;
-    writeFile(fileName: string, content: string): string;
+  readFile(fileName: string): string;
+  writeFile(fileName: string, content: string): void;
 }
 
 class BaseFileSystem implements IFileSystem {
-    readFile(fileName: string): string {
-        return `Reading file: ${fileName}`;
-    }
+  readFile(fileName: string): string {
+    return `Reading file: ${fileName}`;
+  }
 
-    writeFile(fileName: string, content: string): string {
-        return `Writing content to: ${fileName}`;
-    }
+  writeFile(fileName: string, _content: string): void {
+    console.log(`Writing content to: ${fileName}`);
+  }
 }
 
 // Decorators for wrapping functionality
 class EncryptionDecorator implements IFileSystem {
-    private fileSystem: IFileSystem;
+  private fileSystem: IFileSystem;
 
-    constructor(fileSystem: IFileSystem) {
-        this.fileSystem = fileSystem;
-    }
+  constructor(fileSystem: IFileSystem) {
+    this.fileSystem = fileSystem;
+  }
 
-    readFile(fileName: string): string {
-        console.log('Decrypting file content...');
-        return this.fileSystem.readFile(fileName);  // Decrypt before reading
-    }
+  readFile(fileName: string): string {
+    console.log('Decrypting file content...');
+    return this.fileSystem.readFile(fileName); // Decrypt before reading
+  }
 
-    writeFile(fileName: string, content: string): string {
-        console.log('Encrypting file content...');
-        return this.fileSystem.writeFile(fileName, content);  // Encrypt before writing
-    }
+  writeFile(fileName: string, content: string): void {
+    console.log('Encrypting file content...');
+    this.fileSystem.writeFile(fileName, content); // Encrypt before writing
+  }
 }
 
 class LoggingDecorator implements IFileSystem {
-    private fileSystem: IFileSystem;
+  private fileSystem: IFileSystem;
 
-    constructor(fileSystem: IFileSystem) {
-        this.fileSystem = fileSystem;
-    }
+  constructor(fileSystem: IFileSystem) {
+    this.fileSystem = fileSystem;
+  }
 
-    readFile(fileName: string): string {
-        console.log(`Logging: Reading file ${fileName}`);
-        return this.fileSystem.readFile(fileName);
-    }
+  readFile(fileName: string): string {
+    console.log(`Logging: Reading file ${fileName}`);
+    return this.fileSystem.readFile(fileName);
+  }
 
-    writeFile(fileName: string, content: string): string {
-        console.log(`Logging: Writing to file ${fileName}`);
-        return this.fileSystem.writeFile(fileName, content);
-    }
+  writeFile(fileName: string, content: string): void {
+    console.log(`Logging: Writing to file ${fileName}`);
+    this.fileSystem.writeFile(fileName, content);
+  }
 }
 
 // Usage
 let fs: IFileSystem = new BaseFileSystem();
-fs = new EncryptionDecorator(fs);  // Add encryption
-fs = new LoggingDecorator(fs);     // Add logging
+fs = new EncryptionDecorator(fs); // Add encryption
+fs = new LoggingDecorator(fs); // Add logging
 
 console.log(fs.readFile('file.txt'));
 console.log(fs.writeFile('file.txt', 'New content'));

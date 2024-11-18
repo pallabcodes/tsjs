@@ -6,15 +6,15 @@
  * */
 
 /*
-* ## The pattern's full power shines in real-world scenarios such as:
-* Extending functionality dynamically.
-* Avoiding subclass explosion (too many subclasses for every combination of behaviors).
-* Flexibility in applying or removing responsibilities.
-* Maintaining open/closed principle (open for extension, closed for modification).
-* Composing behaviors through layering.
-*
-*
-* */
+ * ## The pattern's full power shines in real-world scenarios such as:
+ * Extending functionality dynamically.
+ * Avoiding subclass explosion (too many subclasses for every combination of behaviors).
+ * Flexibility in applying or removing responsibilities.
+ * Maintaining open/closed principle (open for extension, closed for modification).
+ * Composing behaviors through layering.
+ *
+ *
+ * */
 
 // 1. Interface for Beverage - ensures all beverages have `cost()` and `description()`
 interface IBeverage {
@@ -30,7 +30,7 @@ abstract class Beverage implements IBeverage {
 }
 
 // 3. Concrete Beverage Implementation - DarkRoast
-class DarkRoast extends Beverage {
+export class DarkRoast extends Beverage {
   cost(): number {
     return 3.45; // Base price for DarkRoast
   }
@@ -111,40 +111,16 @@ class FoamDecorator extends BeverageDecorator {
   }
 }
 
-// Client Code - Constructing a Beverage with multiple dynamic behaviors
-
+// 9. Client Code - Constructing a Beverage with multiple dynamic behaviors
 const beverage: IBeverage = new FoamDecorator(
   new CreamDecorator(new EspressoDecorator(new LightRoast()))
-); // works like compose in "functional programming" i.e. through "reduce" so here it starts from rightmost i.e. LightRoast
-
-/**
- * works like "compose" i.e., implemented with "reduce" meaning towards left, so starts from right-most
- * 1.
- * const baseBeverage = new LightRoast();
- * console.log(baseBeverage.description()); // Output: "Light Roast"
- * console.log(baseBeverage.cost()); // Output: 3.45
- * -------------------------------------------------------------------
- * 2.
- * const espressoBeverage = new EspressoDecorator(baseBeverage);
- * console.log(espressoBeverage.description()); // Output: "Light Roast, Espresso"
- * console.log(espressoBeverage.cost()); // Output: 3.45 + 0.5 = 3.95
- * -------------------------------------------------------------------
- * 3.
- * const creamBeverage = new CreamDecorator(espressoBeverage);
- * console.log(creamBeverage.description()); // Output: "Light Roast, Espresso, Cream"
- * console.log(creamBeverage.cost()); // Output: 3.95 + 0.3 = 4.25
- * -------------------------------------------------------------------
- * 4.
- * const finalBeverage = new FoamDecorator(creamBeverage);
- * console.log(finalBeverage.description()); // Output: "Light Roast, Espresso, Cream, Foam"
- * console.log(finalBeverage.cost()); // Output: 4.25 + 0.2 = 4.45
- */
+);
 
 // 10. Logging the final description and cost
+console.log(beverage.description());
+console.log(beverage.cost());
 
-console.log(beverage.description()); // Output: Light Roast, Espresso, Cream, Foam
-console.log(beverage.cost()); // Output: 4.45
-
+// 11. Explanation of the final output:
 /*
 Explanation of the final output:
 - Base Beverage: Light Roast (cost: 3.45)

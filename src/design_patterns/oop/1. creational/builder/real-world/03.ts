@@ -1,125 +1,133 @@
 // # Real-World Example: Config Builder for a Web Service
 
-
 // Imagine you're building a web service, and you need a builder to help configure different components of the service (e.g., database, API, logging, etc.).
 
 class DatabaseConfig {
-    constructor(
-        public readonly host: string,
-        public readonly port: number,
-        public readonly username: string,
-        public readonly password: string
-    ) {}
+  constructor(
+    public readonly host: string,
+    public readonly port: number,
+    public readonly username: string,
+    public readonly password: string
+  ) {}
 }
 
 class ApiConfig {
-    constructor(
-        public readonly endpoint: string,
-        public readonly apiKey: string
-    ) {}
+  constructor(
+    public readonly endpoint: string,
+    public readonly apiKey: string
+  ) {}
 }
 
 class LoggingConfig {
-    constructor(
-        public readonly level: string, // e.g., 'info', 'warn', 'error'
-        public readonly logToFile: boolean
-    ) {}
+  constructor(
+    public readonly level: string, // e.g., 'info', 'warn', 'error'
+    public readonly logToFile: boolean
+  ) {}
 }
 
 class FeatureFlags {
-    constructor(
-        public readonly enableFeatureA: boolean,
-        public readonly enableFeatureB: boolean
-    ) {}
+  constructor(
+    public readonly enableFeatureA: boolean,
+    public readonly enableFeatureB: boolean
+  ) {}
 }
 
 class WebServiceConfig {
-    readonly database: DatabaseConfig;
-    readonly api: ApiConfig;
-    readonly logging: LoggingConfig;
-    readonly featureFlags: FeatureFlags;
+  readonly database: DatabaseConfig;
+  readonly api: ApiConfig;
+  readonly logging: LoggingConfig;
+  readonly featureFlags: FeatureFlags;
 
-    constructor(
-        database: DatabaseConfig,
-        api: ApiConfig,
-        logging: LoggingConfig,
-        featureFlags: FeatureFlags
-    ) {
-        this.database = database;
-        this.api = api;
-        this.logging = logging;
-        this.featureFlags = featureFlags;
-    }
+  constructor(
+    database: DatabaseConfig,
+    api: ApiConfig,
+    logging: LoggingConfig,
+    featureFlags: FeatureFlags
+  ) {
+    this.database = database;
+    this.api = api;
+    this.logging = logging;
+    this.featureFlags = featureFlags;
+  }
 }
 
 interface ConfigBuilder {
-    setDatabaseConfig(host: string, port: number, username: string, password: string): this;
-    setApiConfig(endpoint: string, apiKey: string): this;
-    setLoggingConfig(level: string, logToFile: boolean): this;
-    setFeatureFlags(enableFeatureA: boolean, enableFeatureB: boolean): this;
-    build(): WebServiceConfig;
+  setDatabaseConfig(
+    host: string,
+    port: number,
+    username: string,
+    password: string
+  ): this;
+  setApiConfig(endpoint: string, apiKey: string): this;
+  setLoggingConfig(level: string, logToFile: boolean): this;
+  setFeatureFlags(enableFeatureA: boolean, enableFeatureB: boolean): this;
+  build(): WebServiceConfig;
 }
 
 class WebServiceConfigBuilder implements ConfigBuilder {
-    private databaseConfig?: DatabaseConfig;
-    private apiConfig?: ApiConfig;
-    private loggingConfig?: LoggingConfig;
-    private featureFlags?: FeatureFlags;
+  private databaseConfig?: DatabaseConfig;
+  private apiConfig?: ApiConfig;
+  private loggingConfig?: LoggingConfig;
+  private featureFlags?: FeatureFlags;
 
-    setDatabaseConfig(host: string, port: number, username: string, password: string): this {
-        this.databaseConfig = new DatabaseConfig(host, port, username, password);
-        return this;
+  setDatabaseConfig(
+    host: string,
+    port: number,
+    username: string,
+    password: string
+  ): this {
+    this.databaseConfig = new DatabaseConfig(host, port, username, password);
+    return this;
+  }
+
+  setApiConfig(endpoint: string, apiKey: string): this {
+    this.apiConfig = new ApiConfig(endpoint, apiKey);
+    return this;
+  }
+
+  setLoggingConfig(level: string, logToFile: boolean): this {
+    this.loggingConfig = new LoggingConfig(level, logToFile);
+    return this;
+  }
+
+  setFeatureFlags(enableFeatureA: boolean, enableFeatureB: boolean): this {
+    this.featureFlags = new FeatureFlags(enableFeatureA, enableFeatureB);
+    return this;
+  }
+
+  build(): WebServiceConfig {
+    if (!this.databaseConfig) {
+      throw new Error('Database configuration is required.');
+    }
+    if (!this.apiConfig) {
+      throw new Error('API configuration is required.');
+    }
+    if (!this.loggingConfig) {
+      throw new Error('Logging configuration is required.');
+    }
+    if (!this.featureFlags) {
+      throw new Error('Feature flags are required.');
     }
 
-    setApiConfig(endpoint: string, apiKey: string): this {
-        this.apiConfig = new ApiConfig(endpoint, apiKey);
-        return this;
-    }
-
-    setLoggingConfig(level: string, logToFile: boolean): this {
-        this.loggingConfig = new LoggingConfig(level, logToFile);
-        return this;
-    }
-
-    setFeatureFlags(enableFeatureA: boolean, enableFeatureB: boolean): this {
-        this.featureFlags = new FeatureFlags(enableFeatureA, enableFeatureB);
-        return this;
-    }
-
-    build(): WebServiceConfig {
-        if (!this.databaseConfig) {
-            throw new Error("Database configuration is required.");
-        }
-        if (!this.apiConfig) {
-            throw new Error("API configuration is required.");
-        }
-        if (!this.loggingConfig) {
-            throw new Error("Logging configuration is required.");
-        }
-        if (!this.featureFlags) {
-            throw new Error("Feature flags are required.");
-        }
-
-        return new WebServiceConfig(
-            this.databaseConfig,
-            this.apiConfig,
-            this.loggingConfig,
-            this.featureFlags
-        );
-    }
+    return new WebServiceConfig(
+      this.databaseConfig,
+      this.apiConfig,
+      this.loggingConfig,
+      this.featureFlags
+    );
+  }
 }
 
 // Usage example
 const builder = new WebServiceConfigBuilder();
 const webServiceConfig = builder
-    .setDatabaseConfig("localhost", 5432, "admin", "password")
-    .setApiConfig("https://api.example.com", "API_KEY")
-    .setLoggingConfig("info", true)
-    .setFeatureFlags(true, false)
-    .build();
+  .setDatabaseConfig('localhost', 5432, 'admin', 'password')
+  .setApiConfig('https://api.example.com', 'API_KEY')
+  .setLoggingConfig('info', true)
+  .setFeatureFlags(true, false)
+  .build();
 
 console.log(JSON.stringify(webServiceConfig, null, 2));
-
 
 // Key Benefits of this Example:
 

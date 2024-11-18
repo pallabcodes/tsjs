@@ -6,131 +6,123 @@
 // This interface will enforce that every object can be cloned, ensuring a uniform method for duplication.
 
 interface GameObject {
-    clone(): GameObject;
-    getDetails(): string;
+  clone(): GameObject;
+  getDetails(): string;
 }
-
 
 // Step 2: Define Concrete Prototypes
 
 // define Character, Enemy, and Weapon as concrete prototypes that implement the GameObject interface.
 
-
 // ==========================
 // Concrete Prototypes
 // ==========================
 class Character implements GameObject {
-    constructor(
-        public name: string,
-        public health: number,
-        public attack: number,
-        public speed: number
-    ) {}
+  constructor(
+    public name: string,
+    public health: number,
+    public attack: number,
+    public speed: number
+  ) {}
 
-    clone(): GameObject {
-        return new Character(this.name, this.health, this.attack, this.speed);
-    }
+  clone(): GameObject {
+    return new Character(this.name, this.health, this.attack, this.speed);
+  }
 
-    getDetails(): string {
-        return `${this.name}: Health=${this.health}, Attack=${this.attack}, Speed=${this.speed}`;
-    }
+  getDetails(): string {
+    return `${this.name}: Health=${this.health}, Attack=${this.attack}, Speed=${this.speed}`;
+  }
 }
 
 class Enemy implements GameObject {
-    constructor(
-        public type: string,
-        public health: number,
-        public attack: number,
-        public armor: number
-    ) {}
+  constructor(
+    public type: string,
+    public health: number,
+    public attack: number,
+    public armor: number
+  ) {}
 
-    clone(): GameObject {
-        return new Enemy(this.type, this.health, this.attack, this.armor);
-    }
+  clone(): GameObject {
+    return new Enemy(this.type, this.health, this.attack, this.armor);
+  }
 
-    getDetails(): string {
-        return `${this.type} Enemy: Health=${this.health}, Attack=${this.attack}, Armor=${this.armor}`;
-    }
+  getDetails(): string {
+    return `${this.type} Enemy: Health=${this.health}, Attack=${this.attack}, Armor=${this.armor}`;
+  }
 }
 
 class Weapon implements GameObject {
-    constructor(
-        public name: string,
-        public damage: number,
-        public range: number
-    ) {}
+  constructor(
+    public name: string,
+    public damage: number,
+    public range: number
+  ) {}
 
-    clone(): GameObject {
-        return new Weapon(this.name, this.damage, this.range);
-    }
+  clone(): GameObject {
+    return new Weapon(this.name, this.damage, this.range);
+  }
 
-    getDetails(): string {
-        return `${this.name}: Damage=${this.damage}, Range=${this.range}`;
-    }
+  getDetails(): string {
+    return `${this.name}: Damage=${this.damage}, Range=${this.range}`;
+  }
 }
 
-
 // Character has attributes like name, health, attack, and speed.
-
 
 // Enemy has attributes like type, health, attack, and armor.
 // Weapon has attributes like name, damage, and range.
 // Each class implements the clone method to create a new instance of itself, duplicating the values of the current object.
 
-
 // Step 3: The Prototype Manager (Optional)
 // In more advanced cases, you might want a manager to hold and return prototypes. This is useful when you have a large number of objects and want to centralize their creation and cloning.
 
-
 class PrototypeManager {
-    private prototypes: { [key: string]: GameObject } = {};
+  private prototypes: { [key: string]: GameObject } = {};
 
-    registerPrototype(name: string, prototype: GameObject): void {
-        this.prototypes[name] = prototype;
-    }
+  registerPrototype(name: string, prototype: GameObject): void {
+    this.prototypes[name] = prototype;
+  }
 
-    clonePrototype(name: string): GameObject {
-        const prototype = this.prototypes[name];
-        if (!prototype) {
-            throw new Error(`Prototype ${name} not found`);
-        }
-        return prototype.clone();
+  clonePrototype(name: string): GameObject {
+    const prototype = this.prototypes[name];
+    if (!prototype) {
+      throw new Error(`Prototype ${name} not found`);
     }
+    return prototype.clone();
+  }
 }
 
 // Here, the PrototypeManager helps to centralize the registration and cloning process, ensuring that any object in the system can be cloned with a single call.
-
 
 // Step 4: Usage Example
 
 // ==========================
 // Usage Example
 // ==========================
-const characterPrototype = new Character("Warrior", 100, 25, 10);
-const enemyPrototype = new Enemy("Goblin", 50, 10, 5);
-const weaponPrototype = new Weapon("Sword", 15, 5);
+const characterPrototype = new Character('Warrior', 100, 25, 10);
+const enemyPrototype = new Enemy('Goblin', 50, 10, 5);
+const weaponPrototype = new Weapon('Sword', 15, 5);
 
 // Register prototypes in the Prototype Manager
 const prototypeManager = new PrototypeManager();
-prototypeManager.registerPrototype("warrior", characterPrototype);
-prototypeManager.registerPrototype("goblin", enemyPrototype);
-prototypeManager.registerPrototype("sword", weaponPrototype);
+prototypeManager.registerPrototype('warrior', characterPrototype);
+prototypeManager.registerPrototype('goblin', enemyPrototype);
+prototypeManager.registerPrototype('sword', weaponPrototype);
 
 // Clone and customize the game objects
-const clonedWarrior = prototypeManager.clonePrototype("warrior") as Character;
-clonedWarrior.attack = 30;  // Modifying the clone's attributes
+const clonedWarrior = prototypeManager.clonePrototype('warrior') as Character;
+clonedWarrior.attack = 30; // Modifying the clone's attributes
 
-const clonedGoblin = prototypeManager.clonePrototype("goblin") as Enemy;
-clonedGoblin.health = 60;  // Customizing the clone's attributes
+const clonedGoblin = prototypeManager.clonePrototype('goblin') as Enemy;
+clonedGoblin.health = 60; // Customizing the clone's attributes
 
-const clonedSword = prototypeManager.clonePrototype("sword") as Weapon;
-clonedSword.damage = 20;  // Modifying weapon damage
+const clonedSword = prototypeManager.clonePrototype('sword') as Weapon;
+clonedSword.damage = 20; // Modifying weapon damage
 
 // Display the cloned objects
 console.log(clonedWarrior.getDetails()); // Warrior: Health=100, Attack=30, Speed=10
 console.log(clonedGoblin.getDetails()); // Goblin Enemy: Health=60, Attack=10, Armor=5
-console.log(clonedSword.getDetails());  // Sword: Damage=20, Range=5
-
+console.log(clonedSword.getDetails()); // Sword: Damage=20, Range=5
 
 /*
 

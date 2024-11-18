@@ -20,160 +20,188 @@ We'll structure the system configuration into multiple sub-configurations (datab
 
 */
 
-
 // ==========================
 // Sub-configuration classes
 // ==========================
 class DatabaseConfig {
-    constructor(
-        public readonly host: string,
-        public readonly port: number,
-        public readonly username: string,
-        public readonly password: string,
-        public readonly useSSL: boolean = true // Default to true if not specified
-    ) {}
+  constructor(
+    public readonly host: string,
+    public readonly port: number,
+    public readonly username: string,
+    public readonly password: string,
+    public readonly useSSL: boolean = true // Default to true if not specified
+  ) {}
 }
 
 class ApiConfig {
-    constructor(
-        public readonly baseURL: string,
-        public readonly timeout: number
-    ) {}
+  constructor(
+    public readonly baseURL: string,
+    public readonly timeout: number
+  ) {}
 }
 
 class AuthConfig {
-    constructor(
-        public readonly strategy: string, // e.g., 'OAuth2', 'JWT'
-        public readonly tokenEndpoint: string
-    ) {}
+  constructor(
+    public readonly strategy: string, // e.g., 'OAuth2', 'JWT'
+    public readonly tokenEndpoint: string
+  ) {}
 }
 
 class CachingConfig {
-    constructor(
-        public readonly enabled: boolean,
-        public readonly type: string, // e.g., 'redis', 'memcached'
-        public readonly ttlSeconds: number // Time to live in seconds
-    ) {}
+  constructor(
+    public readonly enabled: boolean,
+    public readonly type: string, // e.g., 'redis', 'memcached'
+    public readonly ttlSeconds: number // Time to live in seconds
+  ) {}
 }
 
 class LoggingConfig {
-    constructor(
-        public readonly level: string, // e.g., 'debug', 'info', 'error'
-        public readonly logToFile: boolean,
-        public readonly logFilePath?: string // Optional file path for logs
-    ) {}
+  constructor(
+    public readonly level: string, // e.g., 'debug', 'info', 'error'
+    public readonly logToFile: boolean,
+    public readonly logFilePath?: string // Optional file path for logs
+  ) {}
 }
 
 class FeatureFlags {
-    constructor(
-        public readonly enableFeatureA: boolean,
-        public readonly enableFeatureB: boolean
-    ) {}
+  constructor(
+    public readonly enableFeatureA: boolean,
+    public readonly enableFeatureB: boolean
+  ) {}
 }
 
 // ==========================
 // Main Configuration Class
 // ==========================
 class SystemConfig {
-    readonly database: DatabaseConfig;
-    readonly api: ApiConfig;
-    readonly auth: AuthConfig;
-    readonly caching: CachingConfig;
-    readonly logging: LoggingConfig;
-    readonly featureFlags: FeatureFlags;
+  readonly database: DatabaseConfig;
+  readonly api: ApiConfig;
+  readonly auth: AuthConfig;
+  readonly caching: CachingConfig;
+  readonly logging: LoggingConfig;
+  readonly featureFlags: FeatureFlags;
 
-    constructor(
-        database: DatabaseConfig,
-        api: ApiConfig,
-        auth: AuthConfig,
-        caching: CachingConfig,
-        logging: LoggingConfig,
-        featureFlags: FeatureFlags
-    ) {
-        this.database = database;
-        this.api = api;
-        this.auth = auth;
-        this.caching = caching;
-        this.logging = logging;
-        this.featureFlags = featureFlags;
-    }
+  constructor(
+    database: DatabaseConfig,
+    api: ApiConfig,
+    auth: AuthConfig,
+    caching: CachingConfig,
+    logging: LoggingConfig,
+    featureFlags: FeatureFlags
+  ) {
+    this.database = database;
+    this.api = api;
+    this.auth = auth;
+    this.caching = caching;
+    this.logging = logging;
+    this.featureFlags = featureFlags;
+  }
 }
 
 // ==========================
 // Builder Interface
 // ==========================
 interface ConfigBuilder {
-    setDatabaseConfig(host: string, port: number, username: string, password: string, useSSL?: boolean): this;
-    setApiConfig(baseURL: string, timeout: number): this;
-    setAuthConfig(strategy: string, tokenEndpoint: string): this;
-    setCachingConfig(enabled: boolean, type: string, ttlSeconds: number): this;
-    setLoggingConfig(level: string, logToFile: boolean, logFilePath?: string): this;
-    setFeatureFlags(enableFeatureA: boolean, enableFeatureB: boolean): this;
-    build(): SystemConfig;
+  setDatabaseConfig(
+    host: string,
+    port: number,
+    username: string,
+    password: string,
+    useSSL?: boolean
+  ): this;
+  setApiConfig(baseURL: string, timeout: number): this;
+  setAuthConfig(strategy: string, tokenEndpoint: string): this;
+  setCachingConfig(enabled: boolean, type: string, ttlSeconds: number): this;
+  setLoggingConfig(
+    level: string,
+    logToFile: boolean,
+    logFilePath?: string
+  ): this;
+  setFeatureFlags(enableFeatureA: boolean, enableFeatureB: boolean): this;
+  build(): SystemConfig;
 }
 
 // ==========================
 // Concrete Builder
 // ==========================
 class SystemConfigBuilder implements ConfigBuilder {
-    private databaseConfig?: DatabaseConfig;
-    private apiConfig?: ApiConfig;
-    private authConfig?: AuthConfig;
-    private cachingConfig?: CachingConfig;
-    private loggingConfig?: LoggingConfig;
-    private featureFlags?: FeatureFlags;
+  private databaseConfig?: DatabaseConfig;
+  private apiConfig?: ApiConfig;
+  private authConfig?: AuthConfig;
+  private cachingConfig?: CachingConfig;
+  private loggingConfig?: LoggingConfig;
+  private featureFlags?: FeatureFlags;
 
-    setDatabaseConfig(
-        host: string,
-        port: number,
-        username: string,
-        password: string,
-        useSSL: boolean = true
-    ): this {
-        this.databaseConfig = new DatabaseConfig(host, port, username, password, useSSL);
-        return this;
+  setDatabaseConfig(
+    host: string,
+    port: number,
+    username: string,
+    password: string,
+    useSSL = true
+  ): this {
+    this.databaseConfig = new DatabaseConfig(
+      host,
+      port,
+      username,
+      password,
+      useSSL
+    );
+    return this;
+  }
+
+  setApiConfig(baseURL: string, timeout: number): this {
+    this.apiConfig = new ApiConfig(baseURL, timeout);
+    return this;
+  }
+
+  setAuthConfig(strategy: string, tokenEndpoint: string): this {
+    this.authConfig = new AuthConfig(strategy, tokenEndpoint);
+    return this;
+  }
+
+  setCachingConfig(enabled: boolean, type: string, ttlSeconds: number): this {
+    this.cachingConfig = new CachingConfig(enabled, type, ttlSeconds);
+    return this;
+  }
+
+  setLoggingConfig(
+    level: string,
+    logToFile: boolean,
+    logFilePath?: string
+  ): this {
+    this.loggingConfig = new LoggingConfig(level, logToFile, logFilePath);
+    return this;
+  }
+
+  setFeatureFlags(enableFeatureA: boolean, enableFeatureB: boolean): this {
+    this.featureFlags = new FeatureFlags(enableFeatureA, enableFeatureB);
+    return this;
+  }
+
+  build(): SystemConfig {
+    // Validate that all configurations have been set
+    if (
+      !this.databaseConfig ||
+      !this.apiConfig ||
+      !this.authConfig ||
+      !this.cachingConfig ||
+      !this.loggingConfig ||
+      !this.featureFlags
+    ) {
+      throw new Error(
+        'All configurations must be set before building the system config.'
+      );
     }
 
-    setApiConfig(baseURL: string, timeout: number): this {
-        this.apiConfig = new ApiConfig(baseURL, timeout);
-        return this;
-    }
-
-    setAuthConfig(strategy: string, tokenEndpoint: string): this {
-        this.authConfig = new AuthConfig(strategy, tokenEndpoint);
-        return this;
-    }
-
-    setCachingConfig(enabled: boolean, type: string, ttlSeconds: number): this {
-        this.cachingConfig = new CachingConfig(enabled, type, ttlSeconds);
-        return this;
-    }
-
-    setLoggingConfig(level: string, logToFile: boolean, logFilePath?: string): this {
-        this.loggingConfig = new LoggingConfig(level, logToFile, logFilePath);
-        return this;
-    }
-
-    setFeatureFlags(enableFeatureA: boolean, enableFeatureB: boolean): this {
-        this.featureFlags = new FeatureFlags(enableFeatureA, enableFeatureB);
-        return this;
-    }
-
-    build(): SystemConfig {
-        // Validate that all configurations have been set
-        if (!this.databaseConfig || !this.apiConfig || !this.authConfig || !this.cachingConfig || !this.loggingConfig || !this.featureFlags) {
-            throw new Error("All configurations must be set before building the system config.");
-        }
-
-        return new SystemConfig(
-            this.databaseConfig,
-            this.apiConfig,
-            this.authConfig,
-            this.cachingConfig,
-            this.loggingConfig,
-            this.featureFlags
-        );
-    }
+    return new SystemConfig(
+      this.databaseConfig,
+      this.apiConfig,
+      this.authConfig,
+      this.cachingConfig,
+      this.loggingConfig,
+      this.featureFlags
+    );
+  }
 }
 
 // ==========================
@@ -182,36 +210,40 @@ class SystemConfigBuilder implements ConfigBuilder {
 const builder = new SystemConfigBuilder();
 
 try {
-    // Creating a system configuration with all required details
-    const systemConfig = builder
-        .setDatabaseConfig("localhost", 5432, "admin", "password", false)
-        .setApiConfig("https://api.example.com", 3000)
-        .setAuthConfig("JWT", "/auth/token")
-        .setCachingConfig(true, "redis", 3600)
-        .setLoggingConfig("info", true, "/var/logs/app.log")
-        .setFeatureFlags(true, false)
-        .build();
+  // Creating a system configuration with all required details
+  const systemConfig = builder
+    .setDatabaseConfig('localhost', 5432, 'admin', 'password', false)
+    .setApiConfig('https://api.example.com', 3000)
+    .setAuthConfig('JWT', '/auth/token')
+    .setCachingConfig(true, 'redis', 3600)
+    .setLoggingConfig('info', true, '/var/logs/app.log')
+    .setFeatureFlags(true, false)
+    .build();
 
-    console.log("Generated System Config:\n", JSON.stringify(systemConfig, null, 2));
+  console.log(
+    'Generated System Config:\n',
+    JSON.stringify(systemConfig, null, 2)
+  );
 } catch (error) {
-    if (error instanceof Error) {
-        console.error("Failed to build system config:", error.message);
-    }
+  if (error instanceof Error) {
+    console.error('Failed to build system config:', error.message);
+  }
 }
 
 // Example with missing optional parameters
 const systemConfigWithDefaults = builder
-    .setDatabaseConfig("localhost", 3306, "root", "root", true) // Using default SSL
-    .setApiConfig("https://api.example.com", 5000)
-    .setAuthConfig("OAuth2", "/auth/authorize")
-    .setCachingConfig(false, "none", 0)
-    .setLoggingConfig("debug", false)
-    .setFeatureFlags(false, true)
-    .build();
+  .setDatabaseConfig('localhost', 3306, 'root', 'root', true) // Using default SSL
+  .setApiConfig('https://api.example.com', 5000)
+  .setAuthConfig('OAuth2', '/auth/authorize')
+  .setCachingConfig(false, 'none', 0)
+  .setLoggingConfig('debug', false)
+  .setFeatureFlags(false, true)
+  .build();
 
-console.log("System Config with Defaults:\n", JSON.stringify(systemConfigWithDefaults, null, 2));
-
-
+console.log(
+  'System Config with Defaults:\n',
+  JSON.stringify(systemConfigWithDefaults, null, 2)
+);
 
 /*
 // # output example: 
@@ -281,7 +313,6 @@ System Config with Defaults:
   }
 }
 */
-
 
 /*
 

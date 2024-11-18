@@ -1,8 +1,14 @@
+// Add enum at the top
+export enum BurgerType {
+  REGULAR = 'regular',
+  DELUXE = 'deluxe',
+}
+
 // Burger.ts
 export abstract class Burger {
-  protected name: string;
-  protected bread: string;
-  protected sauce: string;
+  protected name!: string;
+  protected bread!: string;
+  protected sauce!: string;
   protected toppings: string[];
 
   constructor() {
@@ -18,7 +24,9 @@ export abstract class Burger {
   }
 
   serve(): void {
-    console.log(`Serving ${this.name} with toppings: ${this.toppings.join(", ")}`);
+    console.log(
+      `Serving ${this.name} with toppings: ${this.toppings.join(', ')}`
+    );
   }
 
   getName(): string {
@@ -29,50 +37,49 @@ export abstract class Burger {
 export class CheeseBurger extends Burger {
   constructor() {
     super();
-    this.name = "Cheese Burger";
-    this.bread = "Brioche Bun";
-    this.sauce = "Ketchup";
-    this.toppings = ["Cheese", "Lettuce", "Tomato"];
+    this.name = 'Cheese Burger';
+    this.bread = 'Brioche Bun';
+    this.sauce = 'Ketchup';
+    this.toppings = ['Cheese', 'Lettuce', 'Tomato'];
   }
 }
-
 
 export class DeluxeCheeseBurger extends Burger {
   constructor() {
     super();
-    this.name = "Deluxe Cheese Burger";
-    this.bread = "Sesame Bun";
-    this.sauce = "BBQ Sauce";
-    this.toppings = ["Cheese", "Bacon", "Pickles", "Lettuce"];
+    this.name = 'Deluxe Cheese Burger';
+    this.bread = 'Sesame Bun';
+    this.sauce = 'BBQ Sauce';
+    this.toppings = ['Cheese', 'Bacon', 'Pickles', 'Lettuce'];
   }
 }
 
 export class VeganBurger extends Burger {
   constructor() {
     super();
-    this.name = "Vegan Burger";
-    this.bread = "Whole Wheat Bun";
-    this.sauce = "Vegan Mayo";
-    this.toppings = ["Lettuce", "Tomato", "Onion"];
+    this.name = 'Vegan Burger';
+    this.bread = 'Whole Wheat Bun';
+    this.sauce = 'Vegan Mayo';
+    this.toppings = ['Lettuce', 'Tomato', 'Onion'];
   }
 }
 
 export class DeluxeVeganBurger extends Burger {
   constructor() {
     super();
-    this.name = "Deluxe Vegan Burger";
-    this.bread = "Gluten-Free Bun";
-    this.sauce = "Avocado Sauce";
-    this.toppings = ["Lettuce", "Grilled Veggies", "Guacamole"];
+    this.name = 'Deluxe Vegan Burger';
+    this.bread = 'Gluten-Free Bun';
+    this.sauce = 'Avocado Sauce';
+    this.toppings = ['Lettuce', 'Grilled Veggies', 'Guacamole'];
   }
 }
 
 // BurgerStore.ts – Abstract Factory
 export abstract class BurgerStore {
   // Factory Method to be overridden by subclasses
-  protected abstract createBurger(type: string): Burger;
+  protected abstract createBurger(type: BurgerType): Burger;
 
-  orderBurger(type: string): Burger {
+  orderBurger(type: BurgerType): Burger {
     const burger = this.createBurger(type);
     burger.prepare();
     burger.cook();
@@ -82,21 +89,27 @@ export abstract class BurgerStore {
 }
 
 export class CheeseBurgerStore extends BurgerStore {
-  protected createBurger(type: string): Burger {
-    if (type === "deluxe") {
-      return new DeluxeCheeseBurger();
-    } else {
-      return new CheeseBurger();
+  protected createBurger(type: BurgerType): Burger {
+    switch (type) {
+      case BurgerType.DELUXE:
+        return new DeluxeCheeseBurger();
+      case BurgerType.REGULAR:
+        return new CheeseBurger();
+      default:
+        throw new Error(`Invalid burger type: ${type}`);
     }
   }
 }
 
 export class VeganBurgerStore extends BurgerStore {
-  protected createBurger(type: string): Burger {
-    if (type === "deluxe") {
-      return new DeluxeVeganBurger();
-    } else {
-      return new VeganBurger();
+  protected createBurger(type: BurgerType): Burger {
+    switch (type) {
+      case BurgerType.DELUXE:
+        return new DeluxeVeganBurger();
+      case BurgerType.REGULAR:
+        return new VeganBurger();
+      default:
+        throw new Error(`Invalid burger type: ${type}`);
     }
   }
 }
@@ -104,8 +117,8 @@ export class VeganBurgerStore extends BurgerStore {
 const cheeseBurgerStore = new CheeseBurgerStore();
 const veganBurgerStore = new VeganBurgerStore();
 
-console.log("Ordering a regular Cheese Burger:");
-cheeseBurgerStore.orderBurger("regular");
+console.log('Ordering a regular Cheese Burger:');
+cheeseBurgerStore.orderBurger(BurgerType.REGULAR);
 
-console.log("\nOrdering a Deluxe Vegan Burger:");
-veganBurgerStore.orderBurger("deluxe");
+console.log('\nOrdering a Deluxe Vegan Burger:');
+veganBurgerStore.orderBurger(BurgerType.DELUXE);

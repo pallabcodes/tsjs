@@ -15,7 +15,6 @@
 //
 // Let’s demonstrate the Prototype Pattern in the context of an **Order System**. In this system, orders are placed with specific configurations, and you can create new orders by cloning a prototype order.
 
-
 // ### Scenario 1: Cloning Objects with Shared State
 //
 // In this case, you might need to clone an order configuration where the customer can choose certain customizations while retaining some base properties that are common to many orders (like product, payment method, and delivery details).
@@ -23,53 +22,67 @@
 // ### Code Example:
 
 interface OrderPrototype {
-    clone(): OrderPrototype;
-    getDetails(): string;
+  clone(): OrderPrototype;
+  getDetails(): string;
 }
 
 class Order implements OrderPrototype {
-    constructor(
-        private product: string,
-        private quantity: number,
-        private paymentMethod: string,
-        private deliveryMethod: string
-    ) {}
+  constructor(
+    private product: string,
+    private quantity: number,
+    private paymentMethod: string,
+    private deliveryMethod: string
+  ) {}
 
-    // Method to clone an order
-    clone(): OrderPrototype {
-        return new Order(this.product, this.quantity, this.paymentMethod, this.deliveryMethod);
-    }
+  // Method to clone an order
+  clone(): OrderPrototype {
+    return new Order(
+      this.product,
+      this.quantity,
+      this.paymentMethod,
+      this.deliveryMethod
+    );
+  }
 
-    // Method to show the order details
-    getDetails(): string {
-        return `Product: ${this.product}, Quantity: ${this.quantity}, Payment: ${this.paymentMethod}, Delivery: ${this.deliveryMethod}`;
-    }
+  // Method to show the order details
+  getDetails(): string {
+    return `Product: ${this.product}, Quantity: ${this.quantity}, Payment: ${this.paymentMethod}, Delivery: ${this.deliveryMethod}`;
+  }
 }
 
 class OrderManager {
-    private prototypeOrder: OrderPrototype;
+  private prototypeOrder: OrderPrototype;
 
-    constructor() {
-        // Initialize with a default order configuration
-        this.prototypeOrder = new Order("Laptop", 1, "Credit Card", "Standard Shipping");
-    }
+  constructor() {
+    // Initialize with a default order configuration
+    this.prototypeOrder = new Order(
+      'Laptop',
+      1,
+      'Credit Card',
+      'Standard Shipping'
+    );
+  }
 
-    // Method to create a new order by cloning the prototype
-    createOrder(quantity: number, paymentMethod: string, deliveryMethod: string): OrderPrototype {
-        const newOrder = this.prototypeOrder.clone() as Order;
-        newOrder['quantity'] = quantity;
-        newOrder['paymentMethod'] = paymentMethod;
-        newOrder['deliveryMethod'] = deliveryMethod;
-        return newOrder;
-    }
+  // Method to create a new order by cloning the prototype
+  createOrder(
+    quantity: number,
+    paymentMethod: string,
+    deliveryMethod: string
+  ): OrderPrototype {
+    const newOrder = this.prototypeOrder.clone() as Order;
+    newOrder['quantity'] = quantity;
+    newOrder['paymentMethod'] = paymentMethod;
+    newOrder['deliveryMethod'] = deliveryMethod;
+    return newOrder;
+  }
 }
 
 // Usage
 const orderManager = new OrderManager();
-const order1 = orderManager.createOrder(2, "PayPal", "Express Shipping");
+const order1 = orderManager.createOrder(2, 'PayPal', 'Express Shipping');
 console.log(order1.getDetails());
 
-const order2 = orderManager.createOrder(3, "Credit Card", "Standard Shipping");
+const order2 = orderManager.createOrder(3, 'Credit Card', 'Standard Shipping');
 console.log(order2.getDetails());
 
 // ### Explanation:
@@ -84,53 +97,65 @@ console.log(order2.getDetails());
 // ### Code Example:
 
 interface ProductPrototype {
-    clone(): ProductPrototype;
-    getDetails(): string;
+  clone(): ProductPrototype;
+  getDetails(): string;
 }
 
 class Product implements ProductPrototype {
-    constructor(
-        private name: string,
-        private color: string,
-        private size: string,
-        private accessories: string[]
-    ) {}
+  constructor(
+    private name: string,
+    private color: string,
+    private size: string,
+    private accessories: string[]
+  ) {}
 
-    // Clone method to clone the base product
-    clone(): ProductPrototype {
-        return new Product(this.name, this.color, this.size, [...this.accessories]);
-    }
+  // Clone method to clone the base product
+  clone(): ProductPrototype {
+    return new Product(this.name, this.color, this.size, [...this.accessories]);
+  }
 
-    // Method to get product details
-    getDetails(): string {
-        return `Product: ${this.name}, Color: ${this.color}, Size: ${this.size}, Accessories: ${this.accessories.join(", ")}`;
-    }
+  // Method to get product details
+  getDetails(): string {
+    return `Product: ${this.name}, Color: ${this.color}, Size: ${
+      this.size
+    }, Accessories: ${this.accessories.join(', ')}`;
+  }
 }
 
 class ProductConfigurator {
-    private prototypeProduct: ProductPrototype;
+  private prototypeProduct: ProductPrototype;
 
-    constructor() {
-        // Set up a default base product configuration
-        this.prototypeProduct = new Product("Smartphone", "Black", "Medium", ["Case", "Screen Protector"]);
-    }
+  constructor() {
+    // Set up a default base product configuration
+    this.prototypeProduct = new Product('Smartphone', 'Black', 'Medium', [
+      'Case',
+      'Screen Protector',
+    ]);
+  }
 
-    // Customize and clone the product
-    createProduct(color: string, size: string, accessories: string[]): ProductPrototype {
-        const newProduct = this.prototypeProduct.clone() as Product;
-        newProduct['color'] = color;
-        newProduct['size'] = size;
-        newProduct['accessories'] = accessories;
-        return newProduct;
-    }
+  // Customize and clone the product
+  createProduct(
+    color: string,
+    size: string,
+    accessories: string[]
+  ): ProductPrototype {
+    const newProduct = this.prototypeProduct.clone() as Product;
+    newProduct['color'] = color;
+    newProduct['size'] = size;
+    newProduct['accessories'] = accessories;
+    return newProduct;
+  }
 }
 
 // Usage
 const configurator = new ProductConfigurator();
-const product1 = configurator.createProduct("Red", "Large", ["Charger", "Earphones"]);
+const product1 = configurator.createProduct('Red', 'Large', [
+  'Charger',
+  'Earphones',
+]);
 console.log(product1.getDetails());
 
-const product2 = configurator.createProduct("Blue", "Small", ["Charger"]);
+const product2 = configurator.createProduct('Blue', 'Small', ['Charger']);
 console.log(product2.getDetails());
 
 // ### Explanation:
@@ -143,46 +168,46 @@ console.log(product2.getDetails());
 // ### Code Example:
 
 interface ReportPrototype {
-    clone(): ReportPrototype;
-    generate(): string;
+  clone(): ReportPrototype;
+  generate(): string;
 }
 
 class ReportTemplate implements ReportPrototype {
-    constructor(private content: string) {}
+  constructor(private content: string) {}
 
-    // Clone method to clone a report object
-    clone(): ReportPrototype {
-        return new ReportTemplate(this.content);
-    }
+  // Clone method to clone a report object
+  clone(): ReportPrototype {
+    return new ReportTemplate(this.content);
+  }
 
-    // Method to generate report content (simulated with a delay for performance)
-    generate(): string {
-        return `Report Content: ${this.content}`;
-    }
+  // Method to generate report content (simulated with a delay for performance)
+  generate(): string {
+    return `Report Content: ${this.content}`;
+  }
 }
 
 class ReportManager {
-    private prototypeReport: ReportPrototype;
+  private prototypeReport: ReportPrototype;
 
-    constructor() {
-        // Initialize with a default report template
-        this.prototypeReport = new ReportTemplate("Default Report Content");
-    }
+  constructor() {
+    // Initialize with a default report template
+    this.prototypeReport = new ReportTemplate('Default Report Content');
+  }
 
-    // Method to generate a new report by cloning the prototype
-    generateReport(content: string): ReportPrototype {
-        const newReport = this.prototypeReport.clone() as ReportTemplate;
-        newReport['content'] = content;
-        return newReport;
-    }
+  // Method to generate a new report by cloning the prototype
+  generateReport(content: string): ReportPrototype {
+    const newReport = this.prototypeReport.clone() as ReportTemplate;
+    newReport['content'] = content;
+    return newReport;
+  }
 }
 
 // Usage
 const reportManager = new ReportManager();
-const report1 = reportManager.generateReport("Financial Report for Q1");
+const report1 = reportManager.generateReport('Financial Report for Q1');
 console.log(report1.generate());
 
-const report2 = reportManager.generateReport("Employee Performance Report");
+const report2 = reportManager.generateReport('Employee Performance Report');
 console.log(report2.generate());
 
 // ### Explanation:
@@ -197,45 +222,49 @@ console.log(report2.generate());
 // ### Code Example:
 
 interface CharacterPrototype {
-    clone(): CharacterPrototype;
-    getStats(): string;
+  clone(): CharacterPrototype;
+  getStats(): string;
 }
 
 class Character implements CharacterPrototype {
-    constructor(
-        private name: string,
-        private level: number,
-        private health: number,
-        private attack: number
-    ) {}
+  constructor(
+    private name: string,
+    private level: number,
+    private health: number,
+    private attack: number
+  ) {}
 
-    // Clone method to clone the character
-    clone(): CharacterPrototype {
-        return new Character(this.name, this.level, this.health, this.attack);
-    }
+  // Clone method to clone the character
+  clone(): CharacterPrototype {
+    return new Character(this.name, this.level, this.health, this.attack);
+  }
 
-    // Method to get character stats
-    getStats(): string {
-        return `Name: ${this.name}, Level: ${this.level}, Health: ${this.health}, Attack: ${this.attack}`;
-    }
+  // Method to get character stats
+  getStats(): string {
+    return `Name: ${this.name}, Level: ${this.level}, Health: ${this.health}, Attack: ${this.attack}`;
+  }
 }
 
 class CharacterCreator {
-    private prototypeCharacter: CharacterPrototype;
+  private prototypeCharacter: CharacterPrototype;
 
-    constructor() {
-        // Initialize with a default character template
-        this.prototypeCharacter = new Character("Warrior", 1, 100, 10);
-    }
+  constructor() {
+    // Initialize with a default character template
+    this.prototypeCharacter = new Character('Warrior', 1, 100, 10);
+  }
 
-    // Create new character by cloning and modifying the prototype
-    createCharacter(level: number, health: number, attack: number): CharacterPrototype {
-        const newCharacter = this.prototypeCharacter.clone() as Character;
-        newCharacter['level'] = level;
-        newCharacter['health'] = health;
-        newCharacter['attack'] = attack;
-        return newCharacter;
-    }
+  // Create new character by cloning and modifying the prototype
+  createCharacter(
+    level: number,
+    health: number,
+    attack: number
+  ): CharacterPrototype {
+    const newCharacter = this.prototypeCharacter.clone() as Character;
+    newCharacter['level'] = level;
+    newCharacter['health'] = health;
+    newCharacter['attack'] = attack;
+    return newCharacter;
+  }
 }
 
 // Usage

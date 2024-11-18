@@ -47,7 +47,7 @@ abstract class LoggerDecorator implements Logger {
 
 // Adds a timestamp to the log message
 class TimestampLogger extends LoggerDecorator {
-  log(message: string): void {
+  override log(message: string): void {
     const timestamp = new Date().toISOString();
     super.log(`[${timestamp}] ${message}`);
   }
@@ -62,23 +62,26 @@ class FileLogger extends LoggerDecorator {
     this.filePath = filePath;
   }
 
-  log(message: string): void {
+  override log(message: string): void {
     // Simulate writing to a file (for demo purposes, print to console)
     console.log(`(Writing to ${this.filePath}): ${message}`);
     super.log(message);
   }
 }
 
+// Add error level type for better type safety
+type ErrorLevel = 'INFO' | 'WARN' | 'ERROR' | 'DEBUG';
+
 // Filters log messages by error level
 class ErrorLevelLogger extends LoggerDecorator {
-  private readonly level: string;
+  private readonly level: ErrorLevel;
 
-  constructor(logger: Logger, level: string) {
+  constructor(logger: Logger, level: ErrorLevel) {
     super(logger);
     this.level = level;
   }
 
-  log(message: string): void {
+  override log(message: string): void {
     if (message.includes(`[${this.level}]`)) {
       super.log(message);
     }
@@ -91,17 +94,16 @@ class ErrorLevelLogger extends LoggerDecorator {
 const baseLogger = new BaseLogger();
 
 const timestampLogger = new TimestampLogger(baseLogger);
-const errorLogger = new ErrorLevelLogger(timestampLogger, "ERROR");
-const fileLogger = new FileLogger(errorLogger, "/var/logs/app.log");
+const errorLogger = new ErrorLevelLogger(timestampLogger, 'ERROR');
+const fileLogger = new FileLogger(errorLogger, '/var/logs/app.log');
 
 // Logs with timestamps, filters by level, and writes to file
-fileLogger.log("[INFO] This is an informational message."); // Not logged by ErrorLevelLogger
-fileLogger.log("[ERROR] This is an error message.");        // Logs to file with timestamp
+fileLogger.log('[INFO] This is an informational message.'); // Not logged by ErrorLevelLogger
+fileLogger.log('[ERROR] This is an error message.'); // Logs to file with timestamp
 
 // Example: Simpler chain
 const simpleLogger = new TimestampLogger(new BaseLogger());
-simpleLogger.log("A simple timestamped log.");
-
+simpleLogger.log('A simple timestamped log.');
 
 /**
  *

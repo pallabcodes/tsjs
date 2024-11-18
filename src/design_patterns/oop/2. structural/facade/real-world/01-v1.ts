@@ -75,8 +75,13 @@ class OrderProcessingFacade {
     this.config = config;
   }
 
-  processOrder(itemId: string, amount: number, userEmail: string, shippingAddress?: string): boolean {
-    console.log("Order processing started...");
+  processOrder(
+    itemId: string,
+    amount: number,
+    userEmail: string,
+    shippingAddress?: string
+  ): boolean {
+    console.log('Order processing started...');
 
     try {
       // Check stock
@@ -87,21 +92,24 @@ class OrderProcessingFacade {
 
       // Process payment
       if (!this.paymentGateway.processPayment(amount)) {
-        throw new Error("Payment failed.");
+        throw new Error('Payment failed.');
       }
 
       // Arrange shipping
       const address = shippingAddress || this.config.defaultShippingAddress;
       if (!address) {
-        throw new Error("No shipping address provided.");
+        throw new Error('No shipping address provided.');
       }
       this.shippingService.arrangeShipping(address);
 
       // Send notification
       const email = this.config.notificationEmail || userEmail;
-      this.notificationService.sendEmail(email, "Your order has been processed successfully!");
+      this.notificationService.sendEmail(
+        email,
+        'Your order has been processed successfully!'
+      );
 
-      console.log("Order processed successfully.");
+      console.log('Order processed successfully.');
       return true;
     } catch (error) {
       ErrorLogger.log((error as Error).message);
@@ -119,8 +127,8 @@ const notificationService = new NotificationService();
 
 // Configure facade with dynamic options
 const orderConfig: OrderConfig = {
-  notificationEmail: "support@example.com", // Default email
-  defaultShippingAddress: "123 Default Lane" // Default address
+  notificationEmail: 'support@example.com', // Default email
+  defaultShippingAddress: '123 Default Lane', // Default address
 };
 
 // Create the facade
@@ -134,14 +142,14 @@ const orderFacade = new OrderProcessingFacade(
 
 // Process order
 const success = orderFacade.processOrder(
-  "item123",        // Item ID
-  49.99,            // Amount
-  "user@example.com", // User email
-  "456 Custom Ave"   // Custom shipping address
+  'item123', // Item ID
+  49.99, // Amount
+  'user@example.com', // User email
+  '456 Custom Ave' // Custom shipping address
 );
 
 if (!success) {
-  console.log("Order processing failed.");
+  console.log('Order processing failed.');
 }
 
 // Key Features
