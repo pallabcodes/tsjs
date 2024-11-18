@@ -59,10 +59,10 @@ export const greeter: GreeterFunction;
 // # library structure
 
   myLib
-    +---- index.js
+    +---- start.js
     +---- foo.js   
     +---- bar
-          +----- index.js
+          +----- start.js
           +----- baz.js
 
 

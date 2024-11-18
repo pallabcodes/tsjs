@@ -1,0 +1,1 @@
+A builder pattern is great for such situations where the configuration might change, and there are many options that need to be set in a flexible and extensible way.
