@@ -36,24 +36,23 @@ class QueryBuilder {
     }
 
     build(): string {
-        // Build actual SQL query string
         let query = `SELECT ${this.query.select.join(', ')} FROM ${this.query.from}`;
-        
+
         if (this.query.where.length) {
             query += ` WHERE ${this.query.where.join(' AND ')}`;
         }
-        
+
         if (this.query.orderBy.length) {
             const orderClauses = this.query.orderBy
                 .map(({field, direction}: any) => `${field} ${direction}`)
                 .join(', ');
             query += ` ORDER BY ${orderClauses}`;
         }
-        
+
         if (this.query.limit) {
             query += ` LIMIT ${this.query.limit}`;
         }
-        
+
         return query;
     }
 }
@@ -69,36 +68,40 @@ const query = new QueryBuilder()
 
 // FACTORY PATTERN
 // Real-world example: Payment Gateway Integration
+
+// Interface for payment processor classes
 interface PaymentProcessor {
     processPayment(amount: number): Promise<boolean>;
     refundPayment(transactionId: string): Promise<boolean>;
 }
 
+// Stripe payment processor implementation
 class StripeProcessor implements PaymentProcessor {
     async processPayment(amount: number): Promise<boolean> {
-        // Stripe-specific implementation
+        console.log(`Processing payment of $${amount} with Stripe`);
         return true;
     }
 
     async refundPayment(transactionId: string): Promise<boolean> {
-        // Stripe-specific refund logic
+        console.log(`Refunding transaction ${transactionId} with Stripe`);
         return true;
     }
 }
 
+// PayPal payment processor implementation
 class PayPalProcessor implements PaymentProcessor {
     async processPayment(amount: number): Promise<boolean> {
-        // PayPal-specific implementation
+        console.log(`Processing payment of $${amount} with PayPal`);
         return true;
     }
 
     async refundPayment(transactionId: string): Promise<boolean> {
-        // PayPal-specific refund logic
+        console.log(`Refunding transaction ${transactionId} with PayPal`);
         return true;
     }
 }
 
-// Factory
+// Factory class for creating payment processors
 class PaymentProcessorFactory {
     static createProcessor(type: 'stripe' | 'paypal'): PaymentProcessor {
         switch (type) {
@@ -114,6 +117,13 @@ class PaymentProcessorFactory {
 
 // PROTOTYPE PATTERN
 // Real-world example: Deep cloning complex configuration objects
+
+// Cloneable interface to ensure the clone method is implemented
+interface Cloneable {
+    clone(): this;
+}
+
+// Configuration for the server, which can be cloned
 class ServerConfig implements Cloneable {
     constructor(
         public host: string,
@@ -122,18 +132,46 @@ class ServerConfig implements Cloneable {
         public cache: CacheConfig
     ) {}
 
-    clone(): ServerConfig {
+    clone(): this {
         return new ServerConfig(
             this.host,
             this.port,
             this.database.clone(),
             this.cache.clone()
-        );
+        ) as this;
     }
 }
 
+
+// Assuming DatabaseConfig and CacheConfig are also cloneable
+class DatabaseConfig implements Cloneable {
+    constructor(public dbName: string) {}
+
+    clone(): this {
+        return new DatabaseConfig(this.dbName) as this;
+    }
+}
+
+
+class CacheConfig implements Cloneable {
+    constructor(public cacheSize: number) {}
+
+    clone(): this {
+        return new CacheConfig(this.cacheSize) as this;
+    }
+}
+
+
 // OBJECT POOL PATTERN
 // Real-world example: Database Connection Pool
+
+// Represents a database connection
+class DatabaseConnection {
+    static async create(): Promise<DatabaseConnection> {
+        return new DatabaseConnection();
+    }
+}
+
 class DatabaseConnectionPool {
     private connections: DatabaseConnection[] = [];
     private inUse: Set<DatabaseConnection> = new Set();
@@ -143,8 +181,8 @@ class DatabaseConnectionPool {
         this.maxConnections = maxConnections;
     }
 
+    // Acquire a connection from the pool
     async acquire(): Promise<DatabaseConnection> {
-        // First try to find an available connection
         const availableConnection = this.connections.find(
             conn => !this.inUse.has(conn)
         );
@@ -154,7 +192,6 @@ class DatabaseConnectionPool {
             return availableConnection;
         }
 
-        // If no connection available and we can create more
         if (this.connections.length < this.maxConnections) {
             const newConnection = await DatabaseConnection.create();
             this.connections.push(newConnection);
@@ -162,7 +199,6 @@ class DatabaseConnectionPool {
             return newConnection;
         }
 
-        // Wait for a connection to become available
         return new Promise((resolve) => {
             const checkInterval = setInterval(() => {
                 const conn = this.connections.find(c => !this.inUse.has(c));
@@ -175,6 +211,7 @@ class DatabaseConnectionPool {
         });
     }
 
+    // Release a connection back to the pool
     release(connection: DatabaseConnection): void {
         this.inUse.delete(connection);
     }

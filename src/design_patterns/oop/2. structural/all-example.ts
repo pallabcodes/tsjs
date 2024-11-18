@@ -32,6 +32,35 @@ class PaymentSystemAdapter implements ModernPaymentAPI {
     }
 }
 
+// Added missing video processing related classes
+class VideoValidator {
+    async validate(file: File): Promise<boolean> {
+        // Validation logic here
+        return true;
+    }
+}
+
+class VideoCompressor {
+    async compress(file: File): Promise<File> {
+        // Compression logic here
+        return file;
+    }
+}
+
+class VideoTranscoder {
+    async transcode(file: File): Promise<File> {
+        // Transcoding logic here
+        return file;
+    }
+}
+
+class CloudUploader {
+    async upload(file: File): Promise<string> {
+        // Upload logic here
+        return "https://cloud-storage.com/video-url";
+    }
+}
+
 // FACADE PATTERN
 // Real-world example: Video Processing Service
 class VideoProcessor {
@@ -54,7 +83,7 @@ class VideoProcessor {
             const url = await uploader.upload(transcoded);
 
             return url;
-        } catch (error) {
+        } catch (error: any) {
             throw new Error(`Video processing failed: ${error.message}`);
         }
     }

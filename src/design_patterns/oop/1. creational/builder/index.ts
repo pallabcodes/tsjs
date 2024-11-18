@@ -16,6 +16,7 @@ interface MealBuilder {
 
 // Meal class (Immutable with getters)
 class Meal {
+  // shorthand (so instead of assigning attributes then assigning within constructor) to create these properties with given arguments
   constructor(
     public readonly starter: Starter,
     public readonly main: Main,
@@ -143,4 +144,3 @@ console.log(`Starter: ${healthyMeal.getStarter()}`);
 console.log(`Main: ${healthyMeal.getMain()}`);
 console.log(`Dessert: ${healthyMeal.getDessert()}`);
 console.log(`Drink: ${healthyMeal.getDrink()}`);
-
