@@ -1,48 +1,41 @@
-/*
-3. Cache Singleton
+class Cache {
+    private static instance: Cache;
+    private cache: Map<string, unknown> = new Map(); // Use `unknown` instead of `any`
 
-A cache is often shared across various parts of an application. Using a singleton ensures that only one cache instance exists, preventing inconsistencies and improving memory usage.
-*/
+    // Private constructor ensures no external instantiation
+    private constructor() {}
 
-// class Cache {
-//     private static instance: Cache;
-//     private cache: Map<string, any> = new Map();
+    // Method to get the single instance of the Cache
+    public static getInstance(): Cache {
+        if (!Cache.instance) {
+            Cache.instance = new Cache();
+        }
+        return Cache.instance;
+    }
 
-//     private constructor() {}
+    // Method to get a value by its key
+    public get<T>(key: string): T | undefined {
+        const value = this.cache.get(key);
+        return value as T | undefined; // Cast the value to the expected type
+    }
 
-//     public static getInstance(): Cache {
-//         if (!Cache.instance) {
-//             Cache.instance = new Cache();
-//         }
-//         return Cache.instance;
-//     }
+    // Method to set a value in the cache
+    public set(key: string, value: unknown): void {
+        this.cache.set(key, value);
+    }
 
-//     public get(key: string): any {
-//         return this.cache.get(key);
-//     }
+    // Method to clear all cache entries
+    public clear(): void {
+        this.cache.clear();
+    }
+}
 
-//     public set(key: string, value: any): void {
-//         this.cache.set(key, value);
-//     }
+// Usage example
+const cache1 = Cache.getInstance();
+cache1.set("user123", { name: "John", age: 30 });
 
-//     public clear(): void {
-//         this.cache.clear();
-//     }
-// }
+const cache2 = Cache.getInstance();
+const user = cache2.get<{ name: string; age: number }>("user123");
+console.log(user); // { name: "John", age: 30 }
 
-// // Usage
-// const cache1 = Cache.getInstance();
-// cache1.set("user123", { name: "John", age: 30 });
-
-// const cache2 = Cache.getInstance();
-// console.log(cache2.get("user123")); // { name: "John", age: 30 }
-
-// console.log("Are both cache instances the same?", cache1 === cache2); // true
-
-/*
-Explanation:
-
-Cache Class: This singleton ensures there’s one cache instance shared across the application. It uses a Map to store cached data.
-Methods: get(), set(), and clear() manage the cache. The singleton guarantees only one instance handles caching.
-
-*/
+console.log("Are both cache instances the same?", cache1 === cache2); // true

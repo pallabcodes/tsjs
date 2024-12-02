@@ -1,30 +1,34 @@
 // 4. Thread Pool / Database Connection Pool Singleton
-// In multi-threaded or multi-process applications, managing thread pools or database connections efficiently is critical. A singleton ensures only one connection pool or thread pool is created, reducing resource contention and improving efficiency.
+// In multithreaded or multiprocess applications, managing thread pools or database connections efficiently is critical.
+// A singleton ensures only one connection pool or thread pool is created, reducing resource contention and improving efficiency.
 
 class DatabaseConnectionPool {
+  // Singleton instance, ensuring only one instance is created
   private static instance: DatabaseConnectionPool | null = null;
+
+  // Promise used for async initialization of the instance
   private static initializationPromise: Promise<DatabaseConnectionPool> | null = null;
 
-  private connections: string[] = [];
-  private availableConnections: string[] = [];
+  // Using readonly for immutability where appropriate
+  private readonly connections: string[] = [];
+  private readonly availableConnections: string[] = [];
   private isInitializing: boolean = false;
 
-  private constructor() {
-    // Simulate async database connection initialization
-    this.initializeConnections();
-  }
+  // Private constructor ensures no external instantiation
+  private constructor() {}
 
+  // Singleton getter with thread-safety for async initialization
   public static async getInstance(): Promise<DatabaseConnectionPool> {
     if (DatabaseConnectionPool.instance) {
       return DatabaseConnectionPool.instance;
     }
 
-    // Initialize the singleton instance asynchronously
+    // If an instance is not created, initialize it asynchronously with a lock (to avoid race conditions)
     if (!DatabaseConnectionPool.initializationPromise) {
       DatabaseConnectionPool.initializationPromise = (async () => {
         const instance = new DatabaseConnectionPool();
         try {
-          await instance.initializeConnections(); // Simulate async connection setup
+          await instance.initializeConnections(); // Initialize connections asynchronously
           return instance;
         } catch (error) {
           console.error('Error initializing DatabaseConnectionPool:', error);
@@ -33,24 +37,25 @@ class DatabaseConnectionPool {
       })();
     }
 
-    // Wait for the initialization process to finish
+    // Wait for the initialization process to complete
     DatabaseConnectionPool.instance = await DatabaseConnectionPool.initializationPromise;
     return DatabaseConnectionPool.instance;
   }
 
+  // Private method to simulate async database connection initialization
   private async initializeConnections(): Promise<void> {
-    // Simulate async connection creation
-    if (this.isInitializing) return;
-
+    if (this.isInitializing) return; // Prevent concurrent initializations
     this.isInitializing = true;
+
     try {
-      await new Promise<void>((resolve, reject) => {
+      // Simulate a network or DB call that takes time (1 second)
+      await new Promise<void>((resolve) => {
         setTimeout(() => {
           console.log('Database connections initialized');
           this.connections.push('DB_Connection_1', 'DB_Connection_2');
           this.availableConnections.push(...this.connections);
           resolve();
-        }, 1000); // Simulate 1 second for connection initialization
+        }, 1000);
       });
     } catch (error) {
       console.error('Error during connection pool initialization:', error);
@@ -60,20 +65,23 @@ class DatabaseConnectionPool {
     }
   }
 
+  // Method to safely retrieve a connection from the pool
   public async getConnection(): Promise<string> {
     if (this.availableConnections.length === 0) {
-      // Simulate waiting for a connection to become available
       console.log('Waiting for available connection...');
-      await this.initializeConnections(); // Wait for connections to be initialized if not yet available
+      // Initialize connections if not already done
+      await this.initializeConnections();
     }
 
-    // Return the first available connection
     const connection = this.availableConnections.pop();
     return connection || 'No available connections';
   }
 
+  // Method to release a connection back to the pool
   public releaseConnection(connection: string): void {
-    this.availableConnections.push(connection);
+    if (connection) {
+      this.availableConnections.push(connection);
+    }
   }
 }
 
@@ -90,6 +98,7 @@ class DatabaseConnectionPool {
   pool1.releaseConnection('DB_Connection_1');
   console.log(await pool2.getConnection()); // DB_Connection_1
 })();
+
 
 
 // Explanation:

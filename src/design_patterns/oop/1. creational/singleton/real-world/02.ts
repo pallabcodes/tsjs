@@ -32,7 +32,7 @@ class Logger {
 
   private async initialize(): Promise<void> {
     // Simulating asynchronous setup, such as opening a log file or establishing a network connection
-    await new Promise((resolve) => {
+    await new Promise(resolve => {
       setTimeout(() => {
         console.log('Logger setup complete.');
         resolve(null);

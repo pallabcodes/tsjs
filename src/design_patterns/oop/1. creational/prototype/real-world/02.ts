@@ -27,7 +27,7 @@ interface ConfigPrototype {
   getSettings(): string;
 }
 
-// This interface will ensure that all configuration objects have the ability to be cloned and provide a method to return their settings.
+// This interface will ensure that all configuration objects can be cloned and provide a method to return their settings.
 
 // ### Step 2: Define Concrete Config Prototypes for Each Environment
 

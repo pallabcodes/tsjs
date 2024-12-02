@@ -6,7 +6,7 @@
 // 4. **State Sharing**: When several objects need to share a common state, cloning an existing object with that state helps maintain consistency.
 //
 // ### Scenarios for Using the Prototype Pattern:
-//     1. **Cloning Objects with Shared State**
+// 1. **Cloning Objects with Shared State**
 // 2. **Creating Complex Configurations with Similar Components**
 // 3. **Prototype Caching for Expensive Objects**
 // 4. **Customizable Object Creation**

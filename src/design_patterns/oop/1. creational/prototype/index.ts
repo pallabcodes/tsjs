@@ -10,7 +10,7 @@ interface Enemy {
 
 // Concrete implementation of a Zombie enemy
 class Zombie implements Enemy {
-  // constructor(private health: number, private speed: number) {}
+  // constructor (private health: number, private speed: number) {}
   constructor(public health: number, public speed: number) {}
 
   clone(): Enemy {
