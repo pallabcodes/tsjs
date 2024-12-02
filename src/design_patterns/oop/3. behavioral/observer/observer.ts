@@ -1,7 +1,7 @@
 // N.B: it is all about "notification" behavior
 
 // Abstract Subject class
-class Subject {
+abstract class Subject<T = unknown> {
   constructor() {
     // Prevent instantiation of the abstract class
     if (new.target === Subject) {
@@ -10,36 +10,27 @@ class Subject {
   }
 
   // Method to register an observer; implement this in concrete subjects
-  registerObserver() {
-    throw new Error('You have to implement the method registerObserver!');
-  }
+  abstract registerObserver(observer: Observer<T>): void;
 
   // Method to remove an observer; implement this in concrete subjects
-  removeObserver() {
-    throw new Error('You have to implement the method removeObserver!');
-  }
+  abstract removeObserver(observer: Observer<T>): void;
 
   // Method to notify all observers; implement this in concrete subjects
-  notifyObservers() {
-    throw new Error('You have to implement the method notifyObservers!');
-  }
+  abstract notifyObservers(): void;
 }
 
 // Concrete Subject implementation
-class ConcreteSubject extends Subject {
-  constructor() {
-    super();
-    this.observers = []; // List of observers
-    this.value = 0; // Value to notify observers about
-  }
+class ConcreteSubject extends Subject<number> {
+  private observers: Observer<number>[] = []; // List of observers
+  private value = 0; // Value to notify observers about
 
   // Register a new observer
-  registerObserver(observer) {
+  registerObserver(observer: Observer<number>): void {
     this.observers.push(observer); // Add observer to the list
   }
 
   // Remove an observer
-  removeObserver(observer) {
+  removeObserver(observer: Observer<number>): void {
     const index = this.observers.indexOf(observer);
     if (index !== -1) {
       this.observers.splice(index, 1); // Remove observer from the list
@@ -47,21 +38,21 @@ class ConcreteSubject extends Subject {
   }
 
   // Notify all registered observers about changes
-  notifyObservers() {
-    for (let observer of this.observers) {
+  notifyObservers(): void {
+    for (const observer of this.observers) {
       observer.update(this.value); // Send the current value to each observer
     }
   }
 
   // Update the value and notify observers
-  setValue(value) {
+  setValue(value: number): void {
     this.value = value; // Change the value
     this.notifyObservers(); // Notify all observers about the new value
   }
 }
 
-// Abstract Index class
-class Observer {
+// Abstract Observer class
+abstract class Observer<T = unknown> {
   constructor() {
     // Prevent instantiation of the abstract class
     if (new.target === Observer) {
@@ -70,28 +61,27 @@ class Observer {
   }
 
   // Method to be implemented by concrete observers
-  update() {
-    throw new Error('You have to implement the method update!');
-  }
+  abstract update(value: T): void;
 }
 
-// Concrete Index implementation
-class ConcreteObserver extends Observer {
-  constructor(subject) {
+// Concrete Observer implementation
+class ConcreteObserver extends Observer<number> {
+  private value = 0;
+
+  constructor(private subject: ConcreteSubject) {
     super();
-    this.subject = subject; // Reference to the subject
     this.subject.registerObserver(this); // Register this observer with the subject
   }
 
   // This method is called when the subject notifies observers
-  update(value) {
+  update(value: number): void {
     this.value = value; // Update the observer's value
     console.log(`Observer updated with value: ${value}`); // Log the update for demonstration
   }
 }
 
 // Abstract Store class
-class Store {
+abstract class Store {
   constructor() {
     // Prevent instantiation of the abstract class
     if (new.target === Store) {
@@ -100,41 +90,30 @@ class Store {
   }
 
   // Method to add a customer; implement this in concrete stores
-  addCustomer() {
-    throw new Error('You have to implement the method addCustomer!');
-  }
+  abstract addCustomer(customer: Customer): void;
 
   // Method to remove a customer; implement this in concrete stores
-  removeCustomer() {
-    throw new Error('You have to implement the method removeCustomer!');
-  }
+  abstract removeCustomer(customer: Customer): void;
 
   // Method to notify all customers; implement this in concrete stores
-  notifyCustomers() {
-    throw new Error('You have to implement the method notifyCustomers!');
-  }
+  abstract notifyCustomers(): void;
 
   // Method to update stock quantity; implement this in concrete stores
-  updateQuantity() {
-    throw new Error('You have to implement the method updateQuantity!');
-  }
+  abstract updateQuantity(quantity: number): void;
 }
 
 // Concrete Store implementation
 class BookStore extends Store {
-  constructor() {
-    super();
-    this.customers = []; // List of customers
-    this.stockQuantity = 0; // Current stock quantity
-  }
+  private customers: Customer[] = []; // List of customers
+  private stockQuantity = 0; // Current stock quantity
 
   // Add a customer to the notification list
-  addCustomer(customer) {
+  addCustomer(customer: Customer): void {
     this.customers.push(customer); // Register customer to receive updates
   }
 
   // Remove a customer from the notification list
-  removeCustomer(customer) {
+  removeCustomer(customer: Customer): void {
     const index = this.customers.indexOf(customer);
     if (index !== -1) {
       this.customers.splice(index, 1); // Unregister customer from updates
@@ -142,21 +121,21 @@ class BookStore extends Store {
   }
 
   // Notify all customers of stock updates
-  notifyCustomers() {
-    for (let customer of this.customers) {
+  notifyCustomers(): void {
+    for (const customer of this.customers) {
       customer.update(this.stockQuantity); // Send the current stock quantity to each customer
     }
   }
 
   // Update the stock quantity and notify customers
-  updateQuantity(quantity) {
+  updateQuantity(quantity: number): void {
     this.stockQuantity = quantity; // Change stock quantity
     this.notifyCustomers(); // Notify customers of the new stock quantity
   }
 }
 
 // Abstract Customer class
-class Customer {
+abstract class Customer {
   constructor() {
     // Prevent instantiation of the abstract class
     if (new.target === Customer) {
@@ -165,22 +144,20 @@ class Customer {
   }
 
   // Method to be implemented by concrete customers
-  update() {
-    throw new Error('You have to implement the method update!');
-  }
+  abstract update(stockQuantity: number): void;
 }
 
 // Concrete Customer implementation
 class BookCustomer extends Customer {
-  constructor(store) {
+  private observedStockQuantity = 0;
+
+  constructor(private store: BookStore) {
     super();
-    this.store = store; // Reference to the store
-    this.observedStockQuantity = 0; // Initialize observed stock quantity
     this.store.addCustomer(this); // Register this customer with the store for updates
   }
 
   // Update method called when stock changes
-  update(stockQuantity) {
+  update(stockQuantity: number): void {
     this.observedStockQuantity = stockQuantity; // Update the customer's observed stock quantity
     if (stockQuantity > 0) {
       console.log('Hello, a book you are interested in is back in stock!'); // Notify the customer
@@ -188,11 +165,11 @@ class BookCustomer extends Customer {
   }
 }
 
-// Demonstration of the Index pattern usage
-let store = new BookStore(); // Create a new book store
+// Demonstration of the pattern usage
+const store = new BookStore(); // Create a new book store
 
-let customer1 = new BookCustomer(store); // Create a new customer
-let customer2 = new BookCustomer(store); // Create another customer
+const customer1 = new BookCustomer(store); // Create a new customer
+// const customer2 = new BookCustomer(store); // Create another customer
 
 // Use case: Setting stock quantity to 0
 console.log('Setting stock to 0.');
@@ -209,6 +186,6 @@ store.removeCustomer(customer1); // Remove customer1 from notifications
 console.log('\nSetting stock to 2.');
 store.updateQuantity(2); // Notify remaining customers about the updated stock
 
-// When to use the Index pattern:
-// Use the Index pattern when you have one object (the Subject) that needs to notify multiple objects (Observers) about changes in its state.
+// When to use the pattern:
+// Use the pattern when you have one object (the Subject) that needs to notify multiple objects (Observers) about changes in its state.
 // Common scenarios include UI frameworks where a model needs to update multiple views or notification systems where multiple subscribers need updates.

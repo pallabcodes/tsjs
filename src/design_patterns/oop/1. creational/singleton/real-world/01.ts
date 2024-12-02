@@ -15,53 +15,55 @@ Lazy initialization: The instance is created only when it’s needed, reducing u
 // Singleton Class for Database Connection
 // ==========================
 class DatabaseConnectionManager {
-    // Holds the single instance of the class
-    private static instance: DatabaseConnectionManager;
+  // Holds the single instance of the class
+  private static instance: DatabaseConnectionManager;
 
-    // Simulating a database connection
-    private connection: string;
+  // Simulating a database connection
+  private connection: string;
 
-    // Private constructor to prevent direct instantiation
-    private constructor() {
-        this.connection = "Database Connection Established!";
+  // Private constructor to prevent direct instantiation
+  private constructor() {
+    this.connection = 'Database Connection Established!';
+  }
+
+  // Static method to access the single instance of the class
+  public static getInstance(): DatabaseConnectionManager {
+    // Lazy initialization of the instance
+    if (!DatabaseConnectionManager.instance) {
+      DatabaseConnectionManager.instance = new DatabaseConnectionManager();
     }
+    return DatabaseConnectionManager.instance;
+  }
 
-    // Static method to access the single instance of the class
-    public static getInstance(): DatabaseConnectionManager {
-        // Lazy initialization of the instance
-        if (!DatabaseConnectionManager.instance) {
-            DatabaseConnectionManager.instance = new DatabaseConnectionManager();
-        }
-        return DatabaseConnectionManager.instance;
-    }
+  // Example method that simulates using the database connection
+  public queryDatabase(query: string): string {
+    return `Executing query: ${query}`;
+  }
 
-    // Example method that simulates using the database connection
-    public queryDatabase(query: string): string {
-        return `Executing query: ${query}`;
-    }
-
-    // Optional method to simulate closing the connection
-    public closeConnection(): string {
-        this.connection = "Connection Closed";
-        return this.connection;
-    }
+  // Optional method to simulate closing the connection
+  public closeConnection(): string {
+    this.connection = 'Connection Closed';
+    return this.connection;
+  }
 }
 
 // ==========================
 // Usage Example
 // ==========================
 const dbConnection1 = DatabaseConnectionManager.getInstance();
-console.log(dbConnection1.queryDatabase("SELECT * FROM users"));
+console.log(dbConnection1.queryDatabase('SELECT * FROM users'));
 
 const dbConnection2 = DatabaseConnectionManager.getInstance();
-console.log(dbConnection2.queryDatabase("SELECT * FROM orders"));
+console.log(dbConnection2.queryDatabase('SELECT * FROM orders'));
 
 // Verifying that both instances are the same
-console.log("Are both connections the same instance? ", dbConnection1 === dbConnection2);  // Should print: true
+console.log(
+  'Are both connections the same instance? ',
+  dbConnection1 === dbConnection2
+); // Should print: true
 
 // Demonstrating closing the connection
-console.log(dbConnection1.closeConnection());  // Connection Closed
-
+console.log(dbConnection1.closeConnection()); // Connection Closed
 
 /*
 

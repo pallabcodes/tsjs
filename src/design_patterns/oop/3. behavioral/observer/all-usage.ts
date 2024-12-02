@@ -257,7 +257,7 @@ class FileUploadManager {
     }
   }
 
-  private async uploadChunk(chunk: Blob): Promise<void> {
+  private async uploadChunk(_chunk: Blob): Promise<void> {
     // Simulate network delay
     await new Promise(resolve => setTimeout(resolve, 100));
   }
@@ -279,6 +279,7 @@ class FileUploadManager {
 }
 
 // Example usage:
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 async function demonstratePatterns(): Promise<void> {
   // 1. Analytics tracking
   const analytics = AnalyticsTracker.getInstance();

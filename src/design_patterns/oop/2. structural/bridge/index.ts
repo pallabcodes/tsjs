@@ -10,96 +10,97 @@
 // Step 1: Define the Abstraction
 // The abstraction is the Notification class, representing different notification types (e.g., Alert, Reminder).
 abstract class Notification {
-    protected provider: NotificationProvider;
+  protected provider: NotificationProvider;
 
-    constructor(provider: NotificationProvider) {
-        if (!provider) {
-            throw new Error("Notification provider must be provided.");
-        }
-        this.provider = provider; // Bridge to the implementation
+  constructor(provider: NotificationProvider) {
+    if (!provider) {
+      throw new Error('Notification provider must be provided.');
     }
+    this.provider = provider; // Bridge to the implementation
+  }
 
-    abstract send(message: string, recipient: string): Promise<void>;
+  abstract send(message: string, recipient: string): Promise<void>;
 }
-
 
 // Step 2: Refine the Abstraction
 // Create concrete notification types extending the base abstraction.
 
 class AlertNotification extends Notification {
-    async send(message: string, recipient: string): Promise<void> {
-        console.log("Sending Alert Notification...");
-        try {
-            return this.provider.sendNotification(message, recipient);
-        } catch (error) {
-            console.error("Failed to send alert notification:", error);
-        }
+  async send(message: string, recipient: string): Promise<void> {
+    console.log('Sending Alert Notification...');
+    try {
+      return this.provider.sendNotification(message, recipient);
+    } catch (error) {
+      console.error('Failed to send alert notification:', error);
     }
+  }
 }
 
 class ReminderNotification extends Notification {
-    async send(message: string, recipient: string): Promise<void> {
-        console.log("Sending Reminder Notification...");
-        try {
-            return this.provider.sendNotification(message, recipient);
-        } catch (error) {
-            console.error("Failed to send reminder notification:", error);
-        }
+  async send(message: string, recipient: string): Promise<void> {
+    console.log('Sending Reminder Notification...');
+    try {
+      return this.provider.sendNotification(message, recipient);
+    } catch (error) {
+      console.error('Failed to send reminder notification:', error);
     }
+  }
 }
 
 // Step 3: Define the Implementation Interface
 // This defines the contract that all providers must adhere to.
 interface NotificationProvider {
-    sendNotification(message: string, recipient: string): void | Promise<void>;
+  sendNotification(message: string, recipient: string): void | Promise<void>;
 }
 
 // Step 4: Create Concrete Implementations of Providers
 // These are the different providers implementing the notification sending logic.
 class SendGridProvider implements NotificationProvider {
-    async sendNotification(message: string, recipient: string): Promise<void> {
-        // Simulate a real async API call (e.g., SendGrid API)
-        if (!message || !recipient) {
-            throw new Error("Missing message or recipient for SendGrid.");
-        }
-
-        console.log(`SendGrid: Sending Email - "${message}" to ${recipient}`);
-
-        // Simulating API response delay
-        await new Promise(resolve => setTimeout(resolve, 1000));
-
-        console.log("SendGrid: Email sent successfully!");
+  async sendNotification(message: string, recipient: string): Promise<void> {
+    // Simulate a real async API call (e.g., SendGrid API)
+    if (!message || !recipient) {
+      throw new Error('Missing message or recipient for SendGrid.');
     }
+
+    console.log(`SendGrid: Sending Email - "${message}" to ${recipient}`);
+
+    // Simulating API response delay
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
+    console.log('SendGrid: Email sent successfully!');
+  }
 }
 class TwilioProvider implements NotificationProvider {
-    async sendNotification(message: string, recipient: string): Promise<void> {
-        // Simulate a real async API call (e.g., Twilio API)
-        if (!message || !recipient) {
-            throw new Error("Missing message or recipient for Twilio.");
-        }
-
-        console.log(`Twilio: Sending SMS - "${message}" to ${recipient}`);
-
-        // Simulating API response delay
-        await new Promise(resolve => setTimeout(resolve, 1000));
-
-        console.log("Twilio: SMS sent successfully!");
+  async sendNotification(message: string, recipient: string): Promise<void> {
+    // Simulate a real async API call (e.g., Twilio API)
+    if (!message || !recipient) {
+      throw new Error('Missing message or recipient for Twilio.');
     }
+
+    console.log(`Twilio: Sending SMS - "${message}" to ${recipient}`);
+
+    // Simulating API response delay
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
+    console.log('Twilio: SMS sent successfully!');
+  }
 }
 class FirebaseProvider implements NotificationProvider {
-    async sendNotification(message: string, recipient: string): Promise<void> {
-        // Simulate a real async API call (e.g., Firebase Cloud Messaging)
-        if (!message || !recipient) {
-            throw new Error("Missing message or recipient for Firebase.");
-        }
-
-        console.log(`Firebase: Sending Push Notification - "${message}" to ${recipient}`);
-
-        // Simulating API response delay
-        await new Promise(resolve => setTimeout(resolve, 1000));
-
-        console.log("Firebase: Push Notification sent successfully!");
+  async sendNotification(message: string, recipient: string): Promise<void> {
+    // Simulate a real async API call (e.g., Firebase Cloud Messaging)
+    if (!message || !recipient) {
+      throw new Error('Missing message or recipient for Firebase.');
     }
+
+    console.log(
+      `Firebase: Sending Push Notification - "${message}" to ${recipient}`
+    );
+
+    // Simulating API response delay
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
+    console.log('Firebase: Push Notification sent successfully!');
+  }
 }
 
 // Step 5: Integrate the System
@@ -116,11 +117,10 @@ const reminderPush = new ReminderNotification(firebase);
 
 // Send notifications
 (async () => {
-    await alertEmail.send("Server Down!", "admin@example.com");
-    await alertSMS.send("Server Down!", "+1234567890");
-    await reminderPush.send("Meeting at 3 PM", "user_device_token");
+  await alertEmail.send('Server Down!', 'admin@example.com');
+  await alertSMS.send('Server Down!', '+1234567890');
+  await reminderPush.send('Meeting at 3 PM', 'user_device_token');
 })();
-
 
 /**
  * Sending Alert Notification...

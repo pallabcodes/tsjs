@@ -12,80 +12,84 @@
 
 // Base Permission Interface
 abstract class Permission {
-    abstract hasAccess(userContext: UserContext): boolean;
+  abstract hasAccess(userContext: UserContext): boolean;
 }
 
 // User Context: Real-world user attributes
 interface UserContext {
-    userId: string;
-    role: string;
-    attributes: Record<string, any>; // e.g., { department: "Sales", region: "APAC" }
-    ip: string;
-    currentHour: number;
-    isActive: boolean; // User account status (active/inactive)
+  userId: string;
+  role: string;
+  attributes: Record<string, any>; // e.g., { department: "Sales", region: "APAC" }
+  ip: string;
+  currentHour: number;
+  isActive: boolean; // User account status (active/inactive)
 }
 
 // Basic Permission Class (Defines basic permissions on resources)
 class BasicPermission extends Permission {
-    private resource: string;
-    private action: string;
+  private resource: string;
+  private action: string;
 
-    constructor(resource: string, action: string) {
-        super();
-        this.resource = resource;
-        this.action = action;
-    }
+  constructor(resource: string, action: string) {
+    super();
+    this.resource = resource;
+    this.action = action;
+  }
 
-    hasAccess(userContext: UserContext): boolean {
-        console.log(`Checking ${this.action} access on ${this.resource} for user ${userContext.userId}`);
-        if (!userContext.isActive) {
-            console.log("Access denied: User is inactive.");
-            return false;
-        }
-        return true; // Placeholder for actual business logic (e.g., database or service check)
+  hasAccess(userContext: UserContext): boolean {
+    console.log(
+      `Checking ${this.action} access on ${this.resource} for user ${userContext.userId}`
+    );
+    if (!userContext.isActive) {
+      console.log('Access denied: User is inactive.');
+      return false;
     }
+    return true; // Placeholder for actual business logic (e.g., database or service check)
+  }
 }
 
 // Composite Role Class (Manages roles with possible nested roles or permissions)
 class Role extends Permission {
-    private name: string;
-    private permissions: Permission[];
-    private inheritedRoles: Role[];
+  private name: string;
+  private permissions: Permission[];
+  private inheritedRoles: Role[];
 
-    constructor(name: string) {
-        super();
-        this.name = name;
-        this.permissions = [];
-        this.inheritedRoles = [];
+  constructor(name: string) {
+    super();
+    this.name = name;
+    this.permissions = [];
+    this.inheritedRoles = [];
+  }
+
+  add(permission: Permission): void {
+    this.permissions.push(permission);
+  }
+
+  remove(permission: Permission): void {
+    this.permissions = this.permissions.filter(p => p !== permission);
+  }
+
+  addInheritedRole(role: Role): void {
+    this.inheritedRoles.push(role);
+  }
+
+  hasAccess(userContext: UserContext): boolean {
+    console.log(`Checking access for role: ${this.name}`);
+    if (
+      this.permissions.some(permission => permission.hasAccess(userContext))
+    ) {
+      return true;
     }
 
-    add(permission: Permission): void {
-        this.permissions.push(permission);
+    // Check inherited roles
+    for (const inheritedRole of this.inheritedRoles) {
+      if (inheritedRole.hasAccess(userContext)) {
+        return true;
+      }
     }
 
-    remove(permission: Permission): void {
-        this.permissions = this.permissions.filter(p => p !== permission);
-    }
-
-    addInheritedRole(role: Role): void {
-        this.inheritedRoles.push(role);
-    }
-
-    hasAccess(userContext: UserContext): boolean {
-        console.log(`Checking access for role: ${this.name}`);
-        if (this.permissions.some(permission => permission.hasAccess(userContext))) {
-            return true;
-        }
-
-        // Check inherited roles
-        for (const inheritedRole of this.inheritedRoles) {
-            if (inheritedRole.hasAccess(userContext)) {
-                return true;
-            }
-        }
-
-        return false;
-    }
+    return false;
+  }
 }
 
 // Decorator Base Class (Allows wrapping permissions for additional behavior)
@@ -102,104 +106,121 @@ abstract class PermissionDecorator extends Permission {
 
 // Time-Based Permission Class (Restricts access based on time)
 class TimeBasedPermission extends PermissionDecorator {
-    private allowedHours: [number, number];
+  private allowedHours: [number, number];
 
-    constructor(permission: Permission, allowedHours: [number, number]) {
-        super(permission);
-        this.allowedHours = allowedHours;
-    }
+  constructor(permission: Permission, allowedHours: [number, number]) {
+    super(permission);
+    this.allowedHours = allowedHours;
+  }
 
-    hasAccess(userContext: UserContext): boolean {
-        const [start, end] = this.allowedHours;
-        if (userContext.currentHour >= start && userContext.currentHour < end) {
-            return this.permission.hasAccess(userContext);
-        }
-        console.log("Access denied due to time restriction.");
-        return false;
+  hasAccess(userContext: UserContext): boolean {
+    const [start, end] = this.allowedHours;
+    if (userContext.currentHour >= start && userContext.currentHour < end) {
+      return this.permission.hasAccess(userContext);
     }
+    console.log('Access denied due to time restriction.');
+    return false;
+  }
 }
 
 // IP-Restricted Permission Class (Restricts access based on IP address)
 class IPRestrictedPermission extends PermissionDecorator {
-    private allowedIPs: string[];
+  private allowedIPs: string[];
 
-    constructor(permission: Permission, allowedIPs: string[]) {
-        super(permission);
-        this.allowedIPs = allowedIPs;
-    }
+  constructor(permission: Permission, allowedIPs: string[]) {
+    super(permission);
+    this.allowedIPs = allowedIPs;
+  }
 
-    hasAccess(userContext: UserContext): boolean {
-        if (this.allowedIPs.includes(userContext.ip)) {
-            return this.permission.hasAccess(userContext);
-        }
-        console.log("Access denied due to IP restriction.");
-        return false;
+  hasAccess(userContext: UserContext): boolean {
+    if (this.allowedIPs.includes(userContext.ip)) {
+      return this.permission.hasAccess(userContext);
     }
+    console.log('Access denied due to IP restriction.');
+    return false;
+  }
 }
 
 // Attribute-Based Permission Class (Access control based on user attributes like department)
 class AttributeBasedPermission extends PermissionDecorator {
-    private attributeConditions: Record<string, any>;
+  private attributeConditions: Record<string, any>;
 
-    constructor(permission: Permission, attributeConditions: Record<string, any>) {
-        super(permission);
-        this.attributeConditions = attributeConditions;
-    }
+  constructor(
+    permission: Permission,
+    attributeConditions: Record<string, any>
+  ) {
+    super(permission);
+    this.attributeConditions = attributeConditions;
+  }
 
-    hasAccess(userContext: UserContext): boolean {
-        for (const [key, value] of Object.entries(this.attributeConditions)) {
-            if (userContext.attributes[key] !== value) {
-                console.log(`Access denied: User attribute ${key} does not match required value.`);
-                return false;
-            }
-        }
-        return this.permission.hasAccess(userContext);
+  hasAccess(userContext: UserContext): boolean {
+    for (const [key, value] of Object.entries(this.attributeConditions)) {
+      if (userContext.attributes[key] !== value) {
+        console.log(
+          `Access denied: User attribute ${key} does not match required value.`
+        );
+        return false;
+      }
     }
+    return this.permission.hasAccess(userContext);
+  }
 }
 
 // Example Usage
 
 // Define user context
 const userContext: UserContext = {
-    userId: "12345",
-    role: "Manager",
-    attributes: { department: "Sales", region: "APAC" },
-    ip: "192.168.1.1",
-    currentHour: 10,
-    isActive: true, // User is active
+  userId: '12345',
+  role: 'Manager',
+  attributes: { department: 'Sales', region: 'APAC' },
+  ip: '192.168.1.1',
+  currentHour: 10,
+  isActive: true, // User is active
 };
 
 // Define basic permissions
-const readSalesData = new BasicPermission("Sales Data", "Read");
-const writeSalesData = new BasicPermission("Sales Data", "Write");
+const readSalesData = new BasicPermission('Sales Data', 'Read');
+const writeSalesData = new BasicPermission('Sales Data', 'Write');
 
 // Define roles
-const salesRole = new Role("Sales");
+const salesRole = new Role('Sales');
 salesRole.add(readSalesData);
 
-const managerRole = new Role("Manager");
-managerRole.add(salesRole);  // Manager role inherits Sales permissions
+const managerRole = new Role('Manager');
+managerRole.add(salesRole); // Manager role inherits Sales permissions
 managerRole.add(writeSalesData);
 
 // Define a Time-Based Permission
 const timeRestrictedManager = new TimeBasedPermission(managerRole, [9, 17]); // Access allowed only from 9 AM to 5 PM
 
 // Define IP-Restricted Permission
-const ipRestrictedManager = new IPRestrictedPermission(timeRestrictedManager, ["192.168.1.1", "10.0.0.1"]);
+const ipRestrictedManager = new IPRestrictedPermission(timeRestrictedManager, [
+  '192.168.1.1',
+  '10.0.0.1',
+]);
 
 // Define Attribute-Based Permission
-const attributeRestrictedManager = new AttributeBasedPermission(ipRestrictedManager, { department: "Sales" });
+const attributeRestrictedManager = new AttributeBasedPermission(
+  ipRestrictedManager,
+  { department: 'Sales' }
+);
 
 // Check access for the manager
-console.log("Manager Access:", attributeRestrictedManager.hasAccess(userContext));  // Should pass all conditions
+console.log(
+  'Manager Access:',
+  attributeRestrictedManager.hasAccess(userContext)
+); // Should pass all conditions
 
 // Example with inactive user
 const inactiveUserContext: UserContext = {
-    ...userContext,
-    isActive: false,
+  ...userContext,
+  isActive: false,
 };
 
-console.log("Inactive User Access:", attributeRestrictedManager.hasAccess(inactiveUserContext));  // Should deny access due to inactivity
+console.log(
+  'Inactive User Access:',
+  attributeRestrictedManager.hasAccess(inactiveUserContext)
+); // Should deny access due to inactivity
 
 /**
  * Key Features Addressed:

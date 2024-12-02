@@ -6,93 +6,92 @@
 // Each character implements the `Visitable` interface and provides attributes for specific operations.
 
 interface Visitable {
-    accept(visitor: Visitor): void;
+  accept(visitor: Visitor): void;
 }
 
 class Warrior implements Visitable {
-    constructor(public health: number, public strength: number) {}
+  constructor(public health: number, public strength: number) {}
 
-    accept(visitor: Visitor): void {
-        visitor.visitWarrior(this);
-    }
+  accept(visitor: Visitor): void {
+    visitor.visitWarrior(this);
+  }
 }
 
 class Mage implements Visitable {
-    constructor(public health: number, public mana: number) {}
+  constructor(public health: number, public mana: number) {}
 
-    accept(visitor: Visitor): void {
-        visitor.visitMage(this);
-    }
+  accept(visitor: Visitor): void {
+    visitor.visitMage(this);
+  }
 }
 
 class Archer implements Visitable {
-    constructor(public health: number, public agility: number) {}
+  constructor(public health: number, public agility: number) {}
 
-    accept(visitor: Visitor): void {
-        visitor.visitArcher(this);
-    }
+  accept(visitor: Visitor): void {
+    visitor.visitArcher(this);
+  }
 }
 
 // #### 2. **Visitor Interface and Concrete Visitors**
 //
 // Define the visitor interface for different operations, such as applying power-ups, calculating damage, and scoring updates.
 interface Visitor {
-    visitWarrior(warrior: Warrior): void;
-    visitMage(mage: Mage): void;
-    visitArcher(archer: Archer): void;
+  visitWarrior(warrior: Warrior): void;
+  visitMage(mage: Mage): void;
+  visitArcher(archer: Archer): void;
 }
 
 // Concrete Visitor: Power-Up Application
 class PowerUpVisitor implements Visitor {
-    visitWarrior(warrior: Warrior): void {
-        warrior.strength += 10;
-        console.log(`Warrior power-up: Strength increased to ${warrior.strength}`);
-    }
+  visitWarrior(warrior: Warrior): void {
+    warrior.strength += 10;
+    console.log(`Warrior power-up: Strength increased to ${warrior.strength}`);
+  }
 
-    visitMage(mage: Mage): void {
-        mage.mana += 20;
-        console.log(`Mage power-up: Mana increased to ${mage.mana}`);
-    }
+  visitMage(mage: Mage): void {
+    mage.mana += 20;
+    console.log(`Mage power-up: Mana increased to ${mage.mana}`);
+  }
 
-    visitArcher(archer: Archer): void {
-        archer.agility += 15;
-        console.log(`Archer power-up: Agility increased to ${archer.agility}`);
-    }
+  visitArcher(archer: Archer): void {
+    archer.agility += 15;
+    console.log(`Archer power-up: Agility increased to ${archer.agility}`);
+  }
 }
 
 // Concrete Visitor: Damage Calculation
 class DamageVisitor implements Visitor {
-    visitWarrior(warrior: Warrior): void {
-        warrior.health -= 15;
-        console.log(`Warrior damaged: Health reduced to ${warrior.health}`);
-    }
+  visitWarrior(warrior: Warrior): void {
+    warrior.health -= 15;
+    console.log(`Warrior damaged: Health reduced to ${warrior.health}`);
+  }
 
-    visitMage(mage: Mage): void {
-        mage.health -= 20;
-        console.log(`Mage damaged: Health reduced to ${mage.health}`);
-    }
+  visitMage(mage: Mage): void {
+    mage.health -= 20;
+    console.log(`Mage damaged: Health reduced to ${mage.health}`);
+  }
 
-    visitArcher(archer: Archer): void {
-        archer.health -= 10;
-        console.log(`Archer damaged: Health reduced to ${archer.health}`);
-    }
+  visitArcher(archer: Archer): void {
+    archer.health -= 10;
+    console.log(`Archer damaged: Health reduced to ${archer.health}`);
+  }
 }
 
 // Concrete Visitor: Score Update
 class ScoreVisitor implements Visitor {
-    visitWarrior(warrior: Warrior): void {
-        console.log(`Warrior: Score updated based on strength ${warrior.strength}`);
-    }
+  visitWarrior(warrior: Warrior): void {
+    console.log(`Warrior: Score updated based on strength ${warrior.strength}`);
+  }
 
-    visitMage(mage: Mage): void {
-        console.log(`Mage: Score updated based on mana ${mage.mana}`);
-    }
+  visitMage(mage: Mage): void {
+    console.log(`Mage: Score updated based on mana ${mage.mana}`);
+  }
 
-    visitArcher(archer: Archer): void {
-        console.log(`Archer: Score updated based on agility ${archer.agility}`);
-    }
+  visitArcher(archer: Archer): void {
+    console.log(`Archer: Score updated based on agility ${archer.agility}`);
+  }
 }
-
 
 // #### 3. **Client Code**
 
@@ -100,25 +99,25 @@ class ScoreVisitor implements Visitor {
 
 // Create a team of characters
 const characters: Visitable[] = [
-    new Warrior(100, 50),
-    new Mage(80, 100),
-    new Archer(90, 70)
+  new Warrior(100, 50),
+  new Mage(80, 100),
+  new Archer(90, 70),
 ];
 
 // Apply Power-Ups
-console.log("Applying Power-Ups:");
+console.log('Applying Power-Ups:');
 const powerUpVisitor = new PowerUpVisitor();
-characters.forEach((character) => character.accept(powerUpVisitor));
+characters.forEach(character => character.accept(powerUpVisitor));
 
 // Calculate Damage
-console.log("\nCalculating Damage:");
+console.log('\nCalculating Damage:');
 const damageVisitor = new DamageVisitor();
-characters.forEach((character) => character.accept(damageVisitor));
+characters.forEach(character => character.accept(damageVisitor));
 
 // Update Scores
-console.log("\nUpdating Scores:");
+console.log('\nUpdating Scores:');
 const scoreVisitor = new ScoreVisitor();
-characters.forEach((character) => character.accept(scoreVisitor));
+characters.forEach(character => character.accept(scoreVisitor));
 
 // #### Example Output
 
@@ -136,7 +135,6 @@ characters.forEach((character) => character.accept(scoreVisitor));
 // Warrior: Score updated based on strength 60
 // Mage: Score updated based on mana 120
 // Archer: Score updated based on agility 85
-
 
 // ### Breakdown of Features
 

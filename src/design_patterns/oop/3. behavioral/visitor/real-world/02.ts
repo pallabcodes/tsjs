@@ -4,115 +4,128 @@
 // 2. List directory contents.
 // 3. Check file or directory permissions.
 
-
 // ### File System Operations with the Visitor Pattern
 //
 // #### 1. **Visitable Interface and Elements**
 interface Visitable {
-    accept(visitor: Visitor): void;
+  accept(visitor: Visitor): void;
 }
 
 class File implements Visitable {
-    constructor(
-        public readonly name: string,
-        public readonly size: number, // in KB
-        public readonly permissions: string // e.g., "read-only", "read-write"
-    ) {}
+  constructor(
+    public readonly name: string,
+    public readonly size: number, // in KB
+    public readonly permissions: string // e.g., "read-only", "read-write"
+  ) {}
 
-    accept(visitor: Visitor): void {
-        visitor.visitFile(this);
-    }
+  accept(visitor: Visitor): void {
+    visitor.visitFile(this);
+  }
 }
 
 class Directory implements Visitable {
-    constructor(
-        public readonly name: string,
-        public readonly children: Visitable[] = [], // Can contain files or subdirectories
-        public readonly permissions: string
-    ) {}
+  constructor(
+    public readonly name: string,
+    public readonly children: Visitable[] = [], // Can contain files or subdirectories
+    public readonly permissions: string
+  ) {}
 
-    accept(visitor: Visitor): void {
-        visitor.visitDirectory(this);
-    }
+  accept(visitor: Visitor): void {
+    visitor.visitDirectory(this);
+  }
 }
 
 // #### 2. **Visitor Interface and Concrete Visitors**
 interface Visitor {
-    visitFile(file: File): void;
-    visitDirectory(directory: Directory): void;
+  visitFile(file: File): void;
+  visitDirectory(directory: Directory): void;
 }
 
 // Concrete Visitor: Calculate Total Size
 class SizeCalculatorVisitor implements Visitor {
-    private totalSize = 0;
+  private totalSize = 0;
 
-    visitFile(file: File): void {
-        this.totalSize += file.size;
-    }
+  visitFile(file: File): void {
+    this.totalSize += file.size;
+  }
 
-    visitDirectory(directory: Directory): void {
-        directory.children.forEach((child) => child.accept(this));
-    }
+  visitDirectory(directory: Directory): void {
+    directory.children.forEach(child => child.accept(this));
+  }
 
-    getTotalSize(): number {
-        return this.totalSize; // Return size in KB
-    }
+  getTotalSize(): number {
+    return this.totalSize; // Return size in KB
+  }
 }
 
 // Concrete Visitor: List Directory Contents
 class DirectoryListerVisitor implements Visitor {
-    private listing: string[] = [];
+  private listing: string[] = [];
 
-    visitFile(file: File): void {
-        this.listing.push(`File: ${file.name}`);
-    }
+  visitFile(file: File): void {
+    this.listing.push(`File: ${file.name}`);
+  }
 
-    visitDirectory(directory: Directory): void {
-        this.listing.push(`Directory: ${directory.name}`);
-        directory.children.forEach((child) => child.accept(this));
-    }
+  visitDirectory(directory: Directory): void {
+    this.listing.push(`Directory: ${directory.name}`);
+    directory.children.forEach(child => child.accept(this));
+  }
 
-    getListing(): string[] {
-        return this.listing;
-    }
+  getListing(): string[] {
+    return this.listing;
+  }
 }
 
 // Concrete Visitor: Permission Checker
 class PermissionCheckerVisitor implements Visitor {
-    private issues: string[] = [];
+  private issues: string[] = [];
 
-    visitFile(file: File): void {
-        if (file.permissions !== "read-write") {
-            this.issues.push(`File "${file.name}" has insufficient permissions: ${file.permissions}`);
-        }
+  visitFile(file: File): void {
+    if (file.permissions !== 'read-write') {
+      this.issues.push(
+        `File "${file.name}" has insufficient permissions: ${file.permissions}`
+      );
     }
+  }
 
-    visitDirectory(directory: Directory): void {
-        if (directory.permissions !== "read-write") {
-            this.issues.push(`Directory "${directory.name}" has insufficient permissions: ${directory.permissions}`);
-        }
-        directory.children.forEach((child) => child.accept(this));
+  visitDirectory(directory: Directory): void {
+    if (directory.permissions !== 'read-write') {
+      this.issues.push(
+        `Directory "${directory.name}" has insufficient permissions: ${directory.permissions}`
+      );
     }
+    directory.children.forEach(child => child.accept(this));
+  }
 
-    getIssues(): string[] {
-        return this.issues;
-    }
+  getIssues(): string[] {
+    return this.issues;
+  }
 }
 
 // #### 3. **Client Code**
 // The client interacts with the file system objects and applies different visitors.
 
 // Creating the file system structure
-const root = new Directory("root", [
-    new File("file1.txt", 120, "read-write"),
-    new File("file2.txt", 200, "read-only"),
-    new Directory("subdir1", [
-        new File("file3.txt", 80, "read-write"),
-        new Directory("subdir2", [
-            new File("file4.txt", 300, "read-only")
-        ], "read-only")
-    ], "read-write")
-], "read-write");
+const root = new Directory(
+  'root',
+  [
+    new File('file1.txt', 120, 'read-write'),
+    new File('file2.txt', 200, 'read-only'),
+    new Directory(
+      'subdir1',
+      [
+        new File('file3.txt', 80, 'read-write'),
+        new Directory(
+          'subdir2',
+          [new File('file4.txt', 300, 'read-only')],
+          'read-only'
+        ),
+      ],
+      'read-write'
+    ),
+  ],
+  'read-write'
+);
 
 // 1. Calculate total size
 const sizeCalculator = new SizeCalculatorVisitor();
@@ -122,15 +135,14 @@ console.log(`Total size: ${sizeCalculator.getTotalSize()} KB`);
 // 2. List directory contents
 const lister = new DirectoryListerVisitor();
 root.accept(lister);
-console.log("Directory Listing:");
-console.log(lister.getListing().join("\n"));
+console.log('Directory Listing:');
+console.log(lister.getListing().join('\n'));
 
 // 3. Check permissions
 const permissionChecker = new PermissionCheckerVisitor();
 root.accept(permissionChecker);
-console.log("Permission Issues:");
-console.log(permissionChecker.getIssues().join("\n"));
-
+console.log('Permission Issues:');
+console.log(permissionChecker.getIssues().join('\n'));
 
 // ### Output
 // Total size: 700 KB

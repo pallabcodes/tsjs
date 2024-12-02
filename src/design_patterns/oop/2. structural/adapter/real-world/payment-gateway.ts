@@ -1,7 +1,6 @@
 // # Complete Example: Payment Gateway Integration
 // Problem: Your system uses an IPaymentProcessor interface for processing payments, but you want to integrate a third-party payment gateway with a different interface. To avoid rewriting existing code, you use the Adapter Pattern.
 
-
 // Step 1: Existing System Interface
 
 // Target Interface: The interface expected by the existing system
@@ -9,16 +8,19 @@ interface IPaymentProcessor {
   processPayment(amount: number, currency: string): void;
 }
 
-
 // Step 2: Third-Party Payment Gateway
 
 // Third-Party Payment Gateway (Incompatible Interface)
 class ThirdPartyPaymentGateway {
-  makePayment(paymentDetails: { totalAmount: number; currencyType: string }): void {
-    console.log(`Payment of ${paymentDetails.totalAmount} ${paymentDetails.currencyType} processed successfully via Third-Party Gateway.`);
+  makePayment(paymentDetails: {
+    totalAmount: number;
+    currencyType: string;
+  }): void {
+    console.log(
+      `Payment of ${paymentDetails.totalAmount} ${paymentDetails.currencyType} processed successfully via Third-Party Gateway.`
+    );
   }
 }
-
 
 // Step 3: The adapter converts the IPaymentProcessor interface into the ThirdPartyPaymentGateway interface.
 
@@ -40,11 +42,14 @@ class PaymentGatewayAdapter implements IPaymentProcessor {
   }
 }
 
-
 // Step 4: Client Code (Using the Adapter)
 
 // Client Code
-function processOrder(paymentProcessor: IPaymentProcessor, amount: number, currency: string) {
+function processOrder(
+  paymentProcessor: IPaymentProcessor,
+  amount: number,
+  currency: string
+) {
   paymentProcessor.processPayment(amount, currency);
 }
 
@@ -56,7 +61,6 @@ const paymentProcessorAdapter = new PaymentGatewayAdapter(thirdPartyGateway);
 
 // Process a payment using the adapter
 processOrder(paymentProcessorAdapter, 100, 'USD');
-
 
 /**
  * Breakdown of the Example:
@@ -75,7 +79,6 @@ processOrder(paymentProcessorAdapter, 100, 'USD');
  *
  * */
 
-
 // ## Extending the Example for Product-Based Standards
 // To cover product-based standards comprehensively, let's address additional scenarios:
 //
@@ -85,7 +88,9 @@ processOrder(paymentProcessorAdapter, 100, 'USD');
 // Another Payment Gateway (Incompatible Interface)
 class AnotherPaymentGateway {
   executePayment(amount: number, currencyCode: string): void {
-    console.log(`Payment of ${amount} ${currencyCode} completed via Another Gateway.`);
+    console.log(
+      `Payment of ${amount} ${currencyCode} completed via Another Gateway.`
+    );
   }
 }
 
@@ -108,13 +113,14 @@ const anotherGatewayAdapter = new AnotherPaymentGatewayAdapter(anotherGateway);
 
 processOrder(anotherGatewayAdapter, 50, 'EUR');
 
-
 // 2. Handling Dynamic Gateway Selection
 // Add logic for dynamically selecting the adapter based on configuration.
 
 // Factory for Payment Processor Adapters
 class PaymentProcessorFactory {
-  static getPaymentProcessor(type: 'thirdParty' | 'another'): IPaymentProcessor {
+  static getPaymentProcessor(
+    type: 'thirdParty' | 'another'
+  ): IPaymentProcessor {
     if (type === 'thirdParty') {
       return new PaymentGatewayAdapter(new ThirdPartyPaymentGateway());
     } else if (type === 'another') {
@@ -125,14 +131,14 @@ class PaymentProcessorFactory {
 }
 
 // Example Usage
-const selectedProcessor = PaymentProcessorFactory.getPaymentProcessor('thirdParty');
+const selectedProcessor =
+  PaymentProcessorFactory.getPaymentProcessor('thirdParty');
 processOrder(selectedProcessor, 200, 'GBP');
-
 
 // 3. Logging and Error Handling
 // Add logging and error handling in the adapter to meet production standards.
 
-class LoggingPaymentGatewayAdapter implements IPaymentProcessor {
+export class LoggingPaymentGatewayAdapter implements IPaymentProcessor {
   private thirdPartyGateway: ThirdPartyPaymentGateway;
 
   constructor(thirdPartyGateway: ThirdPartyPaymentGateway) {
@@ -154,7 +160,6 @@ class LoggingPaymentGatewayAdapter implements IPaymentProcessor {
     }
   }
 }
-
 
 /**
  * Does This Example Fully Demonstrate the Power of the Adapter Pattern?

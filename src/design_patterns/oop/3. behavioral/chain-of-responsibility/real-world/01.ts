@@ -13,120 +13,118 @@
 
 // Using the **Chain of Responsibility** pattern ensures that each step can be modular, extendable, and maintainable.
 
-
 // ### Implementation
 
 // #### Base Handler Class
 // Abstract Handler Interface
 interface RequestHandler {
-    setNext(handler: RequestHandler): RequestHandler;
-    handle(request: HttpRequest): void;
+  setNext(handler: RequestHandler): RequestHandler;
+  handle(request: HttpRequest): void;
 }
 
 // Base Handler Class
 abstract class AbstractHandler implements RequestHandler {
-    private nextHandler?: RequestHandler;
+  private nextHandler?: RequestHandler;
 
-    setNext(handler: RequestHandler): RequestHandler {
-        this.nextHandler = handler;
-        return handler; // Allows chaining
-    }
+  setNext(handler: RequestHandler): RequestHandler {
+    this.nextHandler = handler;
+    return handler; // Allows chaining
+  }
 
-    handle(request: HttpRequest): void {
-        if (this.nextHandler) {
-            this.nextHandler.handle(request);
-        }
+  handle(request: HttpRequest): void {
+    if (this.nextHandler) {
+      this.nextHandler.handle(request);
     }
+  }
 }
 
 // #### Specific Handlers
 // Request Object
 class HttpRequest {
-    constructor(
-        public readonly user: { id: string, role: string } | null,
-        public readonly body: Record<string, any>
-    ) {}
+  constructor(
+    public readonly user: { id: string; role: string } | null,
+    public readonly body: Record<string, any>
+  ) {}
 }
 
 // Authentication Handler
-class AuthenticationHandler extends AbstractHandler {
-    handle(request: HttpRequest): void {
-        if (!request.user) {
-            console.error("Authentication failed: No user found.");
-            return; // Stop the chain
-        }
-        console.log("Authentication successful.");
-        super.handle(request); // Pass to the next handler
+export class AuthenticationHandler extends AbstractHandler {
+  override handle(request: HttpRequest): void {
+    if (!request.user) {
+      console.error('Authentication failed: No user found.');
+      return; // Stop the chain
     }
+    console.log('Authentication successful.');
+    super.handle(request); // Pass to the next handler
+  }
 }
 
 // Authorization Handler
-class AuthorizationHandler extends AbstractHandler {
-    private readonly requiredRole: string;
+export class AuthorizationHandler extends AbstractHandler {
+  private readonly requiredRole: string;
 
-    constructor(requiredRole: string) {
-        super();
-        this.requiredRole = requiredRole;
-    }
+  constructor(requiredRole: string) {
+    super();
+    this.requiredRole = requiredRole;
+  }
 
-    handle(request: HttpRequest): void {
-        if (request.user?.role !== this.requiredRole) {
-            console.error("Authorization failed: Insufficient permissions.");
-            return; // Stop the chain
-        }
-        console.log("Authorization successful.");
-        super.handle(request);
+  override handle(request: HttpRequest): void {
+    if (request.user?.role !== this.requiredRole) {
+      console.error('Authorization failed: Insufficient permissions.');
+      return; // Stop the chain
     }
+    console.log('Authorization successful.');
+    super.handle(request);
+  }
 }
 
 // Validation Handler
-class ValidationHandler extends AbstractHandler {
-    handle(request: HttpRequest): void {
-        if (!request.body || Object.keys(request.body).length === 0) {
-            console.error("Validation failed: Request body is empty.");
-            return; // Stop the chain
-        }
-        console.log("Validation successful.");
-        super.handle(request);
+export class ValidationHandler extends AbstractHandler {
+  override handle(request: HttpRequest): void {
+    if (!request.body || Object.keys(request.body).length === 0) {
+      console.error('Validation failed: Request body is empty.');
+      return; // Stop the chain
     }
+    console.log('Validation successful.');
+    super.handle(request);
+  }
 }
 
 // Processing Handler
-class ProcessingHandler extends AbstractHandler {
-    handle(request: HttpRequest): void {
-        console.log("Processing request:", request.body);
-        // Perform the main operation
-        super.handle(request);
-    }
+export class ProcessingHandler extends AbstractHandler {
+  override handle(request: HttpRequest): void {
+    console.log('Processing request:', request.body);
+    // Perform the main operation
+    super.handle(request);
+  }
 }
 
 // Error Handler (Optional)
-class ErrorHandler extends AbstractHandler {
-    handle(request: HttpRequest): void {
-        console.log("Returning a generic error response.");
-    }
+export class ErrorHandler extends AbstractHandler {
+  override handle(_request: HttpRequest): void {
+    console.log('Returning a generic error response.');
+  }
 }
 
 // usage example
 const request = new HttpRequest(
-    { id: "user123", role: "admin" },
-    { action: "delete", resource: "file" }
+  { id: 'user123', role: 'admin' },
+  { action: 'delete', resource: 'file' }
 );
 
 const authHandler = new AuthenticationHandler();
-const roleHandler = new AuthorizationHandler("admin");
+const roleHandler = new AuthorizationHandler('admin');
 const validationHandler = new ValidationHandler();
 const processingHandler = new ProcessingHandler();
 
 // Build the chain
 authHandler
-    .setNext(roleHandler)
-    .setNext(validationHandler)
-    .setNext(processingHandler);
+  .setNext(roleHandler)
+  .setNext(validationHandler)
+  .setNext(processingHandler);
 
 // Start the chain
 authHandler.handle(request);
-
 
 // ### Analysis of the Pattern’s Full Power
 //

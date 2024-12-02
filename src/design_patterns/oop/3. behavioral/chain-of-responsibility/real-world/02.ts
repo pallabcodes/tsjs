@@ -10,157 +10,158 @@
 // 4. **Save to Database**: Persist the user data to the database.
 // 5. **Logging**: Log each step for debugging and monitoring.
 
-
 // ### Implementation
 //
 // #### Abstract Handler
 // Now supporting **asynchronous operations** and **centralized error propagation**.
 
 interface AsyncRequestHandler {
-    setNext(handler: AsyncRequestHandler): AsyncRequestHandler;
-    handle(request: UserRequest): Promise<void>; // Asynchronous handling
+  setNext(handler: AsyncRequestHandler): AsyncRequestHandler;
+  handle(request: UserRequest): Promise<void>; // Asynchronous handling
 }
 
 abstract class AbstractAsyncHandler implements AsyncRequestHandler {
-    private nextHandler?: AsyncRequestHandler;
+  private nextHandler?: AsyncRequestHandler;
 
-    setNext(handler: AsyncRequestHandler): AsyncRequestHandler {
-        this.nextHandler = handler;
-        return handler; // Enables chaining
-    }
+  setNext(handler: AsyncRequestHandler): AsyncRequestHandler {
+    this.nextHandler = handler;
+    return handler; // Enables chaining
+  }
 
-    async handle(request: UserRequest): Promise<void> {
-        if (this.nextHandler) {
-            await this.nextHandler.handle(request);
-        }
+  async handle(request: UserRequest): Promise<void> {
+    if (this.nextHandler) {
+      await this.nextHandler.handle(request);
     }
+  }
 }
 
 // #### User Request Object
 class UserRequest {
-    constructor(
-        public readonly data: { email: string; password: string },
-        public readonly context: Record<string, any> = {} // Used for passing shared data (e.g., hashed password)
-    ) {}
+  constructor(
+    public readonly data: { email: string; password: string },
+    public readonly context: Record<string, any> = {} // Used for passing shared data (e.g., hashed password)
+  ) {}
 }
 
 // #### Specific Handlers with Dependency Injection and Logging
 
 class ValidationHandler extends AbstractAsyncHandler {
-    async handle(request: UserRequest): Promise<void> {
-        const { email, password } = request.data;
-        if (!email || !password) {
-            throw new Error("Validation failed: Missing email or password.");
-        }
-        console.log("Validation successful.");
-        await super.handle(request); // Pass to the next handler
+  override async handle(request: UserRequest): Promise<void> {
+    const { email, password } = request.data;
+    if (!email || !password) {
+      throw new Error('Validation failed: Missing email or password.');
     }
+    console.log('Validation successful.');
+    await super.handle(request); // Pass to the next handler
+  }
 }
 
 class DuplicateCheckHandler extends AbstractAsyncHandler {
-    constructor(private readonly userService: UserService) {
-        super();
-    }
+  constructor(private readonly userService: UserService) {
+    super();
+  }
 
-    async handle(request: UserRequest): Promise<void> {
-        const userExists = await this.userService.findUserByEmail(request.data.email);
-        if (userExists) {
-            throw new Error("Duplicate check failed: User already exists.");
-        }
-        console.log("Duplicate check successful.");
-        await super.handle(request);
+  override async handle(request: UserRequest): Promise<void> {
+    const userExists = await this.userService.findUserByEmail(
+      request.data.email
+    );
+    if (userExists) {
+      throw new Error('Duplicate check failed: User already exists.');
     }
+    console.log('Duplicate check successful.');
+    await super.handle(request);
+  }
 }
 
 class HashPasswordHandler extends AbstractAsyncHandler {
-    constructor(private readonly hashService: HashService) {
-        super();
-    }
+  constructor(private readonly hashService: HashService) {
+    super();
+  }
 
-    async handle(request: UserRequest): Promise<void> {
-        request.context.hashedPassword = await this.hashService.hash(request.data.password);
-        console.log("Password hashing successful.");
-        await super.handle(request);
-    }
+  override async handle(request: UserRequest): Promise<void> {
+    request.context.hashedPassword = await this.hashService.hash(
+      request.data.password
+    );
+    console.log('Password hashing successful.');
+    await super.handle(request);
+  }
 }
 
 class SaveToDatabaseHandler extends AbstractAsyncHandler {
-    constructor(private readonly userService: UserService) {
-        super();
-    }
+  constructor(private readonly userService: UserService) {
+    super();
+  }
 
-    async handle(request: UserRequest): Promise<void> {
-        await this.userService.saveUser({
-            email: request.data.email,
-            password: request.context.hashedPassword,
-        });
-        console.log("User saved to database.");
-        await super.handle(request);
-    }
+  override async handle(request: UserRequest): Promise<void> {
+    await this.userService.saveUser({
+      email: request.data.email,
+      password: request.context.hashedPassword,
+    });
+    console.log('User saved to database.');
+    await super.handle(request);
+  }
 }
 
 class LoggingHandler extends AbstractAsyncHandler {
-    async handle(request: UserRequest): Promise<void> {
-        console.log("Handling request for:", request.data.email);
-        await super.handle(request); // Pass to the next handler
-    }
+  override async handle(request: UserRequest): Promise<void> {
+    console.log('Handling request for:', request.data.email);
+    await super.handle(request); // Pass to the next handler
+  }
 }
 
 // #### Supporting Services
 class UserService {
-    async findUserByEmail(email: string): Promise<boolean> {
-        // Simulate database check
-        console.log(`Checking if user exists for email: ${email}`);
-        return false; // For simplicity, assume user doesn't exist
-    }
+  async findUserByEmail(email: string): Promise<boolean> {
+    // Simulate database check
+    console.log(`Checking if user exists for email: ${email}`);
+    return false; // For simplicity, assume user doesn't exist
+  }
 
-    async saveUser(user: { email: string; password: string }): Promise<void> {
-        console.log("Saving user to database:", user);
-    }
+  async saveUser(user: { email: string; password: string }): Promise<void> {
+    console.log('Saving user to database:', user);
+  }
 }
 
 class HashService {
-    async hash(password: string): Promise<string> {
-        // Simulate hashing (e.g., bcrypt.hash)
-        console.log(`Hashing password: ${password}`);
-        return `hashed_${password}`;
-    }
+  async hash(password: string): Promise<string> {
+    // Simulate hashing (e.g., bcrypt.hash)
+    console.log(`Hashing password: ${password}`);
+    return `hashed_${password}`;
+  }
 }
-
 
 // #### Usage
 
 (async () => {
-    const userService = new UserService();
-    const hashService = new HashService();
+  const userService = new UserService();
+  const hashService = new HashService();
 
-    const loggingHandler = new LoggingHandler();
-    const validationHandler = new ValidationHandler();
-    const duplicateCheckHandler = new DuplicateCheckHandler(userService);
-    const hashPasswordHandler = new HashPasswordHandler(hashService);
-    const saveToDatabaseHandler = new SaveToDatabaseHandler(userService);
+  const loggingHandler = new LoggingHandler();
+  const validationHandler = new ValidationHandler();
+  const duplicateCheckHandler = new DuplicateCheckHandler(userService);
+  const hashPasswordHandler = new HashPasswordHandler(hashService);
+  const saveToDatabaseHandler = new SaveToDatabaseHandler(userService);
 
-    // Build the chain
-    loggingHandler
-        .setNext(validationHandler)
-        .setNext(duplicateCheckHandler)
-        .setNext(hashPasswordHandler)
-        .setNext(saveToDatabaseHandler);
+  // Build the chain
+  loggingHandler
+    .setNext(validationHandler)
+    .setNext(duplicateCheckHandler)
+    .setNext(hashPasswordHandler)
+    .setNext(saveToDatabaseHandler);
 
-    const userRequest = new UserRequest({
-        email: "user@example.com",
-        password: "password123",
-    });
+  const userRequest = new UserRequest({
+    email: 'user@example.com',
+    password: 'password123',
+  });
 
-    try {
-        // Start the chain
-        await loggingHandler.handle(userRequest);
-        console.log("User registration completed successfully.");
-    } catch (error) {
-        console.error("User registration failed:", (error as Error).message);
-    }
+  try {
+    // Start the chain
+    await loggingHandler.handle(userRequest);
+    console.log('User registration completed successfully.');
+  } catch (error) {
+    console.error('User registration failed:', (error as Error).message);
+  }
 })();
-
 
 // ### Key Features in This Example
 //

@@ -17,127 +17,151 @@
  * A ProductCatalog to manage the entire catalog, which will make use of the Flyweight pattern for managing large numbers of similar products.
  * */
 
-
 // Product Flyweight Class - This will hold the shared data (intrinsic state)
 class ProductFlyweight {
-    private category: string;
-    private description: string;
-    private price: number;
+  private category: string;
+  private description: string;
+  private price: number;
 
-    constructor(category: string, description: string, price: number) {
-        this.category = category;
-        this.description = description;
-        this.price = price;
-    }
+  constructor(category: string, description: string, price: number) {
+    this.category = category;
+    this.description = description;
+    this.price = price;
+  }
 
-    getCategory(): string {
-        return this.category;
-    }
+  getCategory(): string {
+    return this.category;
+  }
 
-    getDescription(): string {
-        return this.description;
-    }
+  getDescription(): string {
+    return this.description;
+  }
 
-    getPrice(): number {
-        return this.price;
-    }
+  getPrice(): number {
+    return this.price;
+  }
 }
 
 // Product Class - This will hold both shared (intrinsic) and unique (extrinsic) data
 class Product {
-    private id: string;
-    private name: string;
-    private stock: number;
-    private flyweight: ProductFlyweight;
+  private id: string;
+  private name: string;
+  private stock: number;
+  private flyweight: ProductFlyweight;
 
-    constructor(id: string, name: string, stock: number, flyweight: ProductFlyweight) {
-        this.id = id;
-        this.name = name;
-        this.stock = stock;
-        this.flyweight = flyweight;
-    }
+  constructor(
+    id: string,
+    name: string,
+    stock: number,
+    flyweight: ProductFlyweight
+  ) {
+    this.id = id;
+    this.name = name;
+    this.stock = stock;
+    this.flyweight = flyweight;
+  }
 
-    // Getter method for 'id' to allow access to the private 'id' property
-    getId(): string {
-        return this.id;
-    }
+  // Getter method for 'id' to allow access to the private 'id' property
+  getId(): string {
+    return this.id;
+  }
 
-    getDetails(): string {
-        return `Product ID: ${this.getId()}, Name: ${this.name}, Category: ${this.flyweight.getCategory()}, Description: ${this.flyweight.getDescription()}, Price: $${this.flyweight.getPrice()}, Stock: ${this.stock}`;
-    }
+  getDetails(): string {
+    return `Product ID: ${this.getId()}, Name: ${
+      this.name
+    }, Category: ${this.flyweight.getCategory()}, Description: ${this.flyweight.getDescription()}, Price: $${this.flyweight.getPrice()}, Stock: ${
+      this.stock
+    }`;
+  }
 
-    getStock(): number {
-        return this.stock;
-    }
+  getStock(): number {
+    return this.stock;
+  }
 
-    setStock(stock: number): void {
-        this.stock = stock;
-    }
+  setStock(stock: number): void {
+    this.stock = stock;
+  }
 
-    getFlyweight(): ProductFlyweight {
-        return this.flyweight;
-    }
+  getFlyweight(): ProductFlyweight {
+    return this.flyweight;
+  }
 }
 
 // Flyweight Factory - Manages sharing of common product data
 class ProductFlyweightFactory {
-    private flyweights: Map<string, ProductFlyweight> = new Map();
+  private flyweights: Map<string, ProductFlyweight> = new Map();
 
-    getFlyweight(category: string, description: string, price: number): ProductFlyweight {
-        const key = `${category}-${description}-${price}`;
-        if (!this.flyweights.has(key)) {
-            console.log(`Creating new Flyweight for ${category}`);
-            const flyweight = new ProductFlyweight(category, description, price);
-            this.flyweights.set(key, flyweight);
-        } else {
-            console.log(`Reusing existing Flyweight for ${category}`);
-        }
-        return this.flyweights.get(key)!;
+  getFlyweight(
+    category: string,
+    description: string,
+    price: number
+  ): ProductFlyweight {
+    const key = `${category}-${description}-${price}`;
+    if (!this.flyweights.has(key)) {
+      console.log(`Creating new Flyweight for ${category}`);
+      const flyweight = new ProductFlyweight(category, description, price);
+      this.flyweights.set(key, flyweight);
+    } else {
+      console.log(`Reusing existing Flyweight for ${category}`);
     }
+    return this.flyweights.get(key)!;
+  }
 
-    // Optional: Method to remove flyweights from memory if no longer needed (for cleanup)
-    removeFlyweight(category: string, description: string, price: number): void {
-        const key = `${category}-${description}-${price}`;
-        this.flyweights.delete(key);
-    }
+  // Optional: Method to remove flyweights from memory if no longer needed (for cleanup)
+  removeFlyweight(category: string, description: string, price: number): void {
+    const key = `${category}-${description}-${price}`;
+    this.flyweights.delete(key);
+  }
 
-    // Method to get all the existing flyweights
-    getAllFlyweights(): ProductFlyweight[] {
-        return Array.from(this.flyweights.values());
-    }
+  // Method to get all the existing flyweights
+  getAllFlyweights(): ProductFlyweight[] {
+    return Array.from(this.flyweights.values());
+  }
 }
 
 // Product Catalog - Manages products in the catalog and uses the Flyweight pattern
 class ProductCatalog {
-    private products: Product[] = [];
-    private flyweightFactory: ProductFlyweightFactory = new ProductFlyweightFactory();
+  private products: Product[] = [];
+  private flyweightFactory: ProductFlyweightFactory =
+    new ProductFlyweightFactory();
 
-    addProduct(id: string, name: string, category: string, description: string, price: number, stock: number): void {
-        const flyweight = this.flyweightFactory.getFlyweight(category, description, price);
-        const product = new Product(id, name, stock, flyweight);
-        this.products.push(product);
-    }
+  addProduct(
+    id: string,
+    name: string,
+    category: string,
+    description: string,
+    price: number,
+    stock: number
+  ): void {
+    const flyweight = this.flyweightFactory.getFlyweight(
+      category,
+      description,
+      price
+    );
+    const product = new Product(id, name, stock, flyweight);
+    this.products.push(product);
+  }
 
-    getProductDetails(id: string): string | undefined {
-        const product = this.products.find(p => p.getId() === id);
-        return product ? product.getDetails() : undefined;
-    }
+  getProductDetails(id: string): string | undefined {
+    const product = this.products.find(p => p.getId() === id);
+    return product ? product.getDetails() : undefined;
+  }
 
-    getProductStock(id: string): number | undefined {
-        const product = this.products.find(p => p.getId() === id);
-        return product ? product.getStock() : undefined;
-    }
+  getProductStock(id: string): number | undefined {
+    const product = this.products.find(p => p.getId() === id);
+    return product ? product.getStock() : undefined;
+  }
 
-    updateProductStock(id: string, stock: number): void {
-        const product = this.products.find(p => p.getId() === id);
-        if (product) {
-            product.setStock(stock);
-        }
+  updateProductStock(id: string, stock: number): void {
+    const product = this.products.find(p => p.getId() === id);
+    if (product) {
+      product.setStock(stock);
     }
+  }
 
-    getFlyweights(): ProductFlyweight[] {
-        return this.flyweightFactory.getAllFlyweights();
-    }
+  getFlyweights(): ProductFlyweight[] {
+    return this.flyweightFactory.getAllFlyweights();
+  }
 }
 
 // Example Usage
@@ -145,30 +169,55 @@ class ProductCatalog {
 const catalog = new ProductCatalog();
 
 // Add products to catalog with shared Flyweight data
-catalog.addProduct("001", "Laptop", "Electronics", "A high-performance laptop", 1000, 50);
-catalog.addProduct("002", "Smartphone", "Electronics", "A latest model smartphone", 800, 30);
-catalog.addProduct("003", "Bluetooth Headphones", "Accessories", "Noise-canceling headphones", 200, 100);
+catalog.addProduct(
+  '001',
+  'Laptop',
+  'Electronics',
+  'A high-performance laptop',
+  1000,
+  50
+);
+catalog.addProduct(
+  '002',
+  'Smartphone',
+  'Electronics',
+  'A latest model smartphone',
+  800,
+  30
+);
+catalog.addProduct(
+  '003',
+  'Bluetooth Headphones',
+  'Accessories',
+  'Noise-canceling headphones',
+  200,
+  100
+);
 
 // Get product details
-console.log(catalog.getProductDetails("001"));
-console.log(catalog.getProductDetails("002"));
-console.log(catalog.getProductDetails("003"));
+console.log(catalog.getProductDetails('001'));
+console.log(catalog.getProductDetails('002'));
+console.log(catalog.getProductDetails('003'));
 
 // Update product stock
-catalog.updateProductStock("001", 45);
-console.log("Updated stock for Laptop:", catalog.getProductStock("001"));
+catalog.updateProductStock('001', 45);
+console.log('Updated stock for Laptop:', catalog.getProductStock('001'));
 
 // Get shared flyweights
-console.log("Flyweights in use:");
+console.log('Flyweights in use:');
 const flyweights = catalog.getFlyweights();
 flyweights.forEach(fw => {
-    console.log(`Category: ${fw.getCategory()}, Description: ${fw.getDescription()}, Price: $${fw.getPrice()}`);
+  console.log(
+    `Category: ${fw.getCategory()}, Description: ${fw.getDescription()}, Price: $${fw.getPrice()}`
+  );
 });
 
 // Simulate cleanup (optional)
-catalog["flyweightFactory"].removeFlyweight("Electronics", "A high-performance laptop", 1000);
-
-
+catalog['flyweightFactory'].removeFlyweight(
+  'Electronics',
+  'A high-performance laptop',
+  1000
+);
 
 /**
  * Key Features in the Code:

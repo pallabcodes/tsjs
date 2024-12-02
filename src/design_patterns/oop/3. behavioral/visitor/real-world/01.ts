@@ -16,72 +16,99 @@
 // - **Extensibility**: Adding new operations (e.g., discounts, inventory checks) without changing the product classes.
 // - **Multiple Visitors**: Each visitor represents a distinct operation, such as tax calculation, discount application, or inventory updates.
 
-
 // #### 1. **Object Structure**: The Visitable Elements
 
-  interface Visitable {
-    accept(visitor: Visitor): void;
+interface Visitable {
+  accept(visitor: Visitor): void;
 }
 
 class Book implements Visitable {
-    constructor(public readonly title: string, public readonly price: number) {}
+  constructor(public readonly title: string, public readonly price: number) {}
 
-    accept(visitor: Visitor): void {
-        visitor.visitBook(this);
-    }
+  accept(visitor: Visitor): void {
+    visitor.visitBook(this);
+  }
 }
 
 class Electronic implements Visitable {
-    constructor(public readonly brand: string, public readonly price: number) {}
+  constructor(public readonly brand: string, public readonly price: number) {}
 
-    accept(visitor: Visitor): void {
-        visitor.visitElectronic(this);
-    }
+  accept(visitor: Visitor): void {
+    visitor.visitElectronic(this);
+  }
 }
 
 class Grocery implements Visitable {
-    constructor(public readonly name: string, public readonly weight: number, public readonly pricePerKg: number) {}
+  constructor(
+    public readonly name: string,
+    public readonly weight: number,
+    public readonly pricePerKg: number
+  ) {}
 
-    accept(visitor: Visitor): void {
-        visitor.visitGrocery(this);
-    }
+  accept(visitor: Visitor): void {
+    visitor.visitGrocery(this);
+  }
 }
 
 // #### 2. **Visitor Interface and Concrete Visitors**
 interface Visitor {
-    visitBook(book: Book): void;
-    visitElectronic(electronic: Electronic): void;
-    visitGrocery(grocery: Grocery): void;
+  visitBook(book: Book): void;
+  visitElectronic(electronic: Electronic): void;
+  visitGrocery(grocery: Grocery): void;
 }
 
 // Concrete Visitor: Tax Calculation
 class TaxVisitor implements Visitor {
-    visitBook(book: Book): void {
-        console.log(`Book "${book.title}": Tax = $${(book.price * 0.1).toFixed(2)}`);
-    }
+  visitBook(book: Book): void {
+    console.log(
+      `Book "${book.title}": Tax = $${(book.price * 0.1).toFixed(2)}`
+    );
+  }
 
-    visitElectronic(electronic: Electronic): void {
-        console.log(`Electronic "${electronic.brand}": Tax = $${(electronic.price * 0.15).toFixed(2)}`);
-    }
+  visitElectronic(electronic: Electronic): void {
+    console.log(
+      `Electronic "${electronic.brand}": Tax = $${(
+        electronic.price * 0.15
+      ).toFixed(2)}`
+    );
+  }
 
-    visitGrocery(grocery: Grocery): void {
-        console.log(`Grocery "${grocery.name}": Tax = $${(grocery.weight * grocery.pricePerKg * 0.05).toFixed(2)}`);
-    }
+  visitGrocery(grocery: Grocery): void {
+    console.log(
+      `Grocery "${grocery.name}": Tax = $${(
+        grocery.weight *
+        grocery.pricePerKg *
+        0.05
+      ).toFixed(2)}`
+    );
+  }
 }
 
 // Concrete Visitor: Discount Calculation
 class DiscountVisitor implements Visitor {
-    visitBook(book: Book): void {
-        console.log(`Book "${book.title}": Discount = $${(book.price * 0.05).toFixed(2)}`);
-    }
+  visitBook(book: Book): void {
+    console.log(
+      `Book "${book.title}": Discount = $${(book.price * 0.05).toFixed(2)}`
+    );
+  }
 
-    visitElectronic(electronic: Electronic): void {
-        console.log(`Electronic "${electronic.brand}": Discount = $${(electronic.price * 0.1).toFixed(2)}`);
-    }
+  visitElectronic(electronic: Electronic): void {
+    console.log(
+      `Electronic "${electronic.brand}": Discount = $${(
+        electronic.price * 0.1
+      ).toFixed(2)}`
+    );
+  }
 
-    visitGrocery(grocery: Grocery): void {
-        console.log(`Grocery "${grocery.name}": Discount = $${(grocery.weight * grocery.pricePerKg * 0.02).toFixed(2)}`);
-    }
+  visitGrocery(grocery: Grocery): void {
+    console.log(
+      `Grocery "${grocery.name}": Discount = $${(
+        grocery.weight *
+        grocery.pricePerKg *
+        0.02
+      ).toFixed(2)}`
+    );
+  }
 }
 
 // #### 3. **Client Code**
@@ -89,19 +116,19 @@ class DiscountVisitor implements Visitor {
 
 // Collection of visitable elements
 const products: Visitable[] = [
-    new Book("Design Patterns", 50),
-    new Electronic("Smartphone", 1000),
-    new Grocery("Apples", 2, 3) // 2kg at $3/kg
+  new Book('Design Patterns', 50),
+  new Electronic('Smartphone', 1000),
+  new Grocery('Apples', 2, 3), // 2kg at $3/kg
 ];
 
 // Applying TaxVisitor
-console.log("Calculating Taxes:");
+console.log('Calculating Taxes:');
 const taxVisitor = new TaxVisitor();
-products.forEach((product) => product.accept(taxVisitor));
+products.forEach(product => product.accept(taxVisitor));
 
-console.log("\nCalculating Discounts:");
+console.log('\nCalculating Discounts:');
 const discountVisitor = new DiscountVisitor();
-products.forEach((product) => product.accept(discountVisitor));
+products.forEach(product => product.accept(discountVisitor));
 
 // ### Output:
 
@@ -115,7 +142,6 @@ products.forEach((product) => product.accept(discountVisitor));
 // Electronic "Smartphone": Discount = $100.00
 // Grocery "Apples": Discount = $0.12
 
-
 // ### Breakdown of Real-World Features:
 //   1. **Complex Object Structures**:
 // - Different product types (`Book`, `Electronic`, `Grocery`) with varied attributes and behaviors.
@@ -124,19 +150,19 @@ products.forEach((product) => product.accept(discountVisitor));
 // 2. **Extensibility**:
 // - Adding a new operation, such as `InventoryCheckVisitor`, does not require changes to the product classes.
 // - For example:
-class InventoryCheckVisitor implements Visitor {
-         visitBook(book: Book): void {
-             console.log(`Checking inventory for Book "${book.title}"`);
-         }
+export class InventoryCheckVisitor implements Visitor {
+  visitBook(book: Book): void {
+    console.log(`Checking inventory for Book "${book.title}"`);
+  }
 
-         visitElectronic(electronic: Electronic): void {
-             console.log(`Checking inventory for Electronic "${electronic.brand}"`);
-         }
+  visitElectronic(electronic: Electronic): void {
+    console.log(`Checking inventory for Electronic "${electronic.brand}"`);
+  }
 
-         visitGrocery(grocery: Grocery): void {
-             console.log(`Checking inventory for Grocery "${grocery.name}"`);
-         }
-     }
+  visitGrocery(grocery: Grocery): void {
+    console.log(`Checking inventory for Grocery "${grocery.name}"`);
+  }
+}
 
 // 3. **Multiple Visitors**:
 // - Tax and discount calculations are handled independently.

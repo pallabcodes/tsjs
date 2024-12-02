@@ -6,7 +6,6 @@
  * Caching: Cache responses or data to improve performance in highly repetitive operations.
  * */
 
-
 /**
  * Below is a TypeScript Proxy Pattern implementation designed with real-world product use cases in mind. It will cover:
  *
@@ -16,107 +15,110 @@
  * Logging and Monitoring (logging method calls and response time).
  * */
 
-
 // Step 1: Define an interface for the Subject
 interface IReport {
-    generateReport(user: UserContext): string;
+  generateReport(user: UserContext): string;
 }
 
 // User Context - includes role, access rights, etc.
 interface UserContext {
-    userId: string;
-    role: string;
-    isActive: boolean;
+  userId: string;
+  role: string;
+  isActive: boolean;
 }
 
 // Step 2: Concrete Subject - The actual object that performs the work
 class ReportGenerator implements IReport {
-    generateReport(user: UserContext): string {
-        // Simulate a heavy or expensive task (e.g., generating a financial report)
-        if (!user.isActive) {
-            throw new Error("Inactive user cannot generate report.");
-        }
-        console.log(`Generating report for user: ${user.userId} with role: ${user.role}`);
-        // Simulating a delay for report generation
-        return `Report for ${user.role} with ID ${user.userId} generated successfully.`;
+  generateReport(user: UserContext): string {
+    // Simulate a heavy or expensive task (e.g., generating a financial report)
+    if (!user.isActive) {
+      throw new Error('Inactive user cannot generate report.');
     }
+    console.log(
+      `Generating report for user: ${user.userId} with role: ${user.role}`
+    );
+    // Simulating a delay for report generation
+    return `Report for ${user.role} with ID ${user.userId} generated successfully.`;
+  }
 }
 
 // Step 3: Proxy Class - Controls access to the Real Subject (with additional functionality)
 class ReportProxy implements IReport {
-    private reportGenerator: ReportGenerator | null = null;
-    private cache: Map<string, string> = new Map();
+  private reportGenerator: ReportGenerator | null = null;
+  private cache: Map<string, string> = new Map();
 
-    // Caching previously generated reports
-    private cacheReport(user: UserContext, report: string): void {
-        const key = `${user.userId}-${user.role}`;
-        this.cache.set(key, report);
+  // Caching previously generated reports
+  private cacheReport(user: UserContext, report: string): void {
+    const key = `${user.userId}-${user.role}`;
+    this.cache.set(key, report);
+  }
+
+  private getCachedReport(user: UserContext): string | null {
+    const key = `${user.userId}-${user.role}`;
+    return this.cache.get(key) || null;
+  }
+
+  // Lazy initialization: Only create the ReportGenerator when needed
+  private getReportGenerator(): ReportGenerator {
+    if (!this.reportGenerator) {
+      this.reportGenerator = new ReportGenerator();
+    }
+    return this.reportGenerator;
+  }
+
+  // Access control based on user role
+  private checkUserRole(user: UserContext): boolean {
+    const allowedRoles = ['Admin', 'Manager']; // Example of allowed roles
+    return allowedRoles.includes(user.role);
+  }
+
+  // Generate the report with access control, caching, and logging
+  generateReport(user: UserContext): string {
+    // Check user access control
+    if (!this.checkUserRole(user)) {
+      console.log(
+        `Access Denied: User ${user.userId} with role ${user.role} is not authorized to generate reports.`
+      );
+      throw new Error('Access Denied: Insufficient permissions.');
     }
 
-    private getCachedReport(user: UserContext): string | null {
-        const key = `${user.userId}-${user.role}`;
-        return this.cache.get(key) || null;
+    // Check if the report is cached
+    const cachedReport = this.getCachedReport(user);
+    if (cachedReport) {
+      console.log(`Returning cached report for user: ${user.userId}`);
+      return cachedReport;
     }
 
-    // Lazy initialization: Only create the ReportGenerator when needed
-    private getReportGenerator(): ReportGenerator {
-        if (!this.reportGenerator) {
-            this.reportGenerator = new ReportGenerator();
-        }
-        return this.reportGenerator;
-    }
+    // If report is not cached, generate a new one
+    const reportGenerator = this.getReportGenerator();
+    const report = reportGenerator.generateReport(user);
 
-    // Access control based on user role
-    private checkUserRole(user: UserContext): boolean {
-        const allowedRoles = ['Admin', 'Manager']; // Example of allowed roles
-        return allowedRoles.includes(user.role);
-    }
+    // Cache the report for future use
+    this.cacheReport(user, report);
 
-    // Generate the report with access control, caching, and logging
-    generateReport(user: UserContext): string {
-        // Check user access control
-        if (!this.checkUserRole(user)) {
-            console.log(`Access Denied: User ${user.userId} with role ${user.role} is not authorized to generate reports.`);
-            throw new Error("Access Denied: Insufficient permissions.");
-        }
-
-        // Check if the report is cached
-        const cachedReport = this.getCachedReport(user);
-        if (cachedReport) {
-            console.log(`Returning cached report for user: ${user.userId}`);
-            return cachedReport;
-        }
-
-        // If report is not cached, generate a new one
-        const reportGenerator = this.getReportGenerator();
-        const report = reportGenerator.generateReport(user);
-
-        // Cache the report for future use
-        this.cacheReport(user, report);
-
-        return report;
-    }
+    return report;
+  }
 }
 
 // Step 4: Example usage of Proxy
 
 // Define some users
 const adminUser: UserContext = {
-    userId: 'admin123',
-    role: 'Admin',
-    isActive: true,
+  userId: 'admin123',
+  role: 'Admin',
+  isActive: true,
 };
 
 const managerUser: UserContext = {
-    userId: 'manager456',
-    role: 'Manager',
-    isActive: true,
+  userId: 'manager456',
+  role: 'Manager',
+  isActive: true,
 };
 
 const guestUser: UserContext = {
-    userId: 'guest789',
-    role: 'Guest',
-    isActive: true,
+  userId: 'guest789',
+  role: 'Guest',
+  isActive: true,
 };
 
 // Instantiate Proxy (instead of directly using the ReportGenerator)
@@ -124,22 +126,21 @@ const reportProxy = new ReportProxy();
 
 // Try generating reports for users with various roles
 try {
-    console.log(reportProxy.generateReport(adminUser)); // Should succeed
-    console.log(reportProxy.generateReport(managerUser)); // Should succeed
-    console.log(reportProxy.generateReport(guestUser)); // Should deny access
+  console.log(reportProxy.generateReport(adminUser)); // Should succeed
+  console.log(reportProxy.generateReport(managerUser)); // Should succeed
+  console.log(reportProxy.generateReport(guestUser)); // Should deny access
 } catch (error) {
-    console.error((error as Error).message);
+  console.error((error as Error).message);
 }
 
 // Simulate re-accessing the same report for adminUser (caching in action)
 setTimeout(() => {
-    try {
-        console.log(reportProxy.generateReport(adminUser)); // Should fetch from cache
-    } catch (error) {
-        console.error((error as Error).message);
-    }
+  try {
+    console.log(reportProxy.generateReport(adminUser)); // Should fetch from cache
+  } catch (error) {
+    console.error((error as Error).message);
+  }
 }, 2000);
-
 
 /**
  * Key Features Addressed:

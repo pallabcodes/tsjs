@@ -39,7 +39,6 @@ A cache is often shared across various parts of an application. Using a singleto
 
 // console.log("Are both cache instances the same?", cache1 === cache2); // true
 
-
 /*
 Explanation:
 
