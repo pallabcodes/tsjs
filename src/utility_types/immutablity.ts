@@ -12,15 +12,14 @@ type PersonScore = {
 };
 
 const bill: PersonScore = {
-  name: "Bill",
-  score: 90
+  name: 'Bill',
+  score: 90,
 };
 
 // function doubleScore2(person: PersonScore) {
 //   person.score = person.score * 2;
 //   return person;
 // }
-
 
 // const doubleBill = doubleScore2(bill);
 // no matter from where it's updated; due to having same reference the object will be updated thus
@@ -33,7 +32,6 @@ function doubleScore2(person: Readonly<PersonScore>) {
 const doubleBill = doubleScore2(bill);
 // now, made a new object (it has a new reference pointer)
 console.log(bill, doubleBill); // { name: 'Bill', score: 90 }, { name: "Bill", score: 180 }
-
 
 // # another way of making readonly immutability [this works on compile time]
 // const gohan = {
@@ -48,25 +46,24 @@ console.log(bill, doubleBill); // { name: 'Bill', score: 90 }, { name: "Bill", s
 // gohan.profile.level = 2;
 // gohan.scores.push(100);
 
-
 // do immutability at "runtime" by using Object.Freeze()
 function deepFreeze<T>(obj: T) {
   const propNames = Object.getOwnPropertyNames(obj);
-  for (let name of propNames) {
-    let value = (obj as any)[name];
-    if (value && typeof value === "object") {
+  for (const name of propNames) {
+    const value = (obj as any)[name];
+    if (value && typeof value === 'object') {
       deepFreeze(value);
     }
   }
   return Object.freeze(obj);
 }
 
-let goku = deepFreeze({
-  name: "Goku",
+const goku = deepFreeze({
+  name: 'Goku',
   profile: {
-    level: 1
+    level: 1,
   },
-  scores: [80, 100]
+  scores: [80, 100],
 } as const);
 
 // # making a deep immutable type at "runtime"
@@ -79,13 +76,13 @@ type Person = {
 };
 
 type Immutable<T> = {
-  readonly [K in keyof T]: Immutable<T[K]>
+  readonly [K in keyof T]: Immutable<T[K]>;
 };
 
-let goten: Immutable<Person> = deepFreeze({
-  name: "Goten",
+const goten: Immutable<Person> = deepFreeze({
+  name: 'Goten',
   profile: {
-    level: 1
+    level: 1,
   },
-  scores: [80, 100]
+  scores: [80, 100],
 });
