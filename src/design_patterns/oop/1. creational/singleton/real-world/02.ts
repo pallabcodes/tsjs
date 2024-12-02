@@ -1,20 +1,43 @@
-// 1. Logging System Singleton
-
-// In a logging system, you want to avoid creating multiple instances of the logger, which could result in inconsistencies in logs, performance issues, or redundant operations. By using the Singleton Pattern, you ensure that only one logger instance handles all log operations.
-
 class Logger {
-  private static instance: Logger;
+  private static instance: Logger | null = null;
+  private static initializationPromise: Promise<Logger> | null = null;
 
   private constructor() {
-    // Simulating logger initialization, like opening a file or network stream
+    // Simulate the logger setup, like opening a file or network stream
     console.log('Logger initialized');
   }
 
-  public static getInstance(): Logger {
-    if (!Logger.instance) {
-      Logger.instance = new Logger();
+  public static async getInstance(): Promise<Logger> {
+    if (Logger.instance) {
+      return Logger.instance;
     }
+
+    // Ensure only one instance is initialized, handle async initialization if needed
+    if (!Logger.initializationPromise) {
+      Logger.initializationPromise = (async () => {
+        const instance = new Logger();
+        try {
+          await instance.initialize();
+          return instance;
+        } catch (error) {
+          console.error('Error initializing Logger:', error);
+          throw new Error('Logger initialization failed.');
+        }
+      })();
+    }
+
+    Logger.instance = await Logger.initializationPromise;
     return Logger.instance;
+  }
+
+  private async initialize(): Promise<void> {
+    // Simulating asynchronous setup, such as opening a log file or establishing a network connection
+    await new Promise((resolve) => {
+      setTimeout(() => {
+        console.log('Logger setup complete.');
+        resolve(null);
+      }, 1000);
+    });
   }
 
   public log(message: string): void {
@@ -26,15 +49,13 @@ class Logger {
   }
 }
 
-// Usage
-const logger1 = Logger.getInstance();
-logger1.log('Application started');
+// Usage example
+(async () => {
+  const logger1 = await Logger.getInstance();
+  logger1.log('Application started');
 
-const logger2 = Logger.getInstance();
-logger2.error('An error occurred');
+  const logger2 = await Logger.getInstance();
+  logger2.error('An error occurred');
 
-console.log('Are both logger instances the same?', logger1 === logger2); // true
-
-// Explanation:
-// Logger Class: A singleton logger is implemented to ensure that only one instance is used to log messages.
-// Methods: The log() and error() methods print log messages with timestamps. The getInstance() method ensures the same logger instance is returned every time.
+  console.log('Are both logger instances the same?', logger1 === logger2); // true
+})();

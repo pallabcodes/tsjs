@@ -1,45 +1,54 @@
-// # Lazy initialization
+// # Lazy Initialization with Asynchronous Support
+
 class PrinterService {
-  // Static property to hold the instance
-  private static instance: PrinterService;
-  // Private field with an explicit type
+  private static instance: PrinterService | null = null;
+  private static initializationPromise: Promise<PrinterService> | null = null;
+
   private mode = 'Mono'; // default mode
 
-  // Constructor only initializes properties as done below
-
+  // Private constructor to prevent direct instantiation
   private constructor(mode: string) {
     this.mode = mode;
   }
 
-  // getInstance() handles lazy initialization and ensures a single instance.
+  // Lazy initialization with sync method
   public static getInstance(mode = 'Mono'): PrinterService {
-    // Provide a way to get the singleton instance
     if (!PrinterService.instance) {
       PrinterService.instance = new PrinterService(mode);
     }
     return PrinterService.instance;
   }
 
-  // Async initialization with lazy instantiation
+  // Lazy initialization with async method, for async tasks before instantiation
   public static async getInstanceAsync(mode = 'Mono'): Promise<PrinterService> {
-    if (!PrinterService.instance) {
-      // Perform an async task (e.g., fetch configuration, etc.) before instance creation
-      await PrinterService.asyncInitialization();
-
-      // Initialize the instance after async task completes
-      PrinterService.instance = new PrinterService(mode);
+    if (PrinterService.instance) {
+      return PrinterService.instance;
     }
-    return PrinterService.instance;
+
+    // Initialize the instance asynchronously if not already initialized
+    if (!PrinterService.initializationPromise) {
+      PrinterService.initializationPromise = (async () => {
+        // Perform async initialization tasks (e.g., configuration, network calls)
+        await PrinterService.asyncInitialization();
+
+        // Create and return the singleton instance after async tasks
+        PrinterService.instance = new PrinterService(mode);
+        return PrinterService.instance;
+      })();
+    }
+
+    // Return the initialized instance once the async task completes
+    return PrinterService.initializationPromise;
   }
 
-  // Async method to simulate some initialization task (e.g., fetching configuration)
-  private static async asyncInitialization() {
+  // Simulate some async initialization task (e.g., fetching configuration)
+  private static async asyncInitialization(): Promise<void> {
     console.log('Starting async initialization...');
-    return new Promise<void>(resolve => {
+    return new Promise<void>((resolve) => {
       setTimeout(() => {
         console.log('Async initialization completed.');
         resolve();
-      }, 1000); // Simulating async delay (e.g., fetching config)
+      }, 1000); // Simulating delay (e.g., fetching config)
     });
   }
 
@@ -58,12 +67,17 @@ class PrinterService {
     console.log(`Mode set to: ${mode}`);
   }
 
-  private static isImmutable(): boolean {
-    return Object.isFrozen(PrinterService.instance);
+  // Prevent further modifications to the singleton instance
+  public static lockInstance(): void {
+    if (PrinterService.instance) {
+      Object.freeze(PrinterService.instance); // Freeze the instance to prevent modification
+      console.log('PrinterService instance is locked.');
+    }
   }
 
-  public static lockInstance() {
-    Object.freeze(PrinterService.instance); // Freeze the instance
+  // Check if the instance is frozen (immutable)
+  public static isImmutable(): boolean {
+    return Object.isFrozen(PrinterService.instance);
   }
 }
 
@@ -71,18 +85,18 @@ class PrinterService {
 const worker1 = PrinterService.getInstance('Color');
 const worker2 = PrinterService.getInstance(); // Default mode is "Mono"
 
-console.log(worker1 === worker2); // true
+console.log(worker1 === worker2); // true, both refer to the same instance
 
 worker1.setMode('GrayScale');
-console.log(worker2.getMode()); // "GreyScale"
+console.log(worker2.getMode()); // "GrayScale"
 
-// usage (async)
+// Usage (async)
 (async () => {
   const asyncWorker1 = await PrinterService.getInstanceAsync();
   const asyncWorker2 = await PrinterService.getInstanceAsync();
 
-  console.log(asyncWorker1 === asyncWorker2); // true
+  console.log(asyncWorker1 === asyncWorker2); // true, both refer to the same instance
 
-  worker1.setMode('GrayScale');
-  console.log(worker2.getMode()); // "GrayScale"
+  asyncWorker1.setMode('Color');
+  console.log(asyncWorker2.getMode()); // "Color"
 })();
