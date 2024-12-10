@@ -1,5 +1,5 @@
 // 4. Thread Pool / Database Connection Pool Singleton
-// In multithreaded or multiprocess applications, managing thread pools or database connections efficiently is critical.
+// In multithreaded or multi-process applications, managing thread pools or database connections efficiently is critical.
 // A singleton ensures only one connection pool or thread pool is created, reducing resource contention and improving efficiency.
 
 class DatabaseConnectionPool {
@@ -7,14 +7,16 @@ class DatabaseConnectionPool {
   private static instance: DatabaseConnectionPool | null = null;
 
   // Promise used for async initialization of the instance
-  private static initializationPromise: Promise<DatabaseConnectionPool> | null = null;
+  private static initializationPromise: Promise<DatabaseConnectionPool> | null =
+    null;
 
   // Using readonly for immutability where appropriate
   private readonly connections: string[] = [];
   private readonly availableConnections: string[] = [];
-  private isInitializing: boolean = false;
+  private isInitializing = false;
 
   // Private constructor ensures no external instantiation
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
   private constructor() {}
 
   // Singleton getter with thread-safety for async initialization
@@ -38,7 +40,8 @@ class DatabaseConnectionPool {
     }
 
     // Wait for the initialization process to complete
-    DatabaseConnectionPool.instance = await DatabaseConnectionPool.initializationPromise;
+    DatabaseConnectionPool.instance =
+      await DatabaseConnectionPool.initializationPromise;
     return DatabaseConnectionPool.instance;
   }
 
@@ -49,7 +52,7 @@ class DatabaseConnectionPool {
 
     try {
       // Simulate a network or DB call that takes time (1 second)
-      await new Promise<void>((resolve) => {
+      await new Promise<void>(resolve => {
         setTimeout(() => {
           console.log('Database connections initialized');
           this.connections.push('DB_Connection_1', 'DB_Connection_2');
@@ -98,8 +101,6 @@ class DatabaseConnectionPool {
   pool1.releaseConnection('DB_Connection_1');
   console.log(await pool2.getConnection()); // DB_Connection_1
 })();
-
-
 
 // Explanation:
 // DatabaseConnectionPool Class: This singleton simulates a database connection pool with a limited number of connections.

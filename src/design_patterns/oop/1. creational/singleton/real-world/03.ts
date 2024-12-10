@@ -3,7 +3,8 @@
 
 class ConfigurationManager {
   private static instance: ConfigurationManager | null = null;
-  private static initializationPromise: Promise<ConfigurationManager> | null = null;
+  private static initializationPromise: Promise<ConfigurationManager> | null =
+    null;
 
   private settings: { [key: string]: string } = {};
 
@@ -33,13 +34,14 @@ class ConfigurationManager {
     }
 
     // Wait for the initialization process to finish and assign the instance
-    ConfigurationManager.instance = await ConfigurationManager.initializationPromise;
+    ConfigurationManager.instance =
+      await ConfigurationManager.initializationPromise;
     return ConfigurationManager.instance;
   }
 
   private async loadConfigurations(): Promise<void> {
     // Simulate async loading of configurations (e.g., from a file or external service)
-    await new Promise((resolve, reject) => {
+    await new Promise((resolve, _reject) => {
       setTimeout(() => {
         console.log('Configuration loading complete.');
         // Example of loading additional configurations
@@ -69,7 +71,6 @@ class ConfigurationManager {
   console.log(config1.get('FEATURE_X_ENABLED')); // false
   console.log('Are both config instances the same?', config1 === config2); // true
 })();
-
 
 /*
 Explanation:

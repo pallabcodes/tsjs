@@ -15,7 +15,7 @@
 //   console.log(`ClassDecoratorExample `, ret);
 // }
 
-function sealed(constructor: Function) {
+function sealed(constructor: new (...args: any[]) => any) {
   Object.seal(constructor);
   Object.seal(constructor.prototype);
 }
@@ -36,37 +36,37 @@ new ClassDecoratorExample(3, 4).method();
 
 function withParam(path: string) {
   console.log(`outer withParam ${path}`);
-  return (target: Function) => {
+  return (_target: new (...args: any[]) => any) => {
     console.log(`inner withParam ${path}`);
   };
 }
 
-@withParam("first")
-@withParam("middle")
-@withParam("last")
-class Example {
-}
-
+@withParam('first')
+@withParam('middle')
+@withParam('last')
+export class Example {}
 
 const registeredClasses: unknown[] = [];
 
-function Router(path: string, options ?: object) {
-  return (constructor: Function) => {
+function Router(path: string, options?: object) {
+  return (constructor: new (...args: any[]) => any) => {
     registeredClasses.push({
-      constructor, path, options
+      constructor,
+      path,
+      options,
     });
   };
 }
 
-@Router("/")
-class HomePageRouter {
+@Router('/')
+export class HomePageRouter {
   // routing functions
 }
 
-@Router("/blog", {
-  rss: "/blog/rss.xml"
+@Router('/blog', {
+  rss: '/blog/rss.xml',
 })
-class BlogRouter {
+export class BlogRouter {
   // routing functions
 }
 

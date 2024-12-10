@@ -78,9 +78,9 @@ class ConfigManager {
 
   // Method to clone configuration for a specific environment and modify it
   getConfigForEnvironment(env: string): ConfigPrototype {
-    const clonedConfig = this.prototype.clone();
+    const clonedConfig = this.prototype.clone(); // it gets a new memory address as it instantiates SystemConfig
 
-    // Modify the cloned config based on the environment
+    // Modify or overwrite the clonedConfig based on the env
     if (env === 'development') {
       (clonedConfig as SystemConfig).databaseUrl = 'localhost:5432/dev';
       (clonedConfig as SystemConfig).apiKey = 'dev-api-key';

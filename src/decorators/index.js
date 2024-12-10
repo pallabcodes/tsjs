@@ -1,14 +1,16 @@
 // Class decorator
-@sealed
-class User {}
-
-// The value returned from this "sealed function" will become the new constructor function for this class & so
-// this is very useful to completely overwrite the constructor of this class i.e. User
-function sealed(target: new (...args: any[]) => any): void {
+function sealed(target) {
   Object.seal(target);
   Object.seal(target.prototype);
 }
 
+// Applying the decorator manually
+sealed(User);
+
+class User { }
+
+// The value returned from this "sealed function" will become the new constructor function for this class & so
+// this is very useful to completely overwrite the constructor of this class i.e. User
 const user = new User();
 console.log('user: ', user);
 // with seal applied no new property can be added
@@ -19,14 +21,15 @@ console.log('user: ', user);
 // First decorator factories will run, then it will run its decorator implementation by itself thereafter by default
 // thus no need to call decoratorA(true)()
 
-function decoratorA(_someBooleanFlag: boolean) {
-  return (_target: new (...args: any[]) => any): void => {
+function decoratorA(_someBooleanFlag) {
+  return function (_target) {
     // decorator implementation
   };
 }
 
-@decoratorA(true)
-export class UserFactory {}
+// Applying the decorator manually
+const UserFactory = decoratorA(true)(class { });
+
 
 // Property decorator
 
@@ -34,21 +37,23 @@ export class UserFactory {}
 // For static properties, the constructor function of the class. For all the other properties, the prototype of the class.
 // The name of the member.
 
-function printMemberName(target: object, memberName: string): void {
+function printMemberName(target, memberName) {
   console.log(memberName);
   // to override property here, use Object.defineProperty along with a setter and getter
 }
 
-function allowListOnly(allowList: string[]) {
-  return (target: object, memberName: string): void => {
-    let currentValue = Reflect.get(target, memberName);
+function allowListOnly(allowList) {
+  return function (target, memberName) {
+    let currentValue = target[memberName];
 
     Object.defineProperty(target, memberName, {
-      set: (newValue: string) => {
+      set: function (newValue) {
         if (!allowList.includes(newValue)) return;
         currentValue = newValue;
       },
-      get: () => currentValue,
+      get: function () {
+        return currentValue;
+      }
     });
   };
 }
@@ -65,20 +70,17 @@ console.log(user2.name);
 user2.name = 'Johnson';
 console.log(user2.name);
 
+
 // Accessor decorators: It receives the same properties just like property decorator along with Property descriptor of the accessor member
 // Any value returned from "accessor decorator" will become the new Property descriptor for both getter & setter members
 
-const enumerable = (value: boolean) => {
-  return (
-    target: object,
-    memberName: string,
-    propertyDescriptor: PropertyDescriptor
-  ): void => {
+const enumerable = (value) => {
+  return function (target, memberName, propertyDescriptor) {
     propertyDescriptor.enumerable = value;
   };
 };
 
-export class FullNameAccessor {
+class FullNameAccessor {
   firstName = 'Jon';
   lastName = 'Doe';
 
@@ -91,17 +93,13 @@ export class FullNameAccessor {
 // Method decorators: Similar to the accessor decorator
 
 // If returned a value from the method decorator, this value will become the new Property Descriptor of the method.
-const enumerableMethod = (value: boolean) => {
-  return (
-    target: object,
-    memberName: string,
-    propertyDescriptor: PropertyDescriptor
-  ): void => {
+const enumerableMethod = (value) => {
+  return function (target, memberName, propertyDescriptor) {
     propertyDescriptor.enumerable = value;
   };
 };
 
-export class FullNameMethod {
+class FullNameMethod {
   firstName = 'Jon';
   lastName = 'Doe';
 
@@ -112,15 +110,11 @@ export class FullNameMethod {
 }
 
 // As this method decorator returns a value, thus it'll overwrite this given member's "property descriptor"
-const deprecated = (deprecationReason: string) => {
-  return (
-    target: object,
-    memberName: string,
-    propertyDescriptor: PropertyDescriptor
-  ): PropertyDescriptor => {
+const deprecated = (deprecationReason) => {
+  return function (target, memberName, propertyDescriptor) {
     return {
-      get() {
-        const wrapperFn = (...args: unknown[]) => {
+      get: function () {
+        const wrapperFn = function (...args) {
           console.warn(
             `Method ${memberName} is deprecated with reason: ${deprecationReason}`
           );
@@ -135,7 +129,7 @@ const deprecated = (deprecationReason: string) => {
           writable: true,
         });
         return wrapperFn;
-      },
+      }
     };
   };
 };
@@ -146,7 +140,7 @@ class TestWithDeprecation {
   instanceMember = 'hello';
 
   @deprecated('Use another static method')
-  static deprecatedMethodStatic(): void {
+  static deprecatedMethodStatic() {
     console.log(
       'inside deprecated static method - staticMember =',
       this.staticMember
@@ -154,7 +148,7 @@ class TestWithDeprecation {
   }
 
   @deprecated('Use another instance method')
-  deprecatedMethod(): void {
+  deprecatedMethod() {
     console.log(
       'inside deprecated instance method - instanceMember =',
       this.instanceMember
@@ -174,15 +168,13 @@ instance.deprecatedMethod();
 // The name of the member.
 // The index of the parameter in the method’s parameter list.
 
-function print(
-  target: object,
-  propertyKey: string,
-  parameterIndex: number
-): void {
+function print(target, propertyKey, parameterIndex) {
   console.log(`Decorating param ${parameterIndex} from ${propertyKey}`);
 }
 
-export class ParameterDecoratorExample {
-  // eslint-disable-next-line @typescript-eslint/no-empty-function
-  testMethod(_param0: unknown, @print _param1: unknown): void {}
+class ParameterDecoratorExample {
+  // eslint-disable-next-line no-empty-function
+  testMethod(_param0, _param1) {
+    // method logic
+  }
 }

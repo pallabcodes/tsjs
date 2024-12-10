@@ -16,12 +16,13 @@ Lazy initialization: The instance is created only when it’s needed, reducing u
 // ==========================
 class DatabaseConnectionManager {
   private static instance: DatabaseConnectionManager | null = null;
-  private static initializationPromise: Promise<DatabaseConnectionManager> | null = null;
+  private static initializationPromise: Promise<DatabaseConnectionManager> | null =
+    null;
   private connection: string;
   private connectionState: 'initializing' | 'connected' | 'failed' | 'closed';
 
   private constructor() {
-    this.connection = "Database connection is being established";
+    this.connection = 'Database connection is being established';
     this.connectionState = 'initializing';
   }
 
@@ -81,22 +82,25 @@ class DatabaseConnectionManager {
           await instance.initializeConnection();
           return instance;
         } catch (error) {
-          throw new Error('Database connection failed: ' + (error as Error).message);
+          throw new Error(
+            'Database connection failed: ' + (error as Error).message
+          );
         }
       })();
     }
 
     // Wait for the initialization to complete and assign the instance
-    DatabaseConnectionManager.instance = await DatabaseConnectionManager.initializationPromise;
+    DatabaseConnectionManager.instance =
+      await DatabaseConnectionManager.initializationPromise;
     return DatabaseConnectionManager.instance;
   }
 
   private async initializeConnection(): Promise<void> {
     try {
       // Simulate async database connection
-      await new Promise((resolve, reject) => {
+      await new Promise((resolve, _reject) => {
         setTimeout(() => {
-          this.connection = "Database has successfully connected";
+          this.connection = 'Database has successfully connected';
           this.connectionState = 'connected';
           resolve(null);
         }, 1000);
