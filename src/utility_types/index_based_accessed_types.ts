@@ -3,26 +3,32 @@ interface User {
   name: string;
   address: { street: string; city: string; country: string };
 }
-type City = User["address"]["city"];
-type IdOrName = User["id" | "name"];
-type UserId = User["id"];
-type UserAddress = User["address"];
+export type City = User['address']['city'];
+export type IdOrName = User['id' | 'name'];
+export type UserId = User['id'];
+export type UserAddress = User['address'];
 
-function updateAddress(id: UserId, newAddress: User["address"]) {}
+// eslint-disable-next-line @typescript-eslint/no-empty-function
+export function updateAddress(_id: UserId, _newAddress: User['address']) {}
 
 type UserProperties = keyof User;
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 let userProperties: UserProperties;
 
 function getProperty<T, K extends keyof T>(obj: T, key: K) {
   return obj[key];
 }
 
-let user = { title: "Fifa", rating: 8 };
-const title = getProperty(user, "title");
-const rating = getProperty(user, "rating");
+const user = { title: 'Fifa', rating: 8 };
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const title = getProperty(user, 'title');
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const rating = getProperty(user, 'rating');
 
-document.addEventListener("click", (e) => {});
-document.addEventListener("keypress", (e) => {});
+// eslint-disable-next-line @typescript-eslint/no-empty-function
+document.addEventListener('click', _event => {});
+// eslint-disable-next-line @typescript-eslint/no-empty-function
+document.addEventListener('keypress', _event => {});
 
 interface MyMouseEvent {
   x: number;
@@ -43,16 +49,19 @@ function handleEvent<K extends keyof MyEventObjects>(
 ) {
   // by doing MyEventObjects[K] same as MyEventObjects[keyof MyEventObjects] =
   //  MyMouseEvent | MyKeyboardEvent; thus whether given value is {x: 1, y: 1}/{key: "Enter"}
-  // it doesn't throw error since it satisifes one of these MyMouseEvent | MyKeyboardEvent
+  // it doesn't throw error since it satisfies one of these MyMouseEvent | MyKeyboardEvent
 
-  if (eventName === "click") {
+  if (eventName === 'click') {
     callback({ x: 1, y: 1 } as MyEventObjects[K]);
-  } else if (eventName === "keypress") {
-    callback({ key: "Enter" } as MyEventObjects[K]);
+  } else if (eventName === 'keypress') {
+    callback({ key: 'Enter' } as MyEventObjects[K]);
   }
 }
 
-handleEvent("click", (e) => {});
-handleEvent("keypress", (e) => {});
-type MyEventKeys = keyof MyEventObjects; // 'click' | 'keypress'
-type MyEvents = MyEventObjects[keyof MyEventObjects]; // MyMouseEvent | MyKeyboardEvent
+// eslint-disable-next-line @typescript-eslint/no-empty-function
+handleEvent('click', _event => {});
+// eslint-disable-next-line @typescript-eslint/no-empty-function
+handleEvent('keypress', _event => {});
+
+export type MyEventKeys = keyof MyEventObjects; // 'click' | 'keypress'
+export type MyEvents = MyEventObjects[keyof MyEventObjects]; // MyMouseEvent | MyKeyboardEvent

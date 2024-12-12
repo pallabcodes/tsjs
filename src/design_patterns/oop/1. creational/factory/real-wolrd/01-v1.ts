@@ -1,11 +1,14 @@
-// Add these interface definitions
+// Interface Definitions
 interface DatabaseConnection {
   connect(): void;
   disconnect(): void;
 }
 
 interface APIClient {
-  request(endpoint: string, data?: any): Promise<any>;
+  request<TRequest, TResponse>(
+    endpoint: string,
+    data?: TRequest
+  ): Promise<TResponse>;
 }
 
 interface Logger {
@@ -18,30 +21,66 @@ interface SystemComponentFactory {
   createLogger(): Logger;
 }
 
+// MySQL Connection Implementation
 class MySQLConnection implements DatabaseConnection {
   connect(): void {
-    // Implementation details
+    console.log('MySQL connected');
   }
 
   disconnect(): void {
-    // Implementation details
+    console.log('MySQL disconnected');
   }
 }
 
+// PostgreSQL Connection Implementation
 class PostgreSQLConnection implements DatabaseConnection {
   connect(): void {
-    // Implementation details
+    console.log('PostgreSQL connected');
   }
 
   disconnect(): void {
-    // Implementation details
+    console.log('PostgreSQL disconnected');
   }
 }
 
-// 1. Object Pooling and Resource Management:
+// API Client Implementations
+class RESTAPIClient implements APIClient {
+  async request<TRequest, TResponse>(
+    endpoint: string,
+    data?: TRequest
+  ): Promise<TResponse> {
+    console.log(`REST API request to ${endpoint} with data:`, data);
+    return {} as TResponse; // Mock response
+  }
+}
+
+class GraphQLAPIClient implements APIClient {
+  async request<TRequest, TResponse>(
+    endpoint: string,
+    data?: TRequest
+  ): Promise<TResponse> {
+    console.log(`GraphQL API request to ${endpoint} with data:`, data);
+    return {} as TResponse; // Mock response
+  }
+}
+
+// Logger Implementations
+class FileLogger implements Logger {
+  log(message: string): void {
+    console.log(`Logged to file: ${message}`);
+  }
+}
+
+class ConsoleLogger implements Logger {
+  log(message: string): void {
+    console.log(`Console log: ${message}`);
+  }
+}
+
+// 1. Object Pooling and Resource Management
 export class DatabaseConnectionPoolFactory implements SystemComponentFactory {
   private static pool: DatabaseConnection[] = [];
-  private static maxPoolSize = 10;
+  private static readonly maxPoolSize = 10;
 
   createDatabaseConnection(): DatabaseConnection {
     if (DatabaseConnectionPoolFactory.pool.length > 0) {
@@ -57,11 +96,11 @@ export class DatabaseConnectionPoolFactory implements SystemComponentFactory {
   }
 
   createAPIClient(): APIClient {
-    return new RESTAPIClient(); // Default client
+    return new RESTAPIClient();
   }
 
   createLogger(): Logger {
-    return new ConsoleLogger(); // Default logger
+    return new ConsoleLogger();
   }
 
   static releaseConnection(connection: DatabaseConnection): void {
@@ -70,29 +109,27 @@ export class DatabaseConnectionPoolFactory implements SystemComponentFactory {
 }
 
 // 2. Asynchronous Component Creation
-
 export class AsyncSystemFactory implements SystemComponentFactory {
   async createDatabaseConnection(): Promise<DatabaseConnection> {
-    return this.loadConnectionFromCloud(); // Simply return the connection directly
+    return this.loadConnectionFromCloud();
   }
 
   async createAPIClient(): Promise<APIClient> {
-    return new GraphQLAPIClient(); // Always async in real-world use
+    return new GraphQLAPIClient();
   }
 
   createLogger(): Logger {
-    return new FileLogger(); // Synchronous
+    return new FileLogger();
   }
 
   private async loadConnectionFromCloud(): Promise<DatabaseConnection> {
-    // Simulate async behavior (e.g., fetching credentials from cloud)
     return new Promise(resolve =>
       setTimeout(() => resolve(new MySQLConnection()), 1000)
     );
   }
 }
 
-// 3. Feature Flag-Based Factory:
+// 3. Feature Flag-Based Factory
 export class FeatureFlagFactory implements SystemComponentFactory {
   private featureFlag: boolean;
 
@@ -115,8 +152,8 @@ export class FeatureFlagFactory implements SystemComponentFactory {
   }
 }
 
-// 4. External Configuration Management:
-class ConfigurableFactory implements SystemComponentFactory {
+// 4. External Configuration Management
+export class ConfigurableFactory implements SystemComponentFactory {
   private config: {
     dbType: 'PostgreSQL' | 'MySQL';
     useGraphQL: boolean;
@@ -153,31 +190,7 @@ class ConfigurableFactory implements SystemComponentFactory {
   }
 }
 
-class RESTAPIClient implements APIClient {
-  async request(_endpoint: string, _data?: any): Promise<any> {
-    // Implementation details
-  }
-}
-
-class GraphQLAPIClient implements APIClient {
-  async request(_endpoint: string, _data?: any): Promise<any> {
-    // Implementation details
-  }
-}
-
-class FileLogger implements Logger {
-  log(_message: string): void {
-    // Implementation details for file logging
-  }
-}
-
-class ConsoleLogger implements Logger {
-  log(_message: string): void {
-    // Implementation details for console logging
-  }
-}
-
-// Usage
+// Usage Example
 const config = {
   dbType: 'PostgreSQL' as const,
   useGraphQL: true,
@@ -186,5 +199,18 @@ const config = {
 
 const factory = new ConfigurableFactory(config);
 const asyncFactory = new AsyncSystemFactory();
-console.log(asyncFactory.createDatabaseConnection());
-console.log(factory.createDatabaseConnection());
+
+(async () => {
+  const asyncDbConnection = await asyncFactory.createDatabaseConnection();
+  asyncDbConnection.connect();
+
+  const dbConnection = factory.createDatabaseConnection();
+  dbConnection.connect();
+
+  const apiClient = factory.createAPIClient();
+  const result = await apiClient.request<
+    { param: string },
+    { success: boolean }
+  >('/example', { param: 'test' });
+  console.log('API Response:', result);
+})();

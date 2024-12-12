@@ -29,8 +29,6 @@ class DatabaseConnectionManager {
   public static async getInstance(): Promise<DatabaseConnectionManager> {
     /**
      * What if two users are connection or invoking getInstance at the same time when this class has no instance previously ?
-     *
-     *
      * What happens in code:
      * First Call to getInstance():
      * DatabaseConnectionManager.instance is null.
@@ -295,7 +293,6 @@ const mockDatabaseService = new DatabaseService(
 runDatabaseOperations().then(r => console.log(r));
 
 /*
-
 Breakdown of the Concepts:
 Ensure Only One Instance (Lazy Initialization):
 

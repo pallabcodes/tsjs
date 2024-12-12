@@ -105,6 +105,7 @@ const weaponPrototype = new Weapon('Sword', 15, 5);
 
 // Register prototypes in the Prototype Manager
 const prototypeManager = new PrototypeManager();
+
 prototypeManager.registerPrototype('warrior', characterPrototype);
 prototypeManager.registerPrototype('goblin', enemyPrototype);
 prototypeManager.registerPrototype('sword', weaponPrototype);
@@ -127,28 +128,34 @@ console.log(clonedSword.getDetails()); // Sword: Damage=20, Range=5
 /*
 
 Key Points of This Prototype Pattern Example:
-Complex Objects with Nested or Interdependent Properties:
+# Complex Objects with Nested or Interdependent Properties:
 
 Objects like Character, Enemy, and Weapon may contain nested properties. The cloning process ensures that these properties are duplicated with their exact values.
-Immutability / Multiple Stages of Construction:
+
+# Immutability / Multiple Stages of Construction:
 
 The prototypes themselves are immutable, but you can modify the clones after they are created. This ensures that the prototype object remains unchanged, and any new clone can be customized.
-Fluent Interface:
+
+# Fluent Interface:
 
 In this scenario, we do not directly have a fluent interface, but the Prototype Manager allows easy cloning of objects with simple method calls (clonePrototype).
-Contextual Creation / Performance Optimization:
+
+# Contextual Creation / Performance Optimization:
 
 The prototype pattern allows you to avoid the overhead of re-creating objects from scratch. Instead, you clone existing ones, which can be particularly useful in performance-sensitive applications (like games) where object creation can be resource-intensive.
+
 Does This Example Cover Everything for Real-World Product-Based Scenarios?
 Yes, this example covers the core principles of the Prototype Pattern effectively for most product-based scenarios. Let's analyze it:
 
-Deeply Nested or Interdependent Properties:
+# Deeply Nested or Interdependent Properties:
 
 The objects (Character, Enemy, Weapon) have attributes that can be deeply nested (like health, armor, attack, etc.) and interdependent. This is a real-world scenario where objects need to be cloned, and some properties may be modified in the clone.
-Object Cloning and Customization:
+
+# Object Cloning and Customization:
 
 After cloning the prototype, we customize the clone’s properties (e.g., modifying the attack value of the warrior). This mirrors real-world scenarios where clones are adjusted for different contexts (e.g., different game levels, different characters with slight variations).
-Performance Optimization:
+
+# Performance Optimization:
 
 By cloning an object instead of re-creating it from scratch, we optimize performance. This is common in games or any system where object creation is costly (e.g., rendering complex UI components in a large-scale application).
 Contextual Creation:
@@ -157,12 +164,15 @@ The prototype pattern allows for contextual creation. For example, the Weapon pr
 Real-World Applicability:
 
 This pattern is widely applicable in games, UI components, data structures (where objects have many similar properties), and configurations (where settings may be cloned and adjusted).
-Conclusion:
+
+# Conclusion:
+
 This example demonstrates the full power of the Prototype Pattern in the context of real-world product development (like games, software configuration, etc.). It highlights:
 
-Cloning complex objects.
-Modifying clones for specific use cases.
-Centralized management of prototypes for scalability.
+# Cloning complex objects.
+# Modifying clones for specific use cases.
+# Centralized management of prototypes for scalability.
+
 This example can be extended to handle more sophisticated scenarios in product-based systems. For example, you could integrate it into a UI component library, where components are prototypes and users can clone and customize components for their needs, or in configuration management where system settings are cloned and applied in different environments.
 
 Overall, the example adequately covers the full potential of the Prototype Pattern in real-world, product-based applications.

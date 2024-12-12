@@ -2,8 +2,9 @@
 
 // Real-World Example: Payment Processing System
 // Imagine an e-commerce platform where customers can choose from different payment methods such as Credit Card, PayPal, and Cryptocurrency. Each payment method has a unique implementation, but the platform should handle them seamlessly without hardcoding logic for each.
-//
-//                                                                                                                                                                                                                                                                          Key Features Covered:
+
+// Key Features Covered:
+
 //   Dynamic Behavior Selection:
 //   Switch between different payment methods at runtime.
 //   Encapsulation of Algorithms:
@@ -87,8 +88,9 @@ console.log(paymentProcessor.process(200)); // Output: Processed payment of $200
 
 paymentProcessor.setStrategy(cryptoPayment);
 console.log(paymentProcessor.process(300)); // Output: Processed payment of $300 using Cryptocurrency
+
 // Is This Enough to Cover the Strategy Pattern?
-//   Concepts Demonstrated:
+// Concepts Demonstrated:
 // Dynamic Behavior Selection:
 //   The setStrategy method allows switching strategies at runtime.
 //   Encapsulation:

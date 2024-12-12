@@ -36,6 +36,7 @@ class ConfigurationManager {
     // Wait for the initialization process to finish and assign the instance
     ConfigurationManager.instance =
       await ConfigurationManager.initializationPromise;
+
     return ConfigurationManager.instance;
   }
 
