@@ -1,4 +1,4 @@
-// Here’s an advanced **Template Pattern** implementation with the mentioned extensions, showcasing **Pre- and Post-hooks**, **Configuration Options**, and **Async/Await** in a real-world product-based scenario.
+// Here’s an 04 advanced-generics **Template Pattern** implementation with the mentioned extensions, showcasing **Pre- and Post-hooks**, **Configuration Options**, and **Async/Await** in a real-world product-based scenario.
 //
 // ---
 //

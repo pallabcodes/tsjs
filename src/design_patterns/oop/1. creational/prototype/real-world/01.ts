@@ -74,7 +74,7 @@ class Weapon implements GameObject {
 // Each class implements the clone method to create a new instance of itself, duplicating the values of the current object.
 
 // Step 3: The Prototype Manager (Optional)
-// In more advanced cases, you might want a manager to hold and return prototypes. This is useful when you have a large number of objects and want to centralize their creation and cloning.
+// In more 04 advanced-generics cases, you might want a manager to hold and return prototypes. This is useful when you have a large number of objects and want to centralize their creation and cloning.
 
 class PrototypeManager {
   private prototypes: { [key: string]: GameObject } = {};

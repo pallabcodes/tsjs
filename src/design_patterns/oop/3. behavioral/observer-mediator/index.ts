@@ -154,6 +154,6 @@ chatRoom.notifyUsers(charlie, charlie.getStatus()); // Charlie's status change s
 // However, depending on the complexity of your system, there might be additional features to consider:
 // - **Performance considerations** for large-scale systems (e.g., limiting the number of notifications or users being notified).
 // - **Asynchronous handling** for real-time updates (e.g., using WebSockets for status updates).
-// - **Error handling** or advanced features like status change validations, retries, etc.
+// - **Error handling** or 04 advanced-generics features like status change validations, retries, etc.
 //
 // But as far as a basic example of **Observer + Mediator** goes, this is a solid foundation.

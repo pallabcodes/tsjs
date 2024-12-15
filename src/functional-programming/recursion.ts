@@ -69,7 +69,7 @@ function arraySum(numbers: Array<number>): number {
 console.log(arraySum([1, 2, 4, 5]));
 
 
-// advanced
+// 04 advanced-generics
 
 // without recursion
 function fibonacci(n: number, array: number[] = [0, 1]): number[] {

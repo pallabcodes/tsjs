@@ -235,4 +235,4 @@ remoteControl.undoLastCommand(); // Light is OFF
 //
 // This **Home Automation System** example gives a thorough demonstration of the **Command Pattern** and its typical use cases. It highlights how the pattern is used to encapsulate operations, queue them for delayed execution, and provide undo functionality. It also addresses important product-based concerns like flexibility, separation of concerns, and extensibility.
 //
-//   While there are certainly more advanced use cases (like asynchronous or composite commands), this example is a solid foundation and covers the core principles and advantages of the **Command Pattern** as it would be used in most real-world, product-based applications.
+//   While there are certainly more 04 advanced-generics use cases (like asynchronous or composite commands), this example is a solid foundation and covers the core principles and advantages of the **Command Pattern** as it would be used in most real-world, product-based applications.

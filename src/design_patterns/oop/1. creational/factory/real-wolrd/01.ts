@@ -28,7 +28,7 @@
 
 // ### Extended Real-World Factory Pattern Example
 
-// Here’s an updated version of the Factory Pattern, incorporating more advanced scenarios, such as:
+// Here’s an updated version of the Factory Pattern, incorporating more 04 advanced-generics scenarios, such as:
 
 // 1. **Dynamic Configuration for Different Environments**
 // 2. **Product-Specific Third-Party Integrations**

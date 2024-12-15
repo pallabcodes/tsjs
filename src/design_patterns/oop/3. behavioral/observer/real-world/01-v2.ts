@@ -1,4 +1,4 @@
-// To extend the Observer Pattern example further and ensure it covers additional considerations that might come up in real-world product-based systems, here's an updated version that incorporates several advanced features like asynchronous notifications, observer priorities, and scalability considerations.
+// To extend the Observer Pattern example further and ensure it covers additional considerations that might come up in real-world product-based systems, here's an updated version that incorporates several 04 advanced-generics features like asynchronous notifications, observer priorities, and scalability considerations.
 //
 // ### Full Example with Advanced Features:
 

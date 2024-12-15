@@ -187,4 +187,4 @@ class HashService {
 // - **Retry Mechanism**: Add retries for handlers that interact with external systems (e.g., database or network).
 
 // ### Conclusion
-// This example showcases the **full power of the Chain of Responsibility pattern** for a **real-world user registration pipeline**, meeting **product-based standards**. It is highly modular, testable, and extensible, and the inclusion of advanced features like **asynchronous handling**, **error propagation**, and **logging** makes it robust for large-scale applications.
+// This example showcases the **full power of the Chain of Responsibility pattern** for a **real-world user registration pipeline**, meeting **product-based standards**. It is highly modular, testable, and extensible, and the inclusion of 04 advanced-generics features like **asynchronous handling**, **error propagation**, and **logging** makes it robust for large-scale applications.
