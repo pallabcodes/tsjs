@@ -6,32 +6,31 @@
     "moduleResolution": "NodeNext",
     "rootDir": "./src",
     "outDir": "./build",
-    
+
     /* Strict Type-Checking */
     "strict": true,
     "noImplicitAny": true,
     "noImplicitThis": true,
     "noUncheckedIndexedAccess": true,
     "noImplicitOverride": true,
-    
+
     /* Module Resolution */
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "skipLibCheck": true,
-    
+
     /* Decorators */
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
-    
+
     /* Additional Features */
     "sourceMap": true,
     "declaration": true,
     "resolveJsonModule": true,
-    
+
     /* JavaScript Support */
     "allowJs": true,
-    "checkJs": true,
-
+    "checkJs": true
   },
   "include": ["src/**/*.ts"],
   "exclude": ["build", "node_modules"]
