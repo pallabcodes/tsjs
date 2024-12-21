@@ -143,7 +143,7 @@ class OnPremiseSystemFactory implements SystemComponentFactory {
 // Factory for Specific Use Case (e.g., External Service Integration)
 // ==========================
 class ExternalServiceIntegrationFactory implements SystemComponentFactory {
-  private integrationType: string;
+  private readonly integrationType: string;
 
   constructor(integrationType: string) {
     this.integrationType = integrationType;

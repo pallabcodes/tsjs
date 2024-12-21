@@ -2,37 +2,20 @@
 //
 // A **Factory class** is a design pattern that provides a way to create objects without specifying the exact class of object that will be created. It is used when you need to create instances of various classes that share a common interface or superclass but have different implementations based on some conditions or configuration.
 //
-// Here are the key scenarios where you would use a Factory class:
+// Key scenarios where you would use a Factory class:
 //
-// 1. **Creating Objects Based on Configuration or Conditions**
-// - Use a factory to create different types of objects based on dynamic inputs, configurations, or conditions.
-//
-// 2. **Encapsulating Object Creation Logic**
-// - When the object creation process is complex or involves several steps, a factory can encapsulate this logic.
-//
-// 3. **Avoiding Direct Instantiation of Objects**
-// - Use a factory when you want to hide the details of object instantiation from the user and provide a simpler interface.
-//
-// 4. **Creating Objects of Subclasses or Concrete Implementations**
-// - When you have a common interface or abstract class, and need to instantiate one of several concrete implementations based on some criteria.
-//
-// 5. **Supporting Multiple Types of Objects (Product Families)**
-// - Factories can be used to support the creation of multiple related objects, such as a family of objects, each part of a common theme or set of features.
-
-// 6. **Deferred Instantiation (Lazy Loading)**
-// - A factory can also help defer the creation of objects until they are actually needed, which is useful in lazy loading scenarios.
-
-// ### Examples Based on Each Scenario
+// 1. **Creating Objects Based on Configuration or Conditions**: Create different types of objects based on dynamic inputs or conditions.
+// 2. **Encapsulating Object Creation Logic**: Simplify complex object creation logic by centralizing it in a factory.
+// 3. **Avoiding Direct Instantiation of Objects**: Hide the object instantiation details from the user.
+// 4. **Creating Objects of Subclasses or Concrete Implementations**: Instantiate different concrete classes based on some criteria.
+// 5. **Supporting Multiple Types of Objects (Product Families)**: Support the creation of multiple related objects that belong to a common theme.
+// 6. **Deferred Instantiation (Lazy Loading)**: Delay object creation until it’s actually needed.
 
 // #### 1. **Creating Objects Based on Configuration or Conditions**
-// Here, we use a factory to create different types of meal plans based on a configuration setting (e.g., "vegan" or "healthy").
-
-// Base Meal Plan Interface
 interface MealPlan {
   getDetails(): string;
 }
 
-// Concrete Meal Plans
 class VeganMealPlan implements MealPlan {
   getDetails() {
     return 'Vegan meal plan with plant-based ingredients.';
@@ -46,25 +29,22 @@ class HealthyMealPlan implements MealPlan {
 }
 
 class MealPlanFactory {
-  static createMealPlan(type: string): MealPlan {
-    if (type === 'vegan') {
-      return new VeganMealPlan();
-    } else if (type === 'healthy') {
-      return new HealthyMealPlan();
-    } else {
-      throw new Error('Invalid meal plan type');
+  static createMealPlan(type: 'vegan' | 'healthy'): MealPlan {
+    switch (type) {
+      case 'vegan':
+        return new VeganMealPlan();
+      case 'healthy':
+        return new HealthyMealPlan();
+      default:
+        throw new Error('Invalid meal plan type');
     }
   }
 }
 
 // Usage example
-const veganPlan = MealPlanFactory.createMealPlan('vegan');
-console.log(veganPlan.getDetails()); // "Vegan meal plan with plant-based ingredients."
+console.log(MealPlanFactory.createMealPlan('vegan').getDetails()); // Vegan meal plan with plant-based ingredients.
 
 // #### 2. **Encapsulating Object Creation Logic**
-// Here, a factory is used to encapsulate the creation of meal components (starter, main, dessert, and drink), ensuring that the logic for assembling them is centralized.
-
-// Meal Components
 class Meal {
   constructor(
     public starter: string,
@@ -75,18 +55,19 @@ class Meal {
 }
 
 class MealFactory {
-  static createMeal(type: string): Meal {
-    if (type === 'vegan') {
-      return new Meal(
-        'Salad',
-        'Veggie Stir Fry',
-        'Vegan Pudding',
-        'Vegan Shake'
-      );
-    } else if (type === 'healthy') {
-      return new Meal('Fruit Salad', 'Grilled Chicken', 'Ice Cream', 'Water');
-    } else {
-      throw new Error('Unknown meal type');
+  static createMeal(type: 'vegan' | 'healthy'): Meal {
+    switch (type) {
+      case 'vegan':
+        return new Meal(
+          'Salad',
+          'Veggie Stir Fry',
+          'Vegan Pudding',
+          'Vegan Shake'
+        );
+      case 'healthy':
+        return new Meal('Fruit Salad', 'Grilled Chicken', 'Ice Cream', 'Water');
+      default:
+        throw new Error('Unknown meal type');
     }
   }
 }
@@ -96,9 +77,6 @@ const healthyMeal = MealFactory.createMeal('healthy');
 console.log(healthyMeal); // Meal { starter: 'Fruit Salad', main: 'Grilled Chicken', dessert: 'Ice Cream', drink: 'Water' }
 
 // #### 3. **Avoiding Direct Instantiation of Objects**
-// In this example, the factory abstracts the instantiation of objects, and users of the `Shape` interface don't need to know which specific shape is created.
-
-// Shape Interface and Concrete Shapes
 interface Shape {
   draw(): void;
 }
@@ -116,25 +94,23 @@ class Rectangle implements Shape {
 }
 
 class ShapeFactory {
-  static createShape(type: string): Shape {
-    if (type === 'circle') {
-      return new Circle();
-    } else if (type === 'rectangle') {
-      return new Rectangle();
-    } else {
-      throw new Error('Invalid shape type');
+  static createShape(type: 'circle' | 'rectangle'): Shape {
+    switch (type) {
+      case 'circle':
+        return new Circle();
+      case 'rectangle':
+        return new Rectangle();
+      default:
+        throw new Error('Invalid shape type');
     }
   }
 }
 
 // Usage example
 const circle = ShapeFactory.createShape('circle');
-circle.draw(); // "Drawing a Circle"
+circle.draw(); // Drawing a Circle
 
 // #### 4. **Creating Objects of Subclasses or Concrete Implementations**
-// In this case, the factory decides which concrete `PaymentMethod` to return based on user input or configuration.
-
-// Payment Method Interface and Concrete Classes
 interface PaymentMethod {
   processPayment(amount: number): void;
 }
@@ -152,26 +128,23 @@ class PayPalPayment implements PaymentMethod {
 }
 
 class PaymentFactory {
-  static createPaymentMethod(method: string): PaymentMethod {
-    if (method === 'creditCard') {
-      return new CreditCardPayment();
-    } else if (method === 'paypal') {
-      return new PayPalPayment();
-    } else {
-      throw new Error('Invalid payment method');
+  static createPaymentMethod(method: 'creditCard' | 'paypal'): PaymentMethod {
+    switch (method) {
+      case 'creditCard':
+        return new CreditCardPayment();
+      case 'paypal':
+        return new PayPalPayment();
+      default:
+        throw new Error('Invalid payment method');
     }
   }
 }
 
 // Usage example
 const payment = PaymentFactory.createPaymentMethod('creditCard');
-payment.processPayment(100); // "Processing payment of $100 through Credit Card"
+payment.processPayment(100); // Processing payment of $100 through Credit Card
 
 // #### 5. **Supporting Multiple Types of Objects (Product Families)**
-
-// The factory can create different families of objects. In this example, we create products for a premium or basic service.
-
-// Product Interface and Concrete Products
 interface ServiceProduct {
   getDetails(): string;
 }
@@ -189,27 +162,28 @@ class PremiumService implements ServiceProduct {
 }
 
 class ServiceFactory {
-  static createService(type: string): ServiceProduct {
-    if (type === 'basic') {
-      return new BasicService();
-    } else if (type === 'premium') {
-      return new PremiumService();
-    } else {
-      throw new Error('Unknown service type');
+  static createService(type: 'basic' | 'premium'): ServiceProduct {
+    switch (type) {
+      case 'basic':
+        return new BasicService();
+      case 'premium':
+        return new PremiumService();
+      default:
+        throw new Error('Unknown service type');
     }
   }
 }
 
 // Usage example
 const premiumService = ServiceFactory.createService('premium');
-console.log(premiumService.getDetails()); // "Premium service plan with extended features and support."
+console.log(premiumService.getDetails()); // Premium service plan with extended features and support.
 
-// #### 6. **Deferred Instantiation (Lazy Loading)**
-
-// In this example, the factory delays the instantiation of a large object (like a database connection or complex configuration) until it's needed.
-
+/* 
+  #### 6. **Deferred Instantiation (Lazy Loading)**
+  The factory ensures that objects like database connections are instantiated only when they are actually needed.
+*/
 class DatabaseConnection {
-  private connection: string;
+  private readonly connection: string;
 
   constructor() {
     console.log('Establishing database connection...');
@@ -234,15 +208,89 @@ class DatabaseFactory {
 
 // Usage example
 const db1 = DatabaseFactory.getDatabaseConnection();
-console.log(db1.getConnection()); // "Connected to database"
+console.log(db1.getConnection()); // Connected to database
 
-// ### Summary:
-//
-// - **Creating Objects Based on Configuration or Conditions**: Used when the type of object depends on dynamic conditions or user input.
-// - **Encapsulating Object Creation Logic**: Centralizes complex object creation processes in a factory to reduce complexity in other parts of the application.
-// - **Avoiding Direct Instantiation**: Factory abstracts the creation of objects, so consumers don't need to know the class that is being instantiated.
-// - **Creating Objects of Subclasses or Concrete Implementations**: Useful when working with a common interface and multiple concrete implementations.
-// - **Supporting Multiple Types of Objects (Product Families)**: Factories can create different families of related objects, improving scalability and manageability.
-// - **Deferred Instantiation (Lazy Loading)**: Factories can delay the creation of expensive or heavy objects until they are actually needed.
-//
-//     Each of these examples demonstrates a different real-world use case for a Factory class, ensuring that the system remains flexible and maintainable.
+// ### Additional Scenario: **Abstracting Object Creation for Future Extensions**
+// A scenario where a factory helps create objects without the need for the user to care about future extensions or additional subclasses.
+
+interface Transport {
+  move(): void;
+}
+
+class Car implements Transport {
+  move() {
+    console.log('Driving a Car');
+  }
+}
+
+class Bike implements Transport {
+  move() {
+    console.log('Riding a Bike');
+  }
+}
+
+class TransportFactory {
+  static createTransport(type: 'car' | 'bike'): Transport {
+    switch (type) {
+      case 'car':
+        return new Car();
+      case 'bike':
+        return new Bike();
+      default:
+        throw new Error('Unknown transport type');
+    }
+  }
+}
+
+// Usage example
+const transport = TransportFactory.createTransport('car');
+transport.move(); // Driving a Car
+
+// 7. Abstracting Object Creation for Future Extensions
+
+// A factory can abstract the process of object creation in such a way that new types of objects can be added in the future without altering the existing code. This is particularly useful when the system might evolve and require new classes or objects in the future.
+
+// Animal Interface and Concrete Classes
+interface Animal {
+  makeSound(): void;
+}
+
+class Dog implements Animal {
+  makeSound() {
+    console.log('Bark');
+  }
+}
+
+class Cat implements Animal {
+  makeSound() {
+    console.log('Meow');
+  }
+}
+
+// Animal Factory
+class AnimalFactory {
+  static createAnimal(type: string): Animal {
+    if (type === 'dog') {
+      return new Dog();
+    } else if (type === 'cat') {
+      return new Cat();
+    } else {
+      throw new Error('Unknown animal type');
+    }
+  }
+}
+
+// Usage example
+const dog = AnimalFactory.createAnimal('dog');
+dog.makeSound(); // "Bark"
+
+// Future extension: Adding a new animal class (without changing existing code)
+export class Bird implements Animal {
+  makeSound() {
+    console.log('Tweet');
+  }
+}
+
+// New Animal type can now be created using the same factory
+const bird = AnimalFactory.createAnimal('bird');
+bird.makeSound(); // "Tweet"

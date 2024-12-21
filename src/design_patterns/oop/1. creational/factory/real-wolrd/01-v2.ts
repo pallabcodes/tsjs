@@ -1,5 +1,6 @@
-// 1. Object Pooling and Resource Management:
-// Object pooling can help manage expensive resources like database connections or API clients, ensuring that connections are reused instead of being created repeatedly.
+// 1. Object Pooling and Resource Management
+// Object pooling helps manage expensive resources like database connections,
+// ensuring they are reused instead of being created repeatedly.
 
 class DatabaseConnection {
   connect(): void {
@@ -8,8 +9,8 @@ class DatabaseConnection {
 }
 
 export class DatabaseConnectionPoolFactory {
-  private static pool: DatabaseConnection[] = [];
-  private static maxPoolSize = 10;
+  private static readonly pool: DatabaseConnection[] = [];
+  private static readonly maxPoolSize = 10;
 
   static createDatabaseConnection(): DatabaseConnection {
     if (this.pool.length > 0) {
@@ -17,8 +18,7 @@ export class DatabaseConnectionPoolFactory {
     }
 
     if (this.pool.length < this.maxPoolSize) {
-      const connection = new DatabaseConnection();
-      return connection;
+      return new DatabaseConnection();
     }
 
     throw new Error('Max pool size reached');
@@ -31,8 +31,9 @@ export class DatabaseConnectionPoolFactory {
   }
 }
 
-// 2. Asynchronous Object Creation:
-// Some objects, especially those that depend on external resources, may require asynchronous operations to initialize, like fetching credentials from a remote server.
+// 2. Asynchronous Object Creation
+// Some objects may require asynchronous operations to initialize, 
+// like fetching credentials from a remote server.
 
 class APIClient {
   async initialize(): Promise<void> {
@@ -43,9 +44,7 @@ class APIClient {
 export class AsyncSystemFactory {
   async createDatabaseConnection(): Promise<DatabaseConnection> {
     return new Promise(resolve => {
-      setTimeout(() => {
-        resolve(new DatabaseConnection());
-      }, 1000);
+      setTimeout(() => resolve(new DatabaseConnection()), 1000);
     });
   }
 
@@ -56,29 +55,29 @@ export class AsyncSystemFactory {
   }
 }
 
-// 3. Feature Flags:
-// Feature flags allow you to toggle features on or off based on conditions, often dynamically, without deploying code changes. The Factory Pattern can use feature flags to decide which component or behavior to instantiate.
+// 3. Feature Flags
+// Feature flags toggle features dynamically, without deploying code changes. 
+// The Factory Pattern can leverage feature flags to decide which components to instantiate.
 
 export class FeatureFlagFactory {
-  private featureFlag: boolean;
+  private readonly featureFlag: boolean;
 
   constructor(featureFlag: boolean) {
     this.featureFlag = featureFlag;
   }
 
   createDatabaseConnection(): DatabaseConnection {
-    return this.featureFlag
-      ? new DatabaseConnection() // Use a new type or feature flag-based logic
-      : new DatabaseConnection(); // Default connection
+    return new DatabaseConnection(); // Feature flag logic can be added as needed
   }
 
   createAPIClient(): APIClient {
-    return this.featureFlag ? new APIClient() : new APIClient();
+    return new APIClient(); // Feature flag logic can be added as needed
   }
 }
 
-// 4. External Configuration:
-// In large systems, configuration is often managed outside the application. Factories can read configurations from external files, environment variables, or a configuration service.
+// 4. External Configuration
+// Factories can read configurations from external files or environment variables,
+// making them adaptable to different environments or configurations.
 
 interface Config {
   dbType: string;
@@ -87,17 +86,19 @@ interface Config {
 }
 
 export class ConfigurableFactory {
-  private config: Config;
+  private readonly config: Config;
 
   constructor(config: Config) {
     this.config = config;
   }
 
   createDatabaseConnection(): DatabaseConnection {
-    if (this.config.dbType === 'PostgreSQL') {
-      return new DatabaseConnection(); // Example of PostgreSQL
+    switch (this.config.dbType) {
+      case 'PostgreSQL':
+        return new DatabaseConnection(); // Example for PostgreSQL
+      default:
+        return new DatabaseConnection(); // Default connection (e.g., MySQL)
     }
-    return new DatabaseConnection(); // Default (MySQL)
   }
 
   createAPIClient(): APIClient {
@@ -112,6 +113,7 @@ export class ConfigurableFactory {
 }
 
 // Logger Interface and Implementations
+
 interface Logger {
   log(message: string): void;
 }
@@ -128,28 +130,25 @@ export class ConsoleLogger implements Logger {
   }
 }
 
-// Usage
-
+// Usage Example
 const config = { dbType: 'PostgreSQL', useGraphQL: true, logToFile: false };
 const factory = new ConfigurableFactory(config);
 console.log(factory.createDatabaseConnection());
 
-// 5. Thread Safety (Concurrency):
-// If multiple threads or processes might be using the factory at the same time, thread-safe object creation is crucial to avoid race conditions.
+// 5. Thread Safety (Concurrency)
+// In multi-threaded environments, thread-safe object creation prevents race conditions.
 
 export class SynchronizedFactory {
   private static lock = new Object();
 
   createDatabaseConnection(): DatabaseConnection {
     let connection!: DatabaseConnection;
-
     this.acquireLock();
     try {
       connection = new DatabaseConnection();
     } finally {
       this.releaseLock();
     }
-
     return connection;
   }
 
@@ -166,8 +165,8 @@ export class SynchronizedFactory {
   }
 }
 
-// 6. Dependency Injection Integration:
-// In enterprise systems, dependency injection (DI) is often used to manage object lifecycle(s). The Factory Pattern can be combined with DI containers to instantiate objects with their dependencies.
+// 6. Dependency Injection Integration
+// Factory Pattern can be integrated with Dependency Injection (DI) to manage object lifecycles effectively.
 
 interface SystemComponentFactory {
   createDatabaseConnection(): DatabaseConnection;
@@ -176,7 +175,7 @@ interface SystemComponentFactory {
 }
 
 class DIContainer {
-  private static container: Map<string, any> = new Map();
+  private static readonly container: Map<string, any> = new Map();
 
   static register<T>(key: string, dependency: T): void {
     this.container.set(key, dependency);
@@ -219,17 +218,15 @@ DIContainer.register('logger', new ConsoleLogger());
 /*
 
 Summary:
-This enhanced version of the Factory Pattern showcases how it can be applied in enterprise-level product development with considerations for:
+This version of the Factory Pattern showcases practical implementations for:
 
-1. Object Pooling for managing reusable resources like database connections.
-2. Asynchronous Initialization for components that require async operations.
-3. Feature Flags to toggle different behaviors in the system.
-4. External Configuration to handle complex configuration management.
-5.Thread-Safety for concurrent access in multi-threaded environments.
-6. Dependency Injection integration for better management of object lifecycle(s).
+1. **Object Pooling**: Reusing database connections to manage expensive resources.
+2. **Asynchronous Initialization**: Handling objects requiring async initialization.
+3. **Feature Flags**: Dynamically toggling components or behaviors based on flags.
+4. **External Configuration**: Managing configurations externally (e.g., environment variables).
+5. **Thread-Safety**: Ensuring safe concurrent access to objects.
+6. **Dependency Injection Integration**: Managing object lifecycles using DI.
 
-Each of these considerations enhances the flexibility, scalability, and maintainability of the factory pattern in a large-scale production system, making it more suited for real-world product-based applications.
-
-This should now give you a complete picture of how the Factory Pattern can be leveraged in enterprise-grade systems.
+Each pattern implementation enhances flexibility, scalability, and maintainability, making the system more adaptable to various production environments.
 
 */
