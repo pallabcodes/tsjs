@@ -1,4 +1,5 @@
-function isIterable(obj) {
+// A function to check if an object is iterable by testing for Symbol.iterator
+function isIterable(obj: any): boolean {
   return obj != null && typeof obj[Symbol.iterator] === 'function';
 }
 
@@ -8,18 +9,18 @@ console.log(isIterable([])); // true, arrays are iterable
 console.log(isIterable('string')); // true, strings are iterable
 
 // Creating a class `Game` with iterable functionality
-class Game {
+class Game implements Iterable<string> {
   // Define the [Symbol.iterator] method to make this class iterable
-  [Symbol.iterator]() {
+  [Symbol.iterator](): Iterator<string> {
     const players = ['Player1', 'Player2']; // Use `const` because `players` is not reassigned
     let index = 0;
     return {
-      next: () => {
-        if (index < players.length) {
-          return { value: players[index++], done: false };
-        } else {
-          return { value: '', done: true }; // Ensure value is a string (empty string) when done
-        }
+      next(): IteratorResult<string> {
+        // @ts-expect-error type error
+        return {
+          value: index < players.length ? players[index++] : '',
+          done: index > players.length,
+        };
       },
     };
   }
@@ -35,9 +36,7 @@ console.log(Game.prototype.constructor); // [Function: Game]
 console.log(Object.getPrototypeOf(Game.prototype) === Object.prototype); // true
 
 // Check two levels up the prototype chain to Object's parent (should be null)
-console.log(
-  Object.getPrototypeOf(Object.getPrototypeOf(Game.prototype)) === null
-); // true, since Object.prototype's prototype is null
+console.log(Object.getPrototypeOf(Object.getPrototypeOf(Game.prototype)) === null); // true, since Object.prototype's prototype is null
 
 // Instantiating the Game class
 const gameInstance = new Game(); // Instantiates a Game class object
