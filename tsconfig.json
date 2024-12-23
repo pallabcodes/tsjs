@@ -21,6 +21,12 @@
     "allowJs": true,
     "checkJs": true
   },
-  "include": ["src/**/*.ts", "src/**/*.js"], // Include .js files
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.js",
+    "src/advanced-ts/02 type-generics/06 challenges/.leep",
+    "src/advanced-ts/02 type-generics/04 advanced-generics/.keep",
+    "src/advanced-ts/02 type-generics/05 function-overloads/.keep"
+  ], // Include .js files
   "exclude": ["build", "node_modules"]
 }

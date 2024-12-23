@@ -79,6 +79,7 @@ type Event = 'log_in' | 'log_out' | 'sign_out';
 type UppercaseEvent = Uppercase<Event>; // go over each type of Event and turn each of them into uppercase
 type ObjectOfKeysAlt = Record<UppercaseEvent, string>;
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 type tests_5 = [
   Expect<
     Equal<
