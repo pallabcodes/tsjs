@@ -2,4 +2,6 @@
 const add = (a: number) => (b: number) => a + b;
 
 const addFive = add(5);
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const curriedResult = addFive(10); // result is 15

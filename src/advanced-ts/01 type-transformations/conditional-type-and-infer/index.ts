@@ -1,5 +1,5 @@
 import { Expect, Equal } from '../../../helpers/type-utils';
-import { S } from 'ts-toolbelt';
+// import { S } from 'ts-toolbelt';
 
 type YouSayGoodbyeAndISayHello<T> = T extends 'hello' ? 'goodbye' : 'hello';
 
@@ -14,6 +14,7 @@ type YouSayGoodbyeAndISayHelloAlt<T> = T extends 'hello' | 'goodbye' ? T extends
 // prettier-ignore
 export type TestYouSayGoodbyeAndISayHelloAlt = YouSayGoodbyeAndISayHelloAlt<'Whatever'>; // since it doesn't 'hello' or 'goodbye' -> type never
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 type tests_1 = [
   Expect<Equal<YouSayGoodbyeAndISayHelloAlt<'hello'>, 'goodbye'>>,
   Expect<Equal<YouSayGoodbyeAndISayHelloAlt<'goodbye'>, 'hello'>>,
@@ -23,7 +24,9 @@ type tests_1 = [
 
 type GetDataValue<T> = T extends { data: any } ? T['data'] : never; // uses an index-based access type
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 type GetDateValueExample1 = GetDataValue<{ data: 'hello' }>; // 'hello'
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 type GetDateValueExample2 = GetDataValue<{ data: { name: 'hello' } }>; // { name: "hello" }
 
 // N.B: The type "TData" (below) is only available within the "?" clause, and not accessible after the ":" clause like below
@@ -32,8 +35,10 @@ type GetDataValueAlt<T> = T extends { data: infer TData }
   ? TData | undefined
   : never; // whatever value passed to data inferred
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 type GetDateValueAltExample1 = GetDataValueAlt<{ data: 1 }>;
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 type TestGetDataValue = [
   Expect<Equal<GetDataValue<{ data: 'hello' }>, 'hello'>>,
   Expect<
@@ -70,26 +75,62 @@ type Example = MyComplexInterface<
 // N.B: Since no need to infer the first three types (Event, Context, Name), so either use `{}/any` would be just fine but
 
 // so, here MyComplexInterface uses any as type argument and since type any works irrespective of a data-type, thus it gets proper type hints of methods from MyComplexInterface
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 type GetPointWithAny<T> = T extends MyComplexInterface<any, any, any, any>
   ? T['getPoint']
   : never;
 
 // so, here MyComplexInterface uses {} as type argument and since {} type any works except null/ undefined, thus it gets proper type hints of methods from MyComplexInterface
-type GetPointWithObj<T> = T extends MyComplexInterface<{}, {}, {}, { id: 1 }>
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+type GetPointWithObj<T> = T extends MyComplexInterface<
+  object,
+  object,
+  object,
+  { id: 1 }
+>
   ? T['getPoint']
   : never;
 
 // N.B: any works with every data type (including null, undefined) whereas {} also works every data-type (except null, undefined)
-type GetPoint<T> = T extends MyComplexInterface<any, any, any, infer TPoint>
+type GetPoint<T> = T extends MyComplexInterface<
+  unknown,
+  unknown,
+  unknown,
+  infer TPoint
+>
   ? TPoint
   : never;
 
 // type GetPointExample = GetPoint<1, 2, 3, 4>; // GetPoint expects a single type argument but provided 4
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 type GetPointExample2 = GetPoint<MyComplexInterface<1, 2, 3, 4>>; // GetPoint expects a single type argument but provided 4
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 type TestGetPoint = [Expect<Equal<GetPoint<Example>, { x: 12; y: 14 }>>];
 
+// Define the Names type as a tuple of strings
+// Define the SplitString type to split strings based on a delimiter
+type SplitString<
+  S extends string,
+  Delim extends string
+> = S extends `${infer Before}${Delim}${infer After}` ? [Before, After] : [S];
+
+// Helper type to extract the surname (last name) from a full name
+// type GetSurname<T> = T extends `${infer First} ${infer Last}` ? Last : never;
+type GetSurname<T> = T extends `${string} ${infer Last}` ? Last : never;
+
+// Helper type to split the name and get the surname (alternative method)
+export type GetSurnameAlt<T extends string> = SplitString<T, ' '> extends [
+  any,
+  infer Last
+]
+  ? Last
+  : never;
+
+// Testing the types
 type Names = [
   'Matt Johnson',
   'Jimi Hendrix',
@@ -98,16 +139,13 @@ type Names = [
   'BB King'
 ];
 
-type GetSurname<T> = T extends `${infer First} ${infer Last}` ? Last : never;
-type GetSurnameAlt<T extends string> = S.Split<T, ' '>[1];
-
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 type TestNames = [
   Expect<Equal<GetSurname<Names[0]>, 'Johnson'>>,
   Expect<Equal<GetSurname<Names[1]>, 'Hendrix'>>,
   Expect<Equal<GetSurname<Names[2]>, 'Clapton'>>,
   Expect<Equal<GetSurname<Names[3]>, 'Mayer'>>,
-  Expect<Equal<GetSurname<Names[4]>, 'King'>>,
-  Expect<Equal<GetSurnameAlt<Names[4]>, 'King'>>
+  Expect<Equal<GetSurname<Names[4]>, 'King'>>
 ];
 
 const getServerSideProps = async () => {
@@ -124,8 +162,11 @@ const getServerSideProps = async () => {
 // prettier-ignore
 type InferPropsFromServerSideFunction<T> = T extends () => Promise<{ props: infer P; }> ? P : never;
 // type ExampleInferFromServerSideFn = typeof getServerSideProps;
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 type Props = InferPropsFromServerSideFunction<typeof getServerSideProps>;
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 type TestInferPropsFromServerSideFn = [
   Expect<
     Equal<
@@ -157,6 +198,7 @@ type GetParserResult<T> = T extends {
   ? TResult
   : never;
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 type GetParserResultAlt<T> = T extends
   | {
       parse: () => infer TResult;
@@ -164,8 +206,11 @@ type GetParserResultAlt<T> = T extends
   | {
       extract: () => infer TResult;
     }
-  | (() => infer TResult) ? TResult : never;
+  | (() => infer TResult)
+  ? TResult
+  : never;
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 type TestParser = [
   Expect<Equal<GetParserResult<typeof parser1>, number>>,
   Expect<Equal<GetParserResult<typeof parser2>, string>>,

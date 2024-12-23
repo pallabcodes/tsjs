@@ -22,6 +22,7 @@ function youSayGoodbyeISayHelloAlt<TGreeting extends 'hello' | 'goodbye'>(
 it('Should return goodbye when hello is passed in', () => {
   const result = youSayGoodbyeISayHelloAlt('hello');
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   type test = [Expect<Equal<typeof result, 'goodbye'>>];
 
   expect(result).toEqual('goodbye');
@@ -30,6 +31,7 @@ it('Should return goodbye when hello is passed in', () => {
 it('Should return hello when goodbye is passed in', () => {
   const result = youSayGoodbyeISayHelloAlt('goodbye');
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   type test = [Expect<Equal<typeof result, 'hello'>>];
 
   expect(result).toEqual('hello');
@@ -38,6 +40,7 @@ it('Should return hello when goodbye is passed in', () => {
 it('Should return goodbye when hello is passed in', () => {
   const result = youSayGoodbyeISayHello('hello');
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   type test = [Expect<Equal<typeof result, 'goodbye'>>];
 
   expect(result).toEqual('goodbye');
@@ -46,6 +49,7 @@ it('Should return goodbye when hello is passed in', () => {
 it('Should return hello when goodbye is passed in', () => {
   const result = youSayGoodbyeISayHello('goodbye');
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   type test = [Expect<Equal<typeof result, 'hello'>>];
 
   expect(result).toEqual('hello');
@@ -88,6 +92,7 @@ it('Should return an object which matches the types of each input', () => {
     v: 3,
   });
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   type test = [
     Expect<Equal<typeof result, { t: number; u: number; v: number }>>
   ];
@@ -144,6 +149,7 @@ it('Should let you clone the cache using a transform function', () => {
 
   expect(a).toEqual('1');
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   type tests = [Expect<Equal<typeof a, string | undefined>>];
 });
 
@@ -166,6 +172,7 @@ it('Should return a tuple of the properties a and b', () => {
 
   expect(result).toEqual(['a', 1]);
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   type test1 = Expect<Equal<typeof result, [string, number]>>;
 });
 
@@ -183,10 +190,9 @@ const numberResult = getValue(obj, 'a');
 const stringResult = getValue(obj, 'b');
 const booleanResult = getValue(obj, 'c');
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 type tests = [
   Expect<Equal<typeof numberResult, number>>,
   Expect<Equal<typeof stringResult, string>>,
   Expect<Equal<typeof booleanResult, boolean>>
 ];
-
-// 20

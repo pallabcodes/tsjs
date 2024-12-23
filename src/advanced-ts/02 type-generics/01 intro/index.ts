@@ -1,6 +1,7 @@
 // import { Expect, Equal } from '../../../helpers/type-utils';
 
 // These T1, T2 are Generic type and solely belongs to this Params
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 type Params<T1, T2> = {
   a: T1;
   b: T2;
@@ -14,8 +15,8 @@ const returnOfBothWhatIPassIn = <T1, T2>(params: { a: T1; b: T2 }) => {
   };
 };
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const result = returnOfBothWhatIPassIn({ a: 1, b: 2 });
-
 
 class Component<TProps> {
   // private readonly props: TProps; // diff
@@ -31,11 +32,10 @@ class Component<TProps> {
   getProps(): TProps {
     return this.props;
   }
-
-
 }
 
-const component = new Component({a: 1, b: 2});
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const component = new Component({ a: 1, b: 2 });
 
 // prettier-ignore
 export const concatenateFirstNameAndLastName = <T extends { firstName: string; lastName: string }>(user: T) => {
@@ -48,9 +48,10 @@ export const concatenateFirstNameAndLastName = <T extends { firstName: string; l
 const users = [
   {
     id: 1,
-    firstName: "Matt",
-    lastName: "Johnson",
+    firstName: 'Matt',
+    lastName: 'Johnson',
   },
 ];
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const newUsers = users.map(concatenateFirstNameAndLastName);

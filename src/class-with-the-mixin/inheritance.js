@@ -1,5 +1,4 @@
-// A function to check if an object is iterable by testing for Symbol.iterator
-function isIterable(obj: any): boolean {
+function isIterable(obj) {
   return obj != null && typeof obj[Symbol.iterator] === 'function';
 }
 
@@ -9,18 +8,18 @@ console.log(isIterable([])); // true, arrays are iterable
 console.log(isIterable('string')); // true, strings are iterable
 
 // Creating a class `Game` with iterable functionality
-class Game implements Iterable<string> {
+class Game {
   // Define the [Symbol.iterator] method to make this class iterable
-  [Symbol.iterator](): Iterator<string> {
+  [Symbol.iterator]() {
     const players = ['Player1', 'Player2']; // Use `const` because `players` is not reassigned
     let index = 0;
     return {
-      next(): IteratorResult<string> {
-        // @ts-expect-error type error
-        return {
-          value: index < players.length ? players[index++] : '',
-          done: index > players.length,
-        };
+      next: () => {
+        if (index < players.length) {
+          return { value: players[index++], done: false };
+        } else {
+          return { value: '', done: true }; // Ensure value is a string (empty string) when done
+        }
       },
     };
   }

@@ -7,20 +7,22 @@ interface Saiyan {
   stamina: () => void;
 }
 
-class Goten extends Goku<boolean> implements Saiyan {
+export class Goten extends Goku<boolean> implements Saiyan {
   level!: number;
 
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
   stamina(): void {}
 }
 
-class Trunks implements Saiyan {
+export class Trunks implements Saiyan {
   level!: number;
 
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
   stamina(): void {}
 }
 
-class Greater {
-  static hobby: string = 'watching movies';
+export class Greater {
+  static hobby = 'watching movies';
 
   private _name!: string;
 
@@ -48,29 +50,28 @@ class Greater {
   }
 }
 
-class Box<T = any> {
+class Box<T = unknown> {
   public value!: T;
-  public content: string = '';
+  public content = '';
 
-  sameAs(other: this) {
-    return (other.content = this.content);
+  sameAs(other: this): boolean {
+    return other.content === this.content;
   }
 
   hasValue(): this is { value: T } {
-    // here this's value is an object that value property whose type is T
     return this.value !== undefined;
   }
 }
 
-class DerivedBox extends Box {
-  otherContent: string = '?';
+class DerivedBox extends Box<string> {
+  otherContent = '?';
 }
 
 const base = new Box();
 const derivedBox = new DerivedBox();
 
-// this method will allow to compare the base.content === derivedBox.content
-// derivedBox.sameAs(base)
+// This method will now correctly compare base.content with derivedBox.content
+export const isSameContent = derivedBox.sameAs(base); // boolean
 
 class FileSystemObject {
   constructor(public path: string, private networked: boolean) {}
@@ -83,7 +84,7 @@ class FileSystemObject {
     return this instanceof Directory;
   }
 
-  isNetworked(): this is Networked & this {
+  isNetworked(): this is Networked {
     return this.networked;
   }
 }
@@ -103,9 +104,16 @@ interface Networked {
 }
 
 const fso: FileSystemObject = new FileRep('foo/bar.txt', 'foo');
-// if(fso.isFile()) {} else if(fso.isDirectory()) {} else if {fso.isNetworked()} {}
+// Correctly check types using type guards
+if (fso.isFile()) {
+  console.log('It is a file.');
+} else if (fso.isDirectory()) {
+  console.log('It is a directory.');
+} else if (fso.isNetworked()) {
+  console.log('It is networked.');
+}
 
-// class expressions
+// Class expressions
 const SomeClass = class<Type> {
   content!: Type;
   constructor(value: Type) {
@@ -113,36 +121,32 @@ const SomeClass = class<Type> {
   }
 };
 
-const m = new SomeClass('Hello, World'); // Type has been inferred from the argument here i.e. string
+const m = new SomeClass('Hello, World'); // Type inferred as string
 
-// abstract class : not allowed to be directly instantiated, abstract for field, class and method
+// Abstract class example
 abstract class Base {
   abstract getName(): string;
   printName() {
     console.log('Hello, ' + this.getName());
   }
 }
-// this is not allowed with abstract class
-// const b =  new Base()
 
-// when extending the base class with abstract members has to be implemented within subclass like here getName
-
+// Subclass implements abstract class
 class SubClass extends Base {
   getName(): string {
     return 'TypeScript Nice';
   }
 }
 
-// now the method/props can be used from subclass
 const s = new SubClass();
 s.printName();
 
-// write a function that accept something like a constructor
+// Function accepting a constructor
 function greet(ctor: new () => Base) {
-  // @ts-ignore
   const instance = new ctor();
   instance.printName();
 }
+
 // Base class is abstract, so it can't be instantiated, but it works for the SubClass
 greet(SubClass);
-// greet(Base);
+// greet(Base); // Uncommenting this would cause an error because Base is abstract

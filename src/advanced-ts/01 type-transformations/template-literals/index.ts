@@ -17,17 +17,22 @@ goToRoute('/users/1');
 
 type Routes = '/users' | '/users/:id' | '/posts' | '/posts/:id';
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 type DynamicRoutesV1 = '/users/:id' | '/posts/:id';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 type DynamicRoutesV2 = Extract<Routes, `${string}`>; // since used `${string}` so it picks all types from Routes
 type DynamicRoutesV3 = Extract<Routes, `${string}:${string}`>; // since used `${string}:${string}` so '/users/:id' | '/posts/:id'
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 type DynamicRoutesV4 = Extract<Routes, `:${string}`>; // since no string literal in Route as ':string' so it will be never
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 type tests_1 = Expect<Equal<DynamicRoutesV3, '/users/:id' | '/posts/:id'>>;
 
 type BreadType = 'rye' | 'brown' | 'white';
 type Filling = 'cheese' | 'ham' | 'salami';
 
 type Sandwich = `${BreadType} sandwich with ${Filling}`;
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 type tests_2 = Expect<
   Equal<
     Sandwich,
@@ -45,6 +50,7 @@ type tests_2 = Expect<
 
 type Path = 'Users/John/Documents/notes.txt';
 type SplitPath = S.Split<Path, '/'>;
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 type tests_3 = Expect<
   Equal<SplitPath, ['Users', 'John', 'Documents', 'notes.txt']>
 >;
@@ -54,6 +60,7 @@ type tests_3 = Expect<
 type TemplateLiteralKey = `${'user' | 'post' | 'comment'}${'Id' | 'Name'}`; // returns a multiple unions
 type ObjectOfKeys = Record<TemplateLiteralKey, string>;
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 type tests_4 = Expect<
   Equal<
     ObjectOfKeys,
@@ -129,4 +136,3 @@ export type CloudCustomer = {
   num_employees: number;
   contact_first_name: string;
 };
-

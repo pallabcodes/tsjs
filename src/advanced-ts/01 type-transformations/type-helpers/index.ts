@@ -1,19 +1,26 @@
 import { Expect, Equal } from '../../../helpers/type-utils';
 
 type ReturnWhatIPassIn<T> = T;
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 type Something = ReturnWhatIPassIn<'something'>;
 
 type Maybe<T> = T | null | undefined;
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 type Example = Maybe<number>;
 
 // N.B: T extends {} means T can be anything except null or undefined
 // const whatever: {} = false; // it works due to the same reason since datatype is here {}
 
 // N.B: {} works because everything in JS is an object, therefore, whichever datatype is used, it will be an extension from {}
+
+// eslint-disable-next-line @typescript-eslint/ban-types
 type MaybeType<T extends {}> = T | null | undefined;
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 type MaybeExample = Maybe<string[]>; // so array which is again an object therefore T extends {} works fine and type here string[]
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 type MaybeExample2 = Maybe<false>; // now it should be false which is basically a boolean and boolean is ultimately an object
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 type TestMaybe = [
   MaybeType<'ts'>,
   MaybeType<1>,
@@ -30,8 +37,10 @@ type TestMaybe = [
 // solution: which is why explicitly needed to use extends keyword as below
 type AddRoutePrefix<TRoute extends string> = `/${TRoute}`;
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/no-empty-function
 const addRoutePrefix = (route: string) => {};
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 type tests_1 = [
   Expect<Equal<AddRoutePrefix<''>, '/'>>,
   Expect<Equal<AddRoutePrefix<'about'>, '/about'>>,
@@ -44,6 +53,7 @@ type CreateDataShape<TData, TError> = {
   error: TError;
 };
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 type tests_2 = [
   Expect<
     Equal<
@@ -79,6 +89,7 @@ type CreateDataShapeWithDefault<TData, TError = undefined> = {
   error: TError;
 };
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 type tests_r = [
   Expect<
     Equal<
@@ -106,6 +117,7 @@ type GetParametersAndReturnType<T extends (...args: any) => any> = {
   returnValue: ReturnType<T>;
 };
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 type testsForParamAndReturnType = [
   Expect<
     Equal<
@@ -130,6 +142,7 @@ type testsForParamAndReturnType = [
 // Must provide at least one value, then it could be empty and since used spread so in case of empty array it will work fine
 type NonEmptyArray<T> = [T, ...Array<T>];
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/no-empty-function
 export const makeEnum = (values: NonEmptyArray<string>) => {};
 
 makeEnum(['a']);

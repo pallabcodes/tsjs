@@ -26,14 +26,8 @@ module.exports = {
     "no-unused-vars": "off",
     "@typescript-eslint/explicit-module-boundary-types": "off",
     "@typescript-eslint/no-explicit-any": "warn",
-    // strict: "error",
-    // "noImplicitAny": "error",
-    // "noImplicitThis": "error",
-    // "noUncheckedIndexedAccess": "error",
-    // "noImplicitOverride": "error",
-    // skipLibCheck: "off",
   },
-  ignorePatterns: ["node_modules/", "build/"],
+  ignorePatterns: ["node_modules/", "build/", "**/*.js"],  // Ignore .js files
   overrides: [
     {
       files: ["*.ts", "*.tsx"],

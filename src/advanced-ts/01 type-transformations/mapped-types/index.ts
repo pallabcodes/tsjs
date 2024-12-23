@@ -83,7 +83,7 @@ type OnlyIdKeys<T> = {
     : never]: T[K]; // On each iteration, if never i.e., skipped
 };
 
-type TestOnlyIdKeys = [
+export type TestOnlyIdKeys = [
   Expect<
     Equal<
       OnlyIdKeys<Example>,
@@ -94,6 +94,7 @@ type TestOnlyIdKeys = [
       }
     >
   >,
+  // eslint-disable-next-line @typescript-eslint/ban-types
   Expect<Equal<OnlyIdKeys<{}>, {}>>
 ];
 
@@ -105,8 +106,11 @@ type RouteAlt =
         perPage: string;
       };
     }
+  // eslint-disable-next-line @typescript-eslint/ban-types
   | { route: '/about'; search: {} }
+  // eslint-disable-next-line @typescript-eslint/ban-types
   | { route: '/admin'; search: {} }
+  // eslint-disable-next-line @typescript-eslint/ban-types
   | { route: '/admin/users'; search: {} };
 
 /**
@@ -135,8 +139,11 @@ type TestRoutesV2 = [
           page: string;
           perPage: string;
         };
+        // eslint-disable-next-line @typescript-eslint/ban-types
         '/about': {};
+        // eslint-disable-next-line @typescript-eslint/ban-types
         '/admin': {};
+        // eslint-disable-next-line @typescript-eslint/ban-types
         '/admin/users': {};
       }
     >

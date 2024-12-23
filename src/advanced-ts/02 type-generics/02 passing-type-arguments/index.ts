@@ -1,4 +1,3 @@
-import { expect, it, describe } from 'vitest';
 import { Expect, Equal } from '../../../helpers/type-utils';
 
 export const createSetWithoutDefaultArg = <T>() => {
@@ -15,6 +14,7 @@ const numberSet = createSet<number>();
 const unknownSet = createSet();
 const unknownSetWithoutDefaultArg = createSetWithoutDefaultArg();
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 type tests = [
   Expect<Equal<typeof stringSet, Set<string>>>,
   Expect<Equal<typeof stringOrNumberSet, Set<string | number>>>,
@@ -43,6 +43,7 @@ const clonedComponent = cloneComponent(component);
 
 const result = clonedComponent.getProps();
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 type TestComponent = [
   Expect<Equal<typeof result, { a: number; b: number; c: number }>>
 ];
@@ -56,18 +57,21 @@ const array = [
   },
 ];
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const obj = array.reduce<Record<string, { name: string }>>((accum, item) => {
   accum[item.name] = item;
   return accum;
 }, {});
 
 const fetchData = async <TData>(url: string) => {
-  let data: TData = await fetch(url).then(response => response.json());
+  const data: TData = await fetch(url).then(response => response.json());
 
   return data;
 };
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 async function fetching() {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const data = await fetchData<{ name: string }>(
     'https://swapi.dev/api/people/1'
   );
@@ -108,11 +112,13 @@ const EXAMPLE_CONFIG = {
   },
 };
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const flags = getHomePageFeatureFlags(
   EXAMPLE_CONFIG,
   defaultFlags => defaultFlags
 );
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const flagsNoBanner = getHomePageFeatureFlags(EXAMPLE_CONFIG, defaultFlags => ({
   ...defaultFlags,
   showBanner: false,
@@ -127,6 +133,7 @@ const result1 = typedObjectKeys({
   b: 2,
 });
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 type test = Expect<Equal<typeof result1, Array<'a' | 'b'>>>;
 
 // this is a higher order function, so TypeScript denotes first generic to params and second as the return type
@@ -164,6 +171,7 @@ const func = makeSafe(() => 1);
 
 const resultFunc = func();
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 type TestSafeFn = [
   Expect<
     Equal<
