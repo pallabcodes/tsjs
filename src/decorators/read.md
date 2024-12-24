@@ -176,3 +176,7 @@ console.log('Table Name:', tableName);
 - Proxy-like behavior in the class decorator to enhance constructor functionality.
 
 This code can be extended further to include more advanced use cases, such as dynamic validation or injecting dependencies. Let me know if you'd like to explore those!
+
+## Decorators adds `metadata` and then using `Reflect/Proxy` to validate
+
+Yes, by metadata, I mean everything that can be attached to a class—properties, methods, symbols, and other constructs like parameters or accessors—essentially any information you want to associate with a class or its members, which can be accessed at runtime using the `Reflect` API.
