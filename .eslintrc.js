@@ -27,7 +27,6 @@ module.exports = {
     "@typescript-eslint/explicit-module-boundary-types": "off",
     "@typescript-eslint/no-explicit-any": "warn",
   },
-  ignorePatterns: ["node_modules/", "build/", "**/*.js"],  // Ignore .js files
   overrides: [
     {
       files: ["*.ts", "*.tsx"],
@@ -35,5 +34,13 @@ module.exports = {
         "@typescript-eslint/no-var-requires": "off",
       },
     },
+    {
+      files: ["*.js"],
+      rules: {
+        "@typescript-eslint/no-var-requires": "off",
+        "@typescript-eslint/no-explicit-any": "off",
+      },
+    },
   ],
+  ignorePatterns: ["node_modules/", "build/"]
 };
