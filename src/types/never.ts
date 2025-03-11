@@ -1,3 +1,4 @@
+
 // # A function never returns (e.g. if the function body has while(true){})
 // # A function always throws (e.g. in function foo() { throw new Error('Not Implemented') } the return type of foo is never)
 
