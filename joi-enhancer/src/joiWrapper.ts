@@ -1,4 +1,4 @@
-import Joi, { Schema, ValidationError, ValidationResult, ObjectSchema } from 'joi';
+import Joi, { Schema, ValidationError, ValidationResult, ObjectSchema, WhenOptions, AnySchema, AlternativesSchema } from 'joi';
 
 export class SchemaWrapper<T> {
   private readonly schema: ObjectSchema<any>;
@@ -26,7 +26,6 @@ export class SchemaWrapper<T> {
   }
 
   extend<U>(extension: ObjectSchema<any>): SchemaWrapper<T & U> {
-    // Type assertion is safe here because Joi's concat merges schemas at runtime
     return new SchemaWrapper<T & U>(this.schema.concat(extension) as ObjectSchema<any>);
   }
 
@@ -47,6 +46,36 @@ export class SchemaWrapper<T> {
 
     return new SchemaWrapper<Pick<T, K>>(Joi.object(pickedSchemas) as ObjectSchema<any>);
   }
+
+  /**
+   * Adds object-level conditional logic using Joi's .when().
+   * For alternatives-level conditionals, use the underlying Joi schema directly.
+   */
+  conditional(
+    ref: string,
+    options: WhenOptions | WhenOptions[]
+  ): SchemaWrapper<T> {
+    // This only works for object-level .when()
+    const newSchema = this.schema.when(ref, options);
+    return new SchemaWrapper<T>(newSchema as ObjectSchema<any>);
+  }
+}
+
+/**
+ * Helper to create a Joi alternatives schema, fully typed.
+ */
+export function alternatives<T = any>() {
+  return Joi.alternatives() as AlternativesSchema<T>;
+}
+
+/**
+ * Helper to create a conditional alternatives field, fully typed.
+ */
+export function conditionalField<T = any>(
+  ref: string,
+  options: WhenOptions[]
+): AlternativesSchema<T> {
+  return Joi.alternatives().conditional(ref, options);
 }
 
 export function createSchema<T>(schema: ObjectSchema<any>): SchemaWrapper<T> {

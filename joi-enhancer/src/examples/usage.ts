@@ -1,55 +1,92 @@
 import Joi from 'joi';
-import { createSchema } from '../joiWrapper';
+import { createSchema, conditionalField } from '../joiWrapper';
 
-// Define a base schema using Joi as usual
-const baseSchema = Joi.object({
-  id: Joi.number().integer().required(),
-  name: Joi.string().required(),
-  email: Joi.string().email().required(),
-  isAdmin: Joi.boolean().default(false),
-});
+// Object-level conditional: adminCode required for admin, forbidden otherwise
+const conditionalSchema = createSchema<{
+  username: string;
+  role: 'admin' | 'user';
+  adminCode?: string;
+}>(
+  Joi.object({
+    username: Joi.string().required(),
+    role: Joi.string().valid('admin', 'user').required(),
+    adminCode: Joi.string().when('role', {
+      is: 'admin',
+      then: Joi.string().required(),
+      otherwise: Joi.forbidden(),
+    }),
+  })
+);
 
-// Wrap it to get enhanced type support and methods
-const userSchema = createSchema<{
-  id: number;
-  name: string;
-  email: string;
-  isAdmin: boolean;
-}>(baseSchema);
-
-// Validate some data
+// Example: Valid admin
 try {
-  const validUser = userSchema.validate({
-    id: 1,
-    name: 'Alice',
-    email: 'alice@example.com',
+  const result = conditionalSchema.validate({
+    username: 'alice',
+    role: 'admin',
+    adminCode: 'SECRET',
   });
-
-  console.log(validUser);
-
-  // Pick only id and email keys from user schema
-  const partialUserSchema = userSchema.pick(['id', 'email']);
-
-  const validPartial = partialUserSchema.validate({
-    id: 2,
-    email: 'bob@example.com',
-  });
-
-  console.log(validPartial);
-
-  // Extend schema with an extra field
-  const extendedSchema = userSchema.extend(
-    Joi.object({ phone: Joi.string().optional() })
-  );
-
-  const validExtended = extendedSchema.validate({
-    id: 3,
-    name: 'Eve',
-    email: 'eve@example.com',
-    phone: '123-456-7890',
-  });
-
-  console.log(validExtended);
+  console.log('Valid admin:', result);
 } catch (e) {
-  console.error('Validation failed:', e);
+  console.error('Validation failed:', e instanceof Error ? e.message : e);
+}
+
+// Example: Invalid admin (missing adminCode)
+try {
+  conditionalSchema.validate({
+    username: 'bob',
+    role: 'admin',
+  });
+} catch (e) {
+  console.error('Validation failed:', e instanceof Error ? e.message : e);
+}
+
+// Example: Valid user (adminCode forbidden)
+try {
+  const result = conditionalSchema.validate({
+    username: 'eve',
+    role: 'user',
+  });
+  console.log('Valid user:', result);
+} catch (e) {
+  console.error('Validation failed:', e instanceof Error ? e.message : e);
+}
+
+// Example: Invalid user (adminCode present)
+try {
+  conditionalSchema.validate({
+    username: 'mallory',
+    role: 'user',
+    adminCode: 'SHOULD-NOT-BE-HERE',
+  });
+} catch (e) {
+  console.error('Validation failed:', e instanceof Error ? e.message : e);
+}
+
+// Advanced alternatives-level conditional example
+const schema = createSchema<{
+  x: string;
+  y: string;
+}>(
+  Joi.object({
+    x: Joi.string().min(1).max(5).required(),
+    y: conditionalField('x', [
+      { is: 'foo', then: Joi.string().valid('bar').required() },
+      { not: 'foo', then: Joi.string().optional() },
+    ]).match('one'),
+  })
+);
+
+// Example payloads
+try {
+  const result = schema.validate({ x: 'foo', y: 'bar' });
+  console.log('Valid:', result);
+} catch (e) {
+  console.error('Validation failed:', e instanceof Error ? e.message : e);
+}
+
+try {
+  const result = schema.validate({ x: 'foo2', y: 'bar' });
+  console.log('Valid:', result);
+} catch (e) {
+  console.error('Validation failed:', e instanceof Error ? e.message : e);
 }

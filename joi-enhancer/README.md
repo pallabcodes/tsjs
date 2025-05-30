@@ -54,8 +54,36 @@ tsjs
   const validationResult = JoiValidator.validate(RegisterSchema, registerData);
   ```
 
+- Example of using `joi-enhancer` with JOI:
+  ```typescript
+  import { joi } from 'joi-enhancer';
+
+  const UserSchema = joi.object<{
+    username: string;
+    role: 'admin' | 'user';
+    adminCode?: string;
+  }>({
+    username: joi.string().required(),
+    role: joi.string().valid('admin', 'user').required(),
+    adminCode: joi.string().when('role', {
+      is: 'admin',
+      then: joi.string().required(),
+      otherwise: joi.forbidden(),
+    }),
+  });
+
+  const user = UserSchema.validate({
+    username: 'alice',
+    role: 'admin',
+    adminCode: 'SECRET',
+  });
+  ```
+
 ## Contributing
 Contributions are welcome! Please open an issue or submit a pull request for any improvements or bug fixes.
 
 ## License
 This project is licensed under the ISC License.
+
+# Usage
+
