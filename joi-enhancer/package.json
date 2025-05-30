@@ -35,7 +35,6 @@
     "typescript": "^5.0.0"
   },
   "type": "module",
-  "private": true,
   "publishConfig": {
     "access": "restricted"
   }
