@@ -1,0 +1,37 @@
+{
+  "name": "quick_ts",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "devDependencies": {
+    "@types/express": "^5.0.0",
+    "@types/node": "^22.9.0",
+    "@typescript-eslint/eslint-plugin": "^5.19.0",
+    "@typescript-eslint/parser": "^5.19.0",
+    "eslint": "^8.57.1",
+    "eslint-config-prettier": "^8.5.0",
+    "eslint-plugin-prettier": "^4.0.0",
+    "prettier": "^2.6.2"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "npm run build --workspaces"
+  },
+  "keywords": [
+    "joi",
+    "wrapper"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "joi": "^17.13.3",
+    "reflect-metadata": "^0.2.2",
+    "ts-toolbelt": "^9.6.0",
+    "vitest": "^2.1.8"
+  },
+  "private": true,
+  "workspaces": [
+    "joi-enhancer",
+    "zod-enhancer"
+  ]
+}
