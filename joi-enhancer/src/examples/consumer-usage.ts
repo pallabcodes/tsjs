@@ -1,13 +1,22 @@
-import { joi, Joi } from '../index';
+import { joi, Joi, InferJoiType } from '../index';
 
-interface User {
+// Example 1: Basic usage
+const userSchema = joi.object<{
+  username: string;
+  age?: number;
+}>({
+  username: joi.string().required(),
+  age: joi.number().optional(),
+});
+type User = InferJoiType<typeof userSchema>;
+const validUser: User = userSchema.validate({ username: 'alice', age: 30 });
+
+// Example 2: Object-level conditional
+const UserSchema = joi.object<{
   username: string;
   role: 'admin' | 'user';
   adminCode?: string;
-}
-
-// Example 1: Object-level conditional
-const UserSchema = joi.object<User>({
+}>({
   username: joi.string().required(),
   role: joi.string().valid('admin', 'user').required(),
   adminCode: joi.string().when('role', {
@@ -16,8 +25,15 @@ const UserSchema = joi.object<User>({
     otherwise: joi.forbidden(),
   }),
 });
+type User2 = InferJoiType<typeof UserSchema>;
+const userObj: User2 = UserSchema.validate({
+  username: 'alice',
+  role: 'admin',
+  adminCode: 'SECRET',
+});
+console.log('User validated:', userObj);
 
-// Example 2: Alternatives-level conditional
+// Example 3: Alternatives-level conditional
 const AltSchema = joi.object<{
   x: string;
   y: string;
@@ -28,35 +44,23 @@ const AltSchema = joi.object<{
     { not: 'foo', then: joi.string().optional() },
   ]).match('one'),
 });
+type Alt = InferJoiType<typeof AltSchema>;
+const altValue: Alt = AltSchema.validate({ x: 'foo', y: 'bar' });
+console.log('Alt validated:', altValue);
 
-// Usage
-const user = UserSchema.validate({
-  username: 'alice',
-  role: 'admin',
-  adminCode: 'SECRET',
-});
-
-console.log('User validated:', user);
-
-const alt = AltSchema.validate({ x: 'foo', y: 'bar' });
-console.log('Alt validated:', alt);
-
-
-// Native Joi usage example (for advanced/edge cases)
+// Example 4: Native Joi usage (for advanced/edge cases)
 const rawSchema = Joi.object({
   foo: Joi.string().required(),
   bar: Joi.number().min(0),
 });
-
-const { error, value } = rawSchema.validate({ foo: 'hello', bar: 42 });
-
-if (error) {
-  console.error('Raw Joi validation failed:', error.message);
+const { error: rawError, value: rawValue } = rawSchema.validate({ foo: 'hello', bar: 42 });
+if (rawError) {
+  console.error('Raw Joi validation failed:', rawError.message);
 } else {
-  console.log('Raw Joi validated:', value);
+  console.log('Raw Joi validated:', rawValue);
 }
 
-// Always strip the `secret` field, regardless of value
+// Example 5: Always strip the `secret` field
 const StrippedSchema = joi.object<{
   visible: string;
   secret?: string;
@@ -64,11 +68,14 @@ const StrippedSchema = joi.object<{
   visible: joi.string().required(),
   secret: joi.stripField(),
 });
+const strippedValue = StrippedSchema.validate({ visible: 'show', secret: 'hide-this' });
+console.log(strippedValue); // { visible: 'show' }
 
-const result = StrippedSchema.validate({ visible: 'show', secret: 'hide-this' });
-console.log(result); // { visible: 'show' }
-
-const ConditionalStripSchema = joi.object({
+// Example 6: Conditional strip
+const ConditionalStripSchema = joi.object<{
+  flag: boolean;
+  data?: string;
+}>({
   flag: joi.boolean(),
   data: joi.string().when('flag', {
     is: true,
@@ -76,7 +83,6 @@ const ConditionalStripSchema = joi.object({
     otherwise: joi.string().required(),
   }),
 });
-
 console.log(
   ConditionalStripSchema.validate({ flag: true, data: 'should be stripped' })
 ); // { flag: true }

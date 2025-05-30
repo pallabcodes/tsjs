@@ -61,6 +61,17 @@ export class SchemaWrapper<T> {
     const newSchema = this.schema.when(ref, options);
     return new SchemaWrapper<T>(newSchema as ObjectSchema<any>);
   }
+
+  /**
+   * Zod-like safe validation: returns { value, error } instead of throwing.
+   */
+  safeValidate(input: unknown): { value?: T; error?: Joi.ValidationError } {
+    const { error, value } = this.schema.validate(input, { abortEarly: false, stripUnknown: true });
+    if (error) {
+      return { error };
+    }
+    return { value: value as T, error: undefined };
+  }
 }
 
 /**
@@ -96,12 +107,16 @@ export function createSchema<T>(schema: ObjectSchema<any>): SchemaWrapper<T> {
  * Type-safe requireIf helper.
  * Usage: requireIf('otherField', true)
  */
-export function requireIf<T = any>(ref: string, value: any): AnySchema {
-  return Joi.any().when(ref, {
+export function requireIf<T extends Schema>(
+  schema: T,
+  key: string,
+  value: any
+): T {
+  return schema.when(key, {
     is: value,
-    then: Joi.required(),
-    otherwise: Joi.optional(),
-  } as WhenOptions);
+    then: schema.required(),
+    otherwise: schema.optional(),
+  }) as T;
 }
 
 export function isObjectSchema(schema: AnySchema): schema is Joi.ObjectSchema {
@@ -123,4 +138,8 @@ export function formatError(error: ValidationError) {
       type: d.type,
     })),
   };
+}
+
+export function describeSchema(schema: ObjectSchema<any>) {
+  return schema.describe();
 }

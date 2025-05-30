@@ -9,25 +9,11 @@ import {
   isObjectSchema,
   isStringSchema,
   formatError,
+  describeSchema,
 } from './joiWrapper';
 
-// Re-export everything from Joi for full API access
-export {
-  Joi,
-  SchemaWrapper,
-  createSchema,
-  conditionalField,
-  alternatives,
-  stripField,
-  requireIf,
-  isObjectSchema,
-  isStringSchema,
-  formatError,
-};
-
-// Ergonomic API for most use-cases, but also spread all Joi methods:
+// Ergonomic API for most use-cases
 export const joi = {
-  ...Joi,
   object: <T>(schema: Record<string, any>) => createSchema<T>(Joi.object(schema)),
   alternatives,
   conditionalField,
@@ -37,4 +23,25 @@ export const joi = {
   isStringSchema,
   formatError,
 };
+
+// Native Joi for advanced/extensibility use
+export { Joi };
+
+// Advanced helpers and types
+export {
+  SchemaWrapper,
+  createSchema,
+  conditionalField,
+  alternatives,
+  stripField,
+  requireIf,
+  isObjectSchema,
+  isStringSchema,
+  formatError,
+  describeSchema,
+};
+
+// Type inference helpers
+export { default as ExtractType } from 'joi-extract-type';
+export type { ExtractType as InferJoiType } from 'joi-extract-type';
 

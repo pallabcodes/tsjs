@@ -32,7 +32,8 @@
     "@rollup/plugin-node-resolve": "^15.0.0",
     "@rollup/plugin-typescript": "^9.0.0",
     "rollup": "^3.0.0",
-    "typescript": "^5.0.0"
+    "typescript": "^5.0.0",
+    "joi-extract-type": "^15.0.2"
   },
   "type": "module",
   "publishConfig": {

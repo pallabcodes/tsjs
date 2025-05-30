@@ -268,5 +268,27 @@ See `/src/examples/helpers.test.ts` for tests of all helpers.
 
 ---
 
+## Edge Cases & Advanced Usage
+
+### Alternatives
+
+You can use `joi.alternatives(...)` for schemas that accept multiple shapes:
+```typescript
+const schema = joi.alternatives().try(
+  joi.object({ type: joi.string().valid('a'), value: joi.number() }),
+  joi.object({ type: joi.string().valid('b'), value: joi.string() })
+);
+```
+
+### Custom Extensions
+
+If you need to use custom Joi extensions, use the exported `Joi` object:
+```typescript
+import { Joi } from 'joi-enhancer';
+const customJoi = Joi.extend(/* ... */);
+```
+
+---
+
 **You are ready to build robust, type-safe, and production-grade validation with joi-enhancer!**
 

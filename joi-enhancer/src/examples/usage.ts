@@ -90,3 +90,12 @@ try {
 } catch (e) {
   console.error('Validation failed:', e instanceof Error ? e.message : e);
 }
+
+// Safe validation example
+const input = { x: 'foo', y: 'baz' };
+const result = schema.safeValidate(input);
+if (result.error) {
+  // handle error
+} else {
+  // result.value is type-safe
+}

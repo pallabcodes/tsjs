@@ -1,23 +1,17 @@
-import Joi, { WhenOptions } from 'joi';
+import { joi, InferJoiType, requireIf, Joi } from '../index';
+import { ConditionalRequired } from '../types/conditional-helper';
 
-/**
- * Type-safe requireIf helper.
- * Usage: requireIf('otherField', true)
- */
-export function requireIf<T = any>(ref: string, value: any) {
-  return Joi.any().when(ref, {
-    is: value,
-    then: Joi.required(),
-    otherwise: Joi.optional(),
-  } as WhenOptions);
-}
-
-// Example usage:
-const schema = Joi.object({
-  status: Joi.string().valid('active', 'inactive').required(),
-  reason: requireIf('status', 'inactive'),
+const schema = joi.object({
+  role: Joi.string().valid('admin', 'user').required(),
+  adminCode: requireIf(Joi.string(), 'role', 'admin'),
 });
 
-console.log(schema.validate({ status: 'active' })); // valid, reason optional
-console.log(schema.validate({ status: 'inactive', reason: 'left' })); // valid, reason required
-console.log(schema.validate({ status: 'inactive' })); // invalid, reason required
+type RawUser = InferJoiType<typeof schema>;
+type User = ConditionalRequired<RawUser, 'role', 'admin', 'adminCode'>;
+// User =
+// | { role: 'admin'; adminCode: string }
+// | { role: 'user'; adminCode?: string }
+
+console.log(schema.validate({ role: 'user' })); // valid, adminCode optional
+console.log(schema.validate({ role: 'admin', adminCode: '1234' })); // valid, adminCode required
+console.log(schema.validate({ role: 'admin' })); // invalid, adminCode required
