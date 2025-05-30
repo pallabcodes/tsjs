@@ -1,5 +1,7 @@
 import Joi, { Schema, ValidationError, ValidationResult, ObjectSchema, WhenOptions, AnySchema, AlternativesSchema } from 'joi';
 
+
+
 export class SchemaWrapper<T> {
   private readonly schema: ObjectSchema<any>;
 
@@ -78,6 +80,47 @@ export function conditionalField<T = any>(
   return Joi.alternatives().conditional(ref, options);
 }
 
+/**
+ * Helper to always strip a field from the validated object.
+ * Usage: stripField() returns Joi.any().strip()
+ */
+export function stripField(): AnySchema {
+  return Joi.any().strip();
+}
+
 export function createSchema<T>(schema: ObjectSchema<any>): SchemaWrapper<T> {
   return new SchemaWrapper<T>(schema);
+}
+
+/**
+ * Type-safe requireIf helper.
+ * Usage: requireIf('otherField', true)
+ */
+export function requireIf<T = any>(ref: string, value: any): AnySchema {
+  return Joi.any().when(ref, {
+    is: value,
+    then: Joi.required(),
+    otherwise: Joi.optional(),
+  } as WhenOptions);
+}
+
+export function isObjectSchema(schema: AnySchema): schema is Joi.ObjectSchema {
+  return (schema as any).type === 'object';
+}
+
+export function isStringSchema(schema: AnySchema): schema is Joi.StringSchema {
+  return (schema as any).type === 'string';
+}
+
+
+
+export function formatError(error: ValidationError) {
+  return {
+    message: error.message,
+    details: error.details.map(d => ({
+      path: d.path.join('.'),
+      message: d.message,
+      type: d.type,
+    })),
+  };
 }

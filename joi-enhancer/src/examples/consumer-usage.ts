@@ -55,3 +55,31 @@ if (error) {
 } else {
   console.log('Raw Joi validated:', value);
 }
+
+// Always strip the `secret` field, regardless of value
+const StrippedSchema = joi.object<{
+  visible: string;
+  secret?: string;
+}>({
+  visible: joi.string().required(),
+  secret: joi.stripField(),
+});
+
+const result = StrippedSchema.validate({ visible: 'show', secret: 'hide-this' });
+console.log(result); // { visible: 'show' }
+
+const ConditionalStripSchema = joi.object({
+  flag: joi.boolean(),
+  data: joi.string().when('flag', {
+    is: true,
+    then: joi.stripField(),
+    otherwise: joi.string().required(),
+  }),
+});
+
+console.log(
+  ConditionalStripSchema.validate({ flag: true, data: 'should be stripped' })
+); // { flag: true }
+console.log(
+  ConditionalStripSchema.validate({ flag: false, data: 'must be present' })
+); // { flag: false, data: 'must be present' }

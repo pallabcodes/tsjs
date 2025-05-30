@@ -87,3 +87,186 @@ This project is licensed under the ISC License.
 
 # Usage
 
+# joi-enhancer
+
+A type-safe, ergonomic, and production-ready wrapper around Joi for Node.js and TypeScript.
+
+---
+
+## 🚀 Installation
+
+> **Best Practice:**  
+> `joi-enhancer` lists `joi` as a **peer dependency**.  
+> This means you should install both in your project to ensure version compatibility and avoid duplicate Joi instances.
+
+```bash
+npm install joi joi-enhancer
+```
+
+---
+
+## 🛠️ Quick Usage
+
+### 1. Import the API
+
+```typescript
+import { joi } from 'joi-enhancer';
+```
+
+---
+
+### 2. Define and Validate Schemas
+
+#### Object Schema with Conditional Validation
+
+```typescript
+const UserSchema = joi.object<{
+  username: string;
+  role: 'admin' | 'user';
+  adminCode?: string;
+}>({
+  username: joi.string().required(),
+  role: joi.string().valid('admin', 'user').required(),
+  adminCode: joi.string().when('role', {
+    is: 'admin',
+    then: joi.string().required(),
+    otherwise: joi.forbidden(),
+  }),
+});
+
+const user = UserSchema.validate({
+  username: 'alice',
+  role: 'admin',
+  adminCode: 'SECRET',
+});
+```
+
+---
+
+#### Alternatives/Conditional Field
+
+```typescript
+const AltSchema = joi.object<{
+  x: string;
+  y: string;
+}>({
+  x: joi.string().min(1).max(5).required(),
+  y: joi.conditionalField('x', [
+    { is: 'foo', then: joi.string().valid('bar').required() },
+    { not: 'foo', then: joi.string().optional() },
+  ]).match('one'),
+});
+
+const alt = AltSchema.validate({ x: 'foo', y: 'bar' });
+```
+
+---
+
+#### Always Strip a Field
+
+```typescript
+const schema = joi.object({
+  visible: joi.string().required(),
+  secret: joi.stripField(),
+});
+
+const result = schema.validate({ visible: 'show', secret: 'hide' });
+// result: { visible: 'show' }
+```
+
+---
+
+#### Conditionally Require a Field
+
+```typescript
+const schema = joi.object({
+  status: joi.string().valid('active', 'inactive').required(),
+  reason: joi.requireIf('status', 'inactive'),
+});
+```
+
+---
+
+#### Type Guards
+
+```typescript
+joi.isObjectSchema(joi.object({}).raw); // true
+joi.isStringSchema(joi.string());       // true
+```
+
+---
+
+#### Format Joi Errors
+
+```typescript
+const schema = joi.object({ foo: joi.string().required() });
+const { error } = schema.raw.validate({});
+if (error) {
+  const formatted = joi.formatError(error);
+  // formatted.message, formatted.details
+}
+```
+
+---
+
+#### Use Native Joi Directly (for advanced cases)
+
+```typescript
+import { Joi } from 'joi-enhancer';
+
+const rawSchema = Joi.object({ foo: Joi.string().required() });
+const { error, value } = rawSchema.validate({});
+```
+
+---
+
+## 🧩 Schema Fragments (Reusable Parts)
+
+```typescript
+const nameFragment = {
+  firstName: joi.string().required(),
+  lastName: joi.string().required(),
+};
+
+const addressFragment = {
+  address: joi.string(),
+  city: joi.string(),
+};
+
+const UserSchema = joi.object({
+  ...nameFragment,
+  ...addressFragment,
+  age: joi.number().min(0),
+});
+```
+
+---
+
+## 🧪 Testing Helpers
+
+See `/src/examples/helpers.test.ts` for tests of all helpers.
+
+---
+
+## 📁 Where to Put This File
+
+**Place this documentation in:**
+
+```
+/home/pallabkayal/Personal/tsjs/joi-enhancer/README.md
+```
+
+---
+
+## 👩‍💻 For New Developers
+
+- Use the `joi` object for all schema creation and validation.
+- Use helpers like `requireIf`, `stripField`, `conditionalField` for advanced logic.
+- Use `.raw` to access the underlying Joi schema if needed.
+- Use `formatError` for API-friendly error responses.
+- See the `/src/examples/` folder for more real-world usage.
+
+---
+
+**You are ready to build robust, type-safe, and production-grade validation with joi-enhancer!**
+

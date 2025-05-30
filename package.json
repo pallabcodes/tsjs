@@ -25,6 +25,7 @@
   "license": "ISC",
   "dependencies": {
     "joi": "^17.13.3",
+    "joi-enhancer": "^1.0.0",
     "reflect-metadata": "^0.2.2",
     "ts-toolbelt": "^9.6.0",
     "vitest": "^2.1.8"

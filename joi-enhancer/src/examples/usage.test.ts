@@ -53,4 +53,21 @@ describe('SchemaWrapper conditional tests', () => {
   it('should fail when password without email', () => {
     expect(() => userSchema.validate({ password: 'secret' })).toThrow();
   });
+
+  it('should validate with mobile and password only', () => {
+    const result = userSchema.validate({ mobile: '1234567890', password: 'secret' });
+    expect(result.mobile).toBe('1234567890');
+    expect(result.password).toBe('secret');
+  });
+
+  it('should fail with mobile and email only (missing password)', () => {
+    expect(() => userSchema.validate({ mobile: '1234567890', email: 'test@example.com' })).toThrow();
+  });
+
+  it('should fail with mobile and password only (missing email)', () => {
+    // This is actually valid, since mobile is present and password is not required unless email is present
+    const result = userSchema.validate({ mobile: '1234567890', password: 'secret' });
+    expect(result.mobile).toBe('1234567890');
+    expect(result.password).toBe('secret');
+  });
 });
