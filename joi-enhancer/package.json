@@ -1,6 +1,6 @@
 {
   "name": "@roninbyte/joi-enhancer",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "A production-grade TypeScript-first wrapper and enhancer for Joi validation library",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -42,7 +42,13 @@
     "access": "public"
   },
   "exports": {
-    ".": "./dist/index.js",
-    "./advanced": "./dist/advanced.js"
+    ".": {
+      "import": "./dist/index.esm.js",
+      "require": "./dist/index.js"
+    },
+    "./advanced": {
+      "import": "./dist/advanced.esm.js",
+      "require": "./dist/advanced.js"
+    }
   }
 }
