@@ -14,6 +14,11 @@ import {
 
 // Ergonomic API for most use-cases
 export const joi = {
+  string: Joi.string,
+  number: Joi.number,
+  boolean: Joi.boolean,
+  date: Joi.date,
+  array: Joi.array,
   object: <T>(schema: Record<string, any>) => createSchema<T>(Joi.object(schema)),
   alternatives,
   conditionalField,
@@ -22,6 +27,7 @@ export const joi = {
   isObjectSchema,
   isStringSchema,
   formatError,
+  forbidden: Joi.forbidden, // <-- Add this line
 };
 
 // Native Joi for advanced/extensibility use

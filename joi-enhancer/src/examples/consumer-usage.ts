@@ -10,6 +10,7 @@ const userSchema = joi.object<{
 });
 type User = InferJoiType<typeof userSchema>;
 const validUser: User = userSchema.validate({ username: 'alice', age: 30 });
+console.log('Basic user validated:', validUser);
 
 // Example 2: Object-level conditional
 const UserSchema = joi.object<{
@@ -31,18 +32,18 @@ const userObj: User2 = UserSchema.validate({
   role: 'admin',
   adminCode: 'SECRET',
 });
-console.log('User validated:', userObj);
+console.log('User with conditional adminCode validated:', userObj);
 
 // Example 3: Alternatives-level conditional
 const AltSchema = joi.object<{
   x: string;
-  y: string;
+  y?: string;
 }>({
   x: joi.string().min(1).max(5).required(),
-  y: joi.conditionalField('x', [
+  y: joi.alternatives().conditional('x', [
     { is: 'foo', then: joi.string().valid('bar').required() },
-    { not: 'foo', then: joi.string().optional() },
-  ]).match('one'),
+    { otherwise: joi.string().optional() },
+  ]),
 });
 type Alt = InferJoiType<typeof AltSchema>;
 const altValue: Alt = AltSchema.validate({ x: 'foo', y: 'bar' });
@@ -69,7 +70,7 @@ const StrippedSchema = joi.object<{
   secret: joi.stripField(),
 });
 const strippedValue = StrippedSchema.validate({ visible: 'show', secret: 'hide-this' });
-console.log(strippedValue); // { visible: 'show' }
+console.log('Stripped field result:', strippedValue); // { visible: 'show' }
 
 // Example 6: Conditional strip
 const ConditionalStripSchema = joi.object<{
@@ -84,8 +85,10 @@ const ConditionalStripSchema = joi.object<{
   }),
 });
 console.log(
+  'Conditional strip (flag=true):',
   ConditionalStripSchema.validate({ flag: true, data: 'should be stripped' })
 ); // { flag: true }
 console.log(
+  'Conditional strip (flag=false):',
   ConditionalStripSchema.validate({ flag: false, data: 'must be present' })
 ); // { flag: false, data: 'must be present' }
