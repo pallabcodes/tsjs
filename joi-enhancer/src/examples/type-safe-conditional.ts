@@ -2,8 +2,8 @@ import { joi, InferJoiType, requireIf, Joi } from '../index';
 import { ConditionalRequired } from '../types/conditional-helper';
 
 const schema = joi.object({
-  role: Joi.string().valid('admin', 'user').required(),
-  adminCode: requireIf(Joi.string(), 'role', 'admin'),
+  role: joi.string().valid('admin', 'user').required(),
+  adminCode: requireIf(joi.string(), 'role', 'admin'),
 });
 
 type RawUser = InferJoiType<typeof schema>;

@@ -10,7 +10,7 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
-    "@roninbyte/joi-enhancer": "^1.0.3",
+    "@roninbyte/joi-enhancer": "^1.0.5",
     "joi": "^17.13.3"
   },
   "type": "module"

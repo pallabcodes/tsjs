@@ -1,9 +1,12 @@
 import { InferJoiType } from 'joi-enhancer';
 
 declare module 'joi-extract-type' {
-  // This matches the actual type signature of the default export
+  import { Schema } from 'joi';
+  
+  // Default export is a function that extracts types from schemas
   export default function ExtractType<T>(schema: T): any;
-  // This type alias allows you to use ExtractType<T> as a type
+  
+  // Export a type that can be used for type inference
   export type ExtractType<T> = ReturnType<typeof ExtractType<T>>;
 }
 

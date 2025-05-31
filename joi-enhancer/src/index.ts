@@ -1,10 +1,11 @@
 import Joi from 'joi';
+import type { ExtractType } from 'joi-extract-type';
 import {
   SchemaWrapper,
   createSchema,
   conditionalField,
   alternatives,
-  stripField,
+  stripField, 
   requireIf,
   isObjectSchema,
   isStringSchema,
@@ -18,22 +19,22 @@ import {
   formatErrorWithTranslations,
 } from './joiWrapper';
 
-// Ergonomic API for most use-cases
+// Fix joi object - make all methods functions that return new instances
 export const joi = {
-  string: Joi.string,
-  number: Joi.number,
-  boolean: Joi.boolean,
-  date: Joi.date,
-  array: Joi.array,
+  string: () => Joi.string(),
+  number: () => Joi.number(),
+  boolean: () => Joi.boolean(),
+  date: () => Joi.date(),
+  array: () => Joi.array(),
   object: <T>(schema: Record<string, any>) => createSchema<T>(Joi.object(schema)),
-  alternatives,
+  alternatives: () => alternatives(),
   conditionalField,
-  stripField,
+  stripField: () => stripField(),
   requireIf,
   isObjectSchema,
   isStringSchema,
   formatError,
-  forbidden: () => Joi.forbidden(), // <-- fix here
+  forbidden: () => Joi.forbidden(),
   atLeastOneOf,
   mutuallyExclusive,
   dynamicDefault,
@@ -65,4 +66,3 @@ export {
 // Type inference helpers
 export { default as ExtractType } from 'joi-extract-type';
 export type { ExtractType as InferJoiType } from 'joi-extract-type';
-
