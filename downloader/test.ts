@@ -1,4 +1,3 @@
-// test.ts
 import { joi } from '@roninbyte/joi-enhancer';
 
 // Simple user schema

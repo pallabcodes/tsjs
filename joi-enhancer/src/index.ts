@@ -33,7 +33,7 @@ export const joi = {
   isObjectSchema,
   isStringSchema,
   formatError,
-  forbidden: Joi.forbidden,
+  forbidden: () => Joi.forbidden(), // <-- fix here
   atLeastOneOf,
   mutuallyExclusive,
   dynamicDefault,
