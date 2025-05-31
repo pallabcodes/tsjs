@@ -10,6 +10,11 @@ import {
   isStringSchema,
   formatError,
   describeSchema,
+  atLeastOneOf,
+  mutuallyExclusive,
+  dynamicDefault,
+  formatErrorWithCodes,
+  describeWithType,
 } from './joiWrapper';
 
 // Ergonomic API for most use-cases
@@ -27,7 +32,10 @@ export const joi = {
   isObjectSchema,
   isStringSchema,
   formatError,
-  forbidden: Joi.forbidden, // <-- Add this line
+  forbidden: Joi.forbidden,
+  atLeastOneOf,
+  mutuallyExclusive,
+  dynamicDefault,
 };
 
 // Native Joi for advanced/extensibility use
@@ -45,6 +53,11 @@ export {
   isStringSchema,
   formatError,
   describeSchema,
+  atLeastOneOf,
+  mutuallyExclusive,
+  dynamicDefault,
+  formatErrorWithCodes,
+  describeWithType,
 };
 
 // Type inference helpers
