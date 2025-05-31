@@ -460,7 +460,7 @@ export function formatErrorWithTranslations(
       const translationKey = key !== undefined ? keyToTranslationKey[key] : undefined;
       return {
         path: d.path.join('.'),
-        message: translationKey ? translationMap[translationKey] : d.message,
+        message: translationKey && translationMap[translationKey] ? translationMap[translationKey] : d.message,
         type: d.type,
         translationKey, // Include the translation key in the error detail
       };
@@ -502,42 +502,33 @@ export type DeepPartial<T> = T extends Array<infer U>
     ? { [K in keyof T]?: DeepPartial<T[K]> }
     : T;
 
+const deepPartialMemo = new WeakMap<Schema, Schema>();
+
 function deepPartialSchema(schema: Schema): Schema {
-  type StackItem = { parent: any; key: string | null; schema: Schema };
-  const root = { parent: null, key: null, schema };
-  const stack: StackItem[] = [root];
-  const nodeMap = new WeakMap<Schema, Schema>();
+  if (deepPartialMemo.has(schema)) return deepPartialMemo.get(schema)!;
 
-  while (stack.length) {
-    const { parent, key, schema: current } = stack.pop()!;
-    let result: Schema;
+  let result: Schema;
 
-    if ((current as any).type === 'object') {
-      const described = (current as ObjectSchema<any>).describe();
-      const keys = described.keys || {};
-      const partialKeys: Record<string, Schema> = {};
-      for (const k of Object.keys(keys)) {
-        stack.push({ parent: partialKeys, key: k, schema: (current as ObjectSchema<any>).extract(k) });
-      }
-      result = Joi.object(partialKeys).optional();
-    } else if ((current as any).type === 'array') {
-      result = (current as any).items
-        ? Joi.array().items(deepPartialSchema((current as any).items))
-        : Joi.array();
+  if ((schema as any).type === 'object') {
+    const described = (schema as ObjectSchema<any>).describe();
+    const keys = described.keys || {};
+    const partialKeys: Record<string, Schema> = {};
+    for (const k of Object.keys(keys)) {
+      partialKeys[k] = deepPartialSchema((schema as ObjectSchema<any>).extract(k));
+    }
+    result = Joi.object(partialKeys).optional();
+  } else if ((schema as any).type === 'array') {
+    const items = (schema as any).$_terms?.items;
+    if (items && items.length > 0) {
+      const partialItems = items.map((item: Schema) => deepPartialSchema(item));
+      result = Joi.array().items(...partialItems).optional();
     } else {
-      result = current;
+      result = Joi.array().optional();
     }
-
-    nodeMap.set(current, result);
-
-    if (parent) {
-      const keyStr = key === null ? '*' : key;
-      if (!(keyStr in parent)) {
-        parent[keyStr] = {};
-      }
-      parent[keyStr] = result;
-    }
+  } else {
+    result = (schema as Schema).optional();
   }
 
-  return nodeMap.get(schema)!;
+  deepPartialMemo.set(schema, result);
+  return result;
 }

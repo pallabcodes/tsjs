@@ -5,7 +5,7 @@ describe('joi-enhancer helpers', () => {
   it('requireIf: should require field when condition is met', () => {
     const schema = joi.object({
       status: joi.string().valid('active', 'inactive').required(),
-      reason: joi.requireIf('status', 'inactive'),
+      reason: joi.requireIf(joi.string(), 'status', 'inactive'),
     });
 
     expect(() => schema.validate({ status: 'inactive' })).toThrow();

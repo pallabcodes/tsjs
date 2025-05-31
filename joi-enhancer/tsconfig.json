@@ -4,7 +4,7 @@
     "module": "ESNext",
     "moduleResolution": "node",
     "rootDir": "./src",
-    "outDir": "./build",
+    "outDir": "./dist",
     "strict": true,
     "noImplicitAny": true,
     "noImplicitThis": true,
