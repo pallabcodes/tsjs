@@ -1,4 +1,4 @@
-import { joi, Joi, InferJoiType } from '../index';
+import { joi, Joi, InferJoiType, formatErrorWithTranslations } from '../index';
 
 // Example 1: Basic usage
 const userSchema = joi.object<{
@@ -92,3 +92,91 @@ console.log(
   'Conditional strip (flag=false):',
   ConditionalStripSchema.validate({ flag: false, data: 'must be present' })
 ); // { flag: false, data: 'must be present' }
+
+// Example 7: Custom validator example
+const schema = joi.object<{
+  username: string;
+  age: number;
+}>({
+  username: joi.string().required(),
+  age: joi.number().required(),
+})
+.withCustomValidator('username', (value) => {
+  if (value === 'admin') throw new Error('Username "admin" is reserved');
+  return value;
+}, 'Reserved username not allowed');
+
+console.log(schema.validate({ username: 'alice', age: 30 })); // OK
+console.log(schema.validate({ username: 'admin', age: 30 })); // Throws with custom error
+
+// Example 8: Redacting sensitive fields
+const SensitiveSchema = joi.object<{
+  username: string;
+  password: string;
+  email: string;
+}>({
+  username: joi.string().required(),
+  password: joi.string().required(),
+  email: joi.string().email().required(),
+});
+
+const user = SensitiveSchema.validate({
+  username: 'alice',
+  password: 'supersecret',
+  email: 'alice@mail.com',
+});
+
+// Redact sensitive fields before logging or returning
+const redact = SensitiveSchema.withRedactedFields(['password']);
+console.log('Redacted user:', redact(user)); // { username: 'alice', password: '[REDACTED]', email: 'alice@mail.com' }
+
+// Example 9: Async validation pipeline (e.g., uniqueness check)
+async function fakeEmailCheck(email: string) {
+  // Simulate async DB check
+  if (email === 'taken@mail.com') throw new Error('Email already taken');
+}
+
+const AsyncUserSchema = joi.object<{
+  username: string;
+  email: string;
+}>({
+  username: joi.string().required(),
+  email: joi.string().email().required(),
+});
+
+(async () => {
+  try {
+    const user = await AsyncUserSchema.validateAsync(
+      { username: 'alice', email: 'taken@mail.com' },
+      [
+        async value => await fakeEmailCheck(value.email),
+      ]
+    );
+    console.log('Async validated user:', user);
+  } catch (e) {
+    if (e instanceof Error) {
+      console.error('Async validation failed:', e.message);
+    } else {
+      console.error('Async validation failed:', e);
+    }
+  }
+})();
+
+// Example 10: Error formatting with translations
+const schema10 = joi.object<{
+  username: string;
+}>({
+  username: joi.string().required(),
+}).withTranslationKey('username', 'form.username');
+
+const translationMap = {
+  'form.username': 'Please enter your username.',
+};
+
+const { error } = schema10.raw.validate({});
+if (error) {
+  const formatted = formatErrorWithTranslations(error, schema10.raw, translationMap);
+  if (formatted.details && formatted.details.length > 0 && formatted.details[0]) {
+    console.log(formatted.details[0].message); // "Please enter your username."
+  }
+}

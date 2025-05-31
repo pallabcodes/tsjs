@@ -15,6 +15,7 @@ import {
   dynamicDefault,
   formatErrorWithCodes,
   describeWithType,
+  formatErrorWithTranslations,
 } from './joiWrapper';
 
 // Ergonomic API for most use-cases
@@ -58,6 +59,7 @@ export {
   dynamicDefault,
   formatErrorWithCodes,
   describeWithType,
+  formatErrorWithTranslations,
 };
 
 // Type inference helpers
