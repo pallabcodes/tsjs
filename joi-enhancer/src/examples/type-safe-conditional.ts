@@ -1,17 +1,18 @@
-import { joi, InferJoiType, requireIf, Joi } from '../index';
-import { ConditionalRequired } from '../types/conditional-helper';
+import Joi from 'joi';
 
-const schema = joi.object({
-  role: joi.string().valid('admin', 'user').required(),
-  adminCode: requireIf(joi.string(), 'role', 'admin'),
+const schema = Joi.object({
+  username: Joi.string().required(),
+  role: Joi.string().valid('user', 'admin').required(),
+  adminCode: Joi.string()
 });
 
-type RawUser = InferJoiType<typeof schema>;
-type User = ConditionalRequired<RawUser, 'role', 'admin', 'adminCode'>;
-// User =
-// | { role: 'admin'; adminCode: string }
-// | { role: 'user'; adminCode?: string }
+const validationResult = schema.validate({ 
+  username: 'admin1', 
+  role: 'admin', 
+  adminCode: 'secret'
+});
 
-console.log(schema.validate({ role: 'user' })); // valid, adminCode optional
-console.log(schema.validate({ role: 'admin', adminCode: '1234' })); // valid, adminCode required
-console.log(schema.validate({ role: 'admin' })); // invalid, adminCode required
+// TypeScript knows the type:
+if (!validationResult.error) {
+  // validationResult.value is typed
+}

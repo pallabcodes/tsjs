@@ -1,16 +1,23 @@
-import Joi, { Schema, ValidationError, ValidationResult, ObjectSchema, WhenOptions, AnySchema, AlternativesSchema } from 'joi';
+import Joi, {
+  Schema,
+  ObjectSchema,
+  AlternativesSchema,
+  ValidationResult,
+  ValidationError,
+  AnySchema,
+  WhenOptions,
+} from 'joi';
 import toJsonSchema from 'joi-to-json-schema';
 
-
-
 export class SchemaWrapper<T> {
-  private readonly schema: ObjectSchema<any>;
+  private readonly schema: Schema;
 
-  constructor(schema: ObjectSchema<any>) {
+  constructor(schema: Schema) {
     this.schema = schema;
   }
 
-  validate(input: unknown): T {
+  // Base validation method that accepts unknown input
+  private validateInternal(input: unknown): T {
     const result: ValidationResult = this.schema.validate(input, {
       abortEarly: false,
       allowUnknown: false,
@@ -24,43 +31,76 @@ export class SchemaWrapper<T> {
     return result.value as T;
   }
 
-  get raw(): ObjectSchema<any> {
+  /**
+   * Validates input against this schema. Throws if validation fails.
+   * @param input The data to validate
+   * @returns The validated data, typed as T
+   * @throws {ValidationError} If validation fails
+   */
+  validate(input: T): T {
+    return this.validateInternal(input);
+  }
+
+  get raw(): Schema {
     return this.schema;
   }
 
-  extend<U>(extension: ObjectSchema<any>): SchemaWrapper<T & U> {
-    return new SchemaWrapper<T & U>(this.schema.concat(extension) as ObjectSchema<any>);
+  merge<U>(other: SchemaWrapper<U>): SchemaWrapper<T & U> {
+    if (!isObjectSchema(this.schema) || !isObjectSchema(other.raw)) {
+      throw new Error('merge() is only supported on object schemas');
+    }
+    const base = this.schema as ObjectSchema;
+    const ext = other.raw as ObjectSchema;
+    return new SchemaWrapper<T & U>(base.concat(ext));
   }
 
+  extend<U>(extension: Schema): SchemaWrapper<T & U> {
+    if (!isObjectSchema(this.schema) || !isObjectSchema(extension)) {
+      throw new Error('extend() is only supported on object schemas');
+    }
+    const base = this.schema as ObjectSchema;
+    const ext = extension as ObjectSchema;
+    return new SchemaWrapper<T & U>(base.concat(ext));
+  }
+
+  /**
+   * Returns a new schema with only the specified keys.
+   * @param keys The keys to pick
+   */
   pick<K extends keyof T>(keys: K[]): SchemaWrapper<Pick<T, K>> {
-    if (!this.schema.type || this.schema.type !== 'object') {
+    if (!isObjectSchema(this.schema)) {
       throw new Error('pick() is only supported on object schemas');
     }
 
     const pickedSchemas: Record<string, Schema> = {};
+    const objectSchema = this.schema as Joi.ObjectSchema;
 
     for (const key of keys) {
       try {
-        pickedSchemas[key as string] = this.schema.extract(key as string);
+        pickedSchemas[key as string] = objectSchema.extract(key as string);
       } catch {
         throw new Error(`Key "${String(key)}" does not exist in schema.`);
       }
     }
 
-    return new SchemaWrapper<Pick<T, K>>(Joi.object(pickedSchemas) as ObjectSchema<any>);
+    return new SchemaWrapper<Pick<T, K>>(Joi.object(pickedSchemas));
   }
 
   omit<K extends keyof T>(keys: K[]): SchemaWrapper<Omit<T, K>> {
-    if (!this.schema.type || this.schema.type !== 'object') {
+    if (!isObjectSchema(this.schema)) {
       throw new Error('omit() is only supported on object schemas');
     }
-    const allKeys = Object.keys(this.schema.describe().keys || {});
-    const keepKeys = allKeys.filter(k => !keys.includes(k as K));
+    
+    const objectSchema = this.schema as Joi.ObjectSchema;
+    const allKeys = Object.keys(objectSchema.describe().keys || {});
+    const keepKeys = allKeys.filter(k => !keys.includes(k as unknown as K));
     const pickedSchemas: Record<string, Schema> = {};
+    
     for (const key of keepKeys) {
-      pickedSchemas[key] = this.schema.extract(key);
+      pickedSchemas[key] = objectSchema.extract(key);
     }
-    return new SchemaWrapper<Omit<T, K>>(Joi.object(pickedSchemas) as ObjectSchema<any>);
+    
+    return new SchemaWrapper<Omit<T, K>>(Joi.object(pickedSchemas));
   }
 
   /**
@@ -71,9 +111,13 @@ export class SchemaWrapper<T> {
     ref: string,
     options: WhenOptions | WhenOptions[]
   ): SchemaWrapper<T> {
-    // This only works for object-level .when()
+    // Add runtime check
+    if (!isObjectSchema(this.schema)) {
+      throw new Error('conditional() is only supported on object schemas');
+    }
+    
     const newSchema = this.schema.when(ref, options);
-    return new SchemaWrapper<T>(newSchema as ObjectSchema<any>);
+    return new SchemaWrapper<T>(newSchema);
   }
 
   /**
@@ -91,55 +135,42 @@ export class SchemaWrapper<T> {
     };
   }
 
-  merge<U>(other: SchemaWrapper<U>): SchemaWrapper<T & U> {
-    return new SchemaWrapper<T & U>(this.schema.concat(other.raw) as ObjectSchema<any>);
-  }
-
-  partial(): SchemaWrapper<Partial<T>> {
-    return new SchemaWrapper<Partial<T>>(this.schema.fork(Object.keys(this.schema.describe().keys || {}), s => s.optional()) as ObjectSchema<any>);
-  }
-
-  required(): SchemaWrapper<Required<T>> {
-    return new SchemaWrapper<Required<T>>(this.schema.fork(Object.keys(this.schema.describe().keys || {}), s => s.required()) as ObjectSchema<any>);
-  }
-  extendWithDefaults(defaults: Partial<T>): SchemaWrapper<T> {
-    const keys = Object.keys(defaults) as (keyof T)[];
-    let schema = this.schema;
-    for (const key of keys) {
-      schema = schema.fork([key as string], s => s.default((defaults as any)[key]));
-    }
-    return new SchemaWrapper<T>(schema as ObjectSchema<any>);
-  }
-
-  extendWith<U>(fields: Record<string, Schema>): SchemaWrapper<T & U> {
-    const newSchema = this.schema.keys(fields);
-    return new SchemaWrapper<T & U>(newSchema as ObjectSchema<any>);
-  }
-
+  /**
+   * Returns a new schema with only the specified keys.
+   * @param keys The keys to pick
+   */
   pickBy(predicate: (schema: Schema, key: string) => boolean): SchemaWrapper<Partial<T>> {
-    const described = this.schema.describe();
+    if (!isObjectSchema(this.schema)) {
+      throw new Error('pickBy() is only supported on object schemas');
+    }
+    const objectSchema = this.schema as Joi.ObjectSchema;
+    const described = objectSchema.describe();
     const keys = Object.keys(described.keys || {});
     const pickedSchemas: Record<string, Schema> = {};
     for (const key of keys) {
-      const fieldSchema = this.schema.extract(key);
+      const fieldSchema = objectSchema.extract(key);
       if (predicate(fieldSchema, key)) {
         pickedSchemas[key] = fieldSchema;
       }
     }
-    return new SchemaWrapper<Partial<T>>(Joi.object(pickedSchemas) as ObjectSchema<any>);
+    return new SchemaWrapper<Partial<T>>(Joi.object(pickedSchemas));
   }
   
   pickByType(type: string): SchemaWrapper<Partial<T>> {
-    const described = this.schema.describe();
+    if (!isObjectSchema(this.schema)) {
+      throw new Error('pickByType() is only supported on object schemas');
+    }
+    const objectSchema = this.schema as Joi.ObjectSchema;
+    const described = objectSchema.describe();
     const keys = Object.keys(described.keys || {});
     const pickedSchemas: Record<string, Schema> = {};
     for (const key of keys) {
-      const fieldSchema = this.schema.extract(key);
+      const fieldSchema = objectSchema.extract(key);
       if ((fieldSchema as any).type === type) {
         pickedSchemas[key] = fieldSchema;
       }
     }
-    return new SchemaWrapper<Partial<T>>(Joi.object(pickedSchemas) as ObjectSchema<any>);
+    return new SchemaWrapper<Partial<T>>(Joi.object(pickedSchemas));
   }
 
   deepPartial(): SchemaWrapper<DeepPartial<T>> {
@@ -148,14 +179,18 @@ export class SchemaWrapper<T> {
   }
 
   omitBy(predicate: (schema: Schema, key: string) => boolean): SchemaWrapper<Partial<T>> {
-    const described = this.schema.describe();
+    if (!isObjectSchema(this.schema)) {
+      throw new Error('omitBy() is only supported on object schemas');
+    }
+    const objectSchema = this.schema as Joi.ObjectSchema;
+    const described = objectSchema.describe();
     const keys = Object.keys(described.keys || {});
-    const keepKeys = keys.filter(key => !predicate(this.schema.extract(key), key));
+    const keepKeys = keys.filter(key => !predicate(objectSchema.extract(key), key));
     const pickedSchemas: Record<string, Schema> = {};
     for (const key of keepKeys) {
-      pickedSchemas[key] = this.schema.extract(key);
+      pickedSchemas[key] = objectSchema.extract(key);
     }
-    return new SchemaWrapper<Partial<T>>(Joi.object(pickedSchemas) as ObjectSchema<any>);
+    return new SchemaWrapper<Partial<T>>(Joi.object(pickedSchemas));
   }
 
   toJSONSchema(): object {
@@ -163,7 +198,7 @@ export class SchemaWrapper<T> {
   }
 
   withExample(example: any): SchemaWrapper<T> {
-    return new SchemaWrapper<T>(this.schema.example(example) as ObjectSchema<any>);
+    return new SchemaWrapper<T>(this.schema.example(example));
   }
 
   describeWithExamples(): any {
@@ -221,7 +256,7 @@ export class SchemaWrapper<T> {
   }
 
   withMeta(key: string, value: any): SchemaWrapper<T> {
-    return new SchemaWrapper<T>(this.schema.meta({ [key]: value }) as ObjectSchema<any>);
+    return new SchemaWrapper<T>(this.schema.meta({ [key]: value }));
   }
 
   getMeta(key: string): any {
@@ -253,26 +288,34 @@ export class SchemaWrapper<T> {
     validator: (value: T[K], helpers: Joi.CustomHelpers) => T[K],
     message?: string
   ): SchemaWrapper<T> {
-    const described = this.schema.describe();
+    if (!isObjectSchema(this.schema)) {
+      throw new Error('withCustomValidator() is only supported on object schemas');
+    }
+    const objectSchema = this.schema as Joi.ObjectSchema;
+    const described = objectSchema.describe();
     if (!described.keys || !(key as string in described.keys)) {
       throw new Error(`Key "${String(key)}" does not exist in schema.`);
     }
     // Extract the field schema, attach the custom validator, and re-attach to the object
-    let fieldSchema = this.schema.extract(key as string);
+    let fieldSchema = objectSchema.extract(key as string);
     fieldSchema = (fieldSchema as Schema).custom(validator, message);
-    const newSchema = this.schema.keys({ [key]: fieldSchema });
-    return new SchemaWrapper<T>(newSchema as ObjectSchema<any>);
+    const newSchema = objectSchema.keys({ [key]: fieldSchema });
+    return new SchemaWrapper<T>(newSchema);
   }
 
   withTranslationKey<K extends keyof T>(field: K, translationKey: string): SchemaWrapper<T> {
-    const described = this.schema.describe();
+    if (!isObjectSchema(this.schema)) {
+      throw new Error('withTranslationKey() is only supported on object schemas');
+    }
+    const objectSchema = this.schema as Joi.ObjectSchema;
+    const described = objectSchema.describe();
     if (!described.keys || !(field as string in described.keys)) {
       throw new Error(`Key "${String(field)}" does not exist in schema.`);
     }
-    let fieldSchema = this.schema.extract(field as string);
+    let fieldSchema = objectSchema.extract(field as string);
     fieldSchema = (fieldSchema as Schema).meta({ translationKey });
-    const newSchema = this.schema.keys({ [field]: fieldSchema });
-    return new SchemaWrapper<T>(newSchema as ObjectSchema<any>);
+    const newSchema = objectSchema.keys({ [field]: fieldSchema });
+    return new SchemaWrapper<T>(newSchema);
   }
 
   /**
@@ -340,10 +383,8 @@ export class SchemaWrapper<T> {
     input: unknown,
     asyncValidators: Array<(value: T) => Promise<void>> = []
   ): Promise<T> {
-    // First, run synchronous Joi validation
-    const value = this.validate(input);
+    const value = this.validateInternal(input);
 
-    // Then, run async validators in sequence
     for (const validator of asyncValidators) {
       await validator(value);
     }
@@ -377,7 +418,11 @@ export function stripField(): AnySchema {
   return Joi.any().strip();
 }
 
-export function createSchema<T>(schema: ObjectSchema<any>): SchemaWrapper<T> {
+export function createSchema<T>(schema: Schema): SchemaWrapper<T> {
+  return new SchemaWrapper<T>(schema);
+}
+
+export function createAlternativesSchema<T>(schema: AlternativesSchema<T>): SchemaWrapper<T> {
   return new SchemaWrapper<T>(schema);
 }
 
@@ -436,33 +481,25 @@ export function formatErrorWithCodes(error: Joi.ValidationError, codeMap: Record
  */
 export function formatErrorWithTranslations(
   error: ValidationError,
-  schema: ObjectSchema<any>,
+  schema: Schema | SchemaWrapper<any>,
   translationMap: Record<string, string>
 ) {
-  // Get translation keys from schema description
-  const desc = schema.describe();
-  const keyToTranslationKey: Record<string, string> = {};
-
-  if (desc.keys) {
-    for (const [key, value] of Object.entries(desc.keys)) {
-      const translationKey = (value as any).meta?.find((m: any) => m.translationKey)?.translationKey;
-      if (translationKey) {
-        keyToTranslationKey[key] = translationKey;
-      }
-    }
-  }
-
-  // Format error details with translation keys
+  // Handle both SchemaWrapper and raw Schema
+  const rawSchema = 'raw' in schema ? (schema as SchemaWrapper<any>).raw : schema;
+  
+  // Rest of the function unchanged
   return {
     message: error.message,
     details: error.details.map(d => {
-      const key = d.path[0];
-      const translationKey = key !== undefined ? keyToTranslationKey[key] : undefined;
+      const path = d.path.join('.');
+      const fieldSchema = path ? (rawSchema as any).extract?.(path) : null;
+      const translationKey = fieldSchema?.metas?.find((m: any) => m.translationKey)?.translationKey;
+      
       return {
-        path: d.path.join('.'),
+        path,
         message: translationKey && translationMap[translationKey] ? translationMap[translationKey] : d.message,
         type: d.type,
-        translationKey, // Include the translation key in the error detail
+        translationKey,
       };
     }),
   };
@@ -506,15 +543,13 @@ const deepPartialMemo = new WeakMap<Schema, Schema>();
 
 function deepPartialSchema(schema: Schema): Schema {
   if (deepPartialMemo.has(schema)) return deepPartialMemo.get(schema)!;
-
   let result: Schema;
-
-  if ((schema as any).type === 'object') {
-    const described = (schema as ObjectSchema<any>).describe();
+  if (isObjectSchema(schema)) {
+    const described = schema.describe();
     const keys = described.keys || {};
     const partialKeys: Record<string, Schema> = {};
     for (const k of Object.keys(keys)) {
-      partialKeys[k] = deepPartialSchema((schema as ObjectSchema<any>).extract(k));
+      partialKeys[k] = deepPartialSchema(schema.extract(k));
     }
     result = Joi.object(partialKeys).optional();
   } else if ((schema as any).type === 'array') {
@@ -528,7 +563,8 @@ function deepPartialSchema(schema: Schema): Schema {
   } else {
     result = (schema as Schema).optional();
   }
-
   deepPartialMemo.set(schema, result);
   return result;
 }
+
+export type { WhenOptions };

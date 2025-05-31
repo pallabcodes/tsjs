@@ -60,7 +60,7 @@ export declare function formatErrorWithCodes(error: ValidationError, codeMap: Re
 };
 export declare function formatErrorWithTranslations(
   error: ValidationError, 
-  schema: ObjectSchema<any>, 
+  schema: Schema | SchemaWrapper<any>, 
   translationMap: Record<string, string>
 ): {
   message: string;

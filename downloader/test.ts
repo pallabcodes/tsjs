@@ -1,29 +1,48 @@
-import { joi, formatErrorWithTranslations } from '@roninbyte/joi-enhancer';
+import { joi, formatErrorWithTranslations, Infer, createSchema, alternatives, createAlternativesSchema } from '@roninbyte/joi-enhancer';
 
 // 1. Strongly-typed object schema
-const UserSchema = joi.object<{
-  username: string;
-  age?: number;
-}>({
+const UserSchema = joi.object<{ username: string; age?: number }>({
   username: joi.string().required(),
   age: joi.number().optional(),
 });
+
+// Type hint works perfectly now
+type User = Infer<typeof UserSchema>;
+const john: User = { username: 'john', age: 25 };
+
 console.log('User:', UserSchema.validate({ username: 'alice', age: 30 }));
 
 // 2. alternatives
-const AltSchema = joi.alternatives().try(joi.string(), joi.number());
-console.log('Alt (string):', AltSchema.validate('hello'));
-console.log('Alt (number):', AltSchema.validate(42));
+const AltSchema = createAlternativesSchema(
+  alternatives<string | number>().try(joi.string(), joi.number())
+);
+type AltType = Infer<typeof AltSchema>;
+
+// Now this will be a TS error (as expected):
+const altStringBool = AltSchema.validate(false); // ❌ Error: Argument of type 'false' is not assignable to parameter of type 'string | number'
+
+const altString = AltSchema.validate('hello'); // ✅ OK, type hint: string | number
+const altNumber = AltSchema.validate(42);      // ✅ OK, type hint: string | number
+
+console.log('Alt (string):', altString);
+console.log('Alt (number):', altNumber); // number
 
 // 3. conditionalField
-const CondSchema = joi.object({
+const CondSchema = joi.object<{
+  type: string;
+  value: string | number;
+}>({
   type: joi.string().required(),
   value: joi.conditionalField('type', [
     { is: 'special', then: joi.string().required(), otherwise: joi.number().optional() }
   ]),
 });
-console.log('Cond (special):', CondSchema.validate({ type: 'special', value: 'abc' }));
-console.log('Cond (other):', CondSchema.validate({ type: 'other', value: 123 }));
+
+type CondType = Infer<typeof CondSchema>;
+
+const condExample: CondType = { type: 'other', value: 123 }; // This is valid
+console.log('Cond (valid):', CondSchema.validate(condExample));
+
 
 // 4. stripField
 const StripSchema = joi.object({
@@ -69,9 +88,11 @@ console.log('MutuallyExclusive (both):', MutExSchema.validate({ a: 'x', b: 'y' }
 
 // 11. dynamicDefault
 const DynDefaultSchema = joi.object({
-  now: joi.dynamicDefault(joi.number(), 'now', () => Date.now()),
+  now: joi.dynamicDefault(joi.number().optional(), 'now', () => 42),
 });
-console.log('DynamicDefault:', DynDefaultSchema.validate({}));
+
+console.log('DynamicDefault (empty):', DynDefaultSchema.validate({})); // Should print { now: 42 }
+console.log('DynamicDefault (with now):', DynDefaultSchema.validate({ now: 100 })); // Should print { now: 100 }
 
 // 12. deepPartial
 const DeepSchema = joi.object({
@@ -171,3 +192,34 @@ console.log('DescribeWithExamples:', UserSchema.describeWithExamples());
 console.log('DependencyGraph:', UserSchema.getDependencyGraph());
 console.log('FieldPresence:', UserSchema.getFieldPresence());
 console.log('Version:', UserSchema.withVersion('1.2.3').getVersion());
+
+// --- Type hinting and error highlighting ---
+const user1 = UserSchema.validate({ username: 'alice' }); // age is optional, type hint shows both fields
+// Uncommenting the next line should show a TS error in your editor (missing username):
+// const user2 = UserSchema.validate({}); // Error: Property 'username' is missing
+
+// --- Type extraction and extension ---
+type UserType = Infer<typeof UserSchema>;
+type AdminUser = UserType & { adminCode: string };
+const admin: AdminUser = { username: 'bob', adminCode: 'SECRET' }; // type hint for adminCode
+
+// --- Pick/Omit and type hints ---
+const OnlyUsernameSchema = UserSchema.pick(['username']);
+type OnlyUsername = Infer<typeof OnlyUsernameSchema>;
+const onlyUsername: OnlyUsername = OnlyUsernameSchema.validate({ username: 'foo' }); // type hint: { username: string }
+
+const NoAgeSchema = UserSchema.omit(['age']);
+type NoAge = Infer<typeof NoAgeSchema>;
+const noAge: NoAge = NoAgeSchema.validate({ username: 'bar' }); // type hint: { username: string }
+
+// --- DeepPartial and type hints ---
+const DeepPartialSchema = UserSchema.deepPartial();
+type DeepPartialUser = Infer<typeof DeepPartialSchema>;
+const partialUser: DeepPartialUser = {}; // both fields optional, type hint shows this
+
+// --- Custom validator and type hint ---
+const CustomUserSchema = UserSchema.withCustomValidator('username', (value) => {
+  if (value === 'root') throw new Error('Reserved');
+  return value;
+});
+const customUser = CustomUserSchema.validate({ username: 'alice' }); // type hint: { username: string; age?: number }
