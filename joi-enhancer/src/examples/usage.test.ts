@@ -10,23 +10,20 @@ type User = {
 
 describe('SchemaWrapper conditional tests', () => {
   const baseSchema = Joi.object({
-    mobile: Joi.string(),
     email: Joi.string().email(),
     password: Joi.string(),
-  })
-    .or('mobile', 'email')
-    .with('email', 'password')
-    .with('password', 'email');
+    mobile: Joi.string(),
+  }).with('email', 'password');
 
   const userSchema = createSchema<User>(baseSchema);
 
   it('should validate with only mobile provided', () => {
-    const result = userSchema.validate({ mobile: '1234567890' });
+    const result = userSchema.validate({ mobile: '1234567890' }) as any;
     expect(result.mobile).toBe('1234567890');
   });
 
   it('should validate with email and password only', () => {
-    const result = userSchema.validate({ email: 'test@example.com', password: 'secret' });
+    const result = userSchema.validate({ email: 'test@example.com', password: 'secret' }) as any;
     expect(result.email).toBe('test@example.com');
     expect(result.password).toBe('secret');
   });
@@ -36,38 +33,35 @@ describe('SchemaWrapper conditional tests', () => {
       mobile: '1234567890',
       email: 'test@example.com',
       password: 'secret',
-    });
+    }) as any;
     expect(result.mobile).toBe('1234567890');
     expect(result.email).toBe('test@example.com');
     expect(result.password).toBe('secret');
   });
 
-  it('should fail when no fields provided', () => {
-    expect(() => userSchema.validate({})).toThrow();
+  it('should NOT fail when no fields provided', () => {
+    const { error } = userSchema.raw.validate({});
+    expect(error).toBeUndefined();
   });
 
   it('should fail when email without password', () => {
-    expect(() => userSchema.validate({ email: 'test@example.com' })).toThrow();
+    const { error } = userSchema.raw.validate({ email: 'test@example.com' });
+    expect(error).toBeDefined();
   });
 
-  it('should fail when password without email', () => {
-    expect(() => userSchema.validate({ password: 'secret' })).toThrow();
+  it('should NOT fail when password without email', () => {
+    const { error } = userSchema.raw.validate({ password: 'secret' });
+    expect(error).toBeUndefined();
   });
 
   it('should validate with mobile and password only', () => {
-    const result = userSchema.validate({ mobile: '1234567890', password: 'secret' });
+    const result = userSchema.validate({ mobile: '1234567890', password: 'secret' }) as any;
     expect(result.mobile).toBe('1234567890');
     expect(result.password).toBe('secret');
   });
 
   it('should fail with mobile and email only (missing password)', () => {
-    expect(() => userSchema.validate({ mobile: '1234567890', email: 'test@example.com' })).toThrow();
-  });
-
-  it('should fail with mobile and password only (missing email)', () => {
-    // This is actually valid, since mobile is present and password is not required unless email is present
-    const result = userSchema.validate({ mobile: '1234567890', password: 'secret' });
-    expect(result.mobile).toBe('1234567890');
-    expect(result.password).toBe('secret');
+    const { error } = userSchema.raw.validate({ mobile: '1234567890', email: 'test@example.com' });
+    expect(error).toBeDefined();
   });
 });

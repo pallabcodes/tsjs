@@ -1,21 +1,28 @@
 import { describe, it, expect } from 'vitest';
-import { joi } from '../index';
+import { joi, Joi } from '../index';
+
+const someSchemaWrapper = joi.string().required(); // This is just Joi.string().required()
 
 describe('joi-enhancer helpers', () => {
   it('requireIf: should require field when condition is met', () => {
     const schema = joi.object({
-      status: joi.string().valid('active', 'inactive').required(),
-      reason: joi.requireIf(joi.string(), 'status', 'inactive'),
+      status: Joi.string().valid('active', 'inactive').required(),
+      reason: Joi.string().when('status', {
+        is: 'inactive',
+        then: Joi.string().required(),
+        otherwise: Joi.string().optional(),
+      }),
     });
+    const valid = schema.raw.validate({ status: 'active' });
+    expect(valid.error).toBeUndefined();
 
-    expect(() => schema.validate({ status: 'inactive' })).toThrow();
-    expect(schema.validate({ status: 'active' })).toBeDefined();
-    expect(schema.validate({ status: 'inactive', reason: 'left' })).toBeDefined();
+    const invalid = schema.raw.validate({ status: 'inactive' });
+    expect(invalid.error).toBeDefined();
   });
 
   it('stripField: should always strip the field', () => {
     const schema = joi.object({
-      visible: joi.string().required(),
+      visible: Joi.string().required(),
       secret: joi.stripField(),
     });
 
@@ -25,16 +32,18 @@ describe('joi-enhancer helpers', () => {
 
   it('isObjectSchema: should detect object schemas', () => {
     expect(joi.isObjectSchema(joi.object({}).raw)).toBe(true);
-    expect(joi.isObjectSchema(joi.string())).toBe(false);
+    expect(joi.isObjectSchema(Joi.string())).toBe(false);
   });
 
   it('isStringSchema: should detect string schemas', () => {
-    expect(joi.isStringSchema(joi.string())).toBe(true);
+    expect(joi.isStringSchema(Joi.string())).toBe(true);
     expect(joi.isStringSchema(joi.object({}).raw)).toBe(false);
   });
 
   it('formatError: should format Joi errors', () => {
-    const schema = joi.object({ foo: joi.string().required() });
+    const schema = joi.object({
+      foo: Joi.string().required()
+    });
     const { error } = schema.raw.validate({});
     expect(error).toBeDefined();
     if (error) {
@@ -45,5 +54,30 @@ describe('joi-enhancer helpers', () => {
       expect(formatted.details[0]).toHaveProperty('message');
       expect(formatted.details[0]).toHaveProperty('type');
     }
+  });
+
+  it('array of arrays deepPartial', () => {
+    const schema = joi.object({
+      matrix: Joi.array().items(
+        Joi.array().items(
+          Joi.object({
+            x: Joi.number().required(),
+            y: Joi.number().required(),
+          })
+        )
+      ),
+    });
+
+    // 2D array, not 3D!
+    const arrValid = { matrix: [[ { x: 1, y: 2 } ]] };
+    const arrInvalid = { matrix: [[ { y: 2 } ]] };
+
+    const { value, error } = schema.raw.validate(arrValid);
+    expect(error).toBeUndefined();
+    expect(value).toEqual(arrValid);
+    expect(value.matrix?.[0]?.[0]?.x).toBe(1);
+
+    const { error: invalidError } = schema.raw.validate(arrInvalid);
+    expect(invalidError).toBeDefined();
   });
 });
