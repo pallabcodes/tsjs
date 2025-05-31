@@ -49,9 +49,9 @@ export class SchemaWrapper<T> {
     if (!isObjectSchema(this.schema) || !isObjectSchema(other.raw)) {
       throw new Error('merge() is only supported on object schemas');
     }
-    const base = this.schema as ObjectSchema;
-    const ext = other.raw as ObjectSchema;
-    return new SchemaWrapper<T & U>(base.concat(ext));
+    return new SchemaWrapper<T & U>(
+      (this.schema as ObjectSchema).concat(other.raw as ObjectSchema)
+    );
   }
 
   extend<U>(extension: Schema): SchemaWrapper<T & U> {
@@ -86,20 +86,29 @@ export class SchemaWrapper<T> {
     return new SchemaWrapper<Pick<T, K>>(Joi.object(pickedSchemas));
   }
 
+  extendWith<U>(fields: Record<string, Schema>): SchemaWrapper<T & U> {
+    if (!isObjectSchema(this.schema)) {
+      throw new Error('extendWith() is only supported on object schemas');
+    }
+    return new SchemaWrapper<T & U>(
+      (this.schema as ObjectSchema).keys(fields)
+    );
+  }
+
   omit<K extends keyof T>(keys: K[]): SchemaWrapper<Omit<T, K>> {
     if (!isObjectSchema(this.schema)) {
       throw new Error('omit() is only supported on object schemas');
     }
-    
+
     const objectSchema = this.schema as Joi.ObjectSchema;
     const allKeys = Object.keys(objectSchema.describe().keys || {});
     const keepKeys = allKeys.filter(k => !keys.includes(k as unknown as K));
     const pickedSchemas: Record<string, Schema> = {};
-    
+
     for (const key of keepKeys) {
       pickedSchemas[key] = objectSchema.extract(key);
     }
-    
+
     return new SchemaWrapper<Omit<T, K>>(Joi.object(pickedSchemas));
   }
 
@@ -115,7 +124,7 @@ export class SchemaWrapper<T> {
     if (!isObjectSchema(this.schema)) {
       throw new Error('conditional() is only supported on object schemas');
     }
-    
+
     const newSchema = this.schema.when(ref, options);
     return new SchemaWrapper<T>(newSchema);
   }
@@ -155,7 +164,7 @@ export class SchemaWrapper<T> {
     }
     return new SchemaWrapper<Partial<T>>(Joi.object(pickedSchemas));
   }
-  
+
   pickByType(type: string): SchemaWrapper<Partial<T>> {
     if (!isObjectSchema(this.schema)) {
       throw new Error('pickByType() is only supported on object schemas');
@@ -486,7 +495,7 @@ export function formatErrorWithTranslations(
 ) {
   // Handle both SchemaWrapper and raw Schema
   const rawSchema = 'raw' in schema ? (schema as SchemaWrapper<any>).raw : schema;
-  
+
   // Rest of the function unchanged
   return {
     message: error.message,
@@ -494,7 +503,7 @@ export function formatErrorWithTranslations(
       const path = d.path.join('.');
       const fieldSchema = path ? (rawSchema as any).extract?.(path) : null;
       const translationKey = fieldSchema?.metas?.find((m: any) => m.translationKey)?.translationKey;
-      
+
       return {
         path,
         message: translationKey && translationMap[translationKey] ? translationMap[translationKey] : d.message,
@@ -536,8 +545,8 @@ export function dynamicDefault<T extends Joi.Schema>(
 export type DeepPartial<T> = T extends Array<infer U>
   ? Array<DeepPartial<U>>
   : T extends object
-    ? { [K in keyof T]?: DeepPartial<T[K]> }
-    : T;
+  ? { [K in keyof T]?: DeepPartial<T[K]> }
+  : T;
 
 const deepPartialMemo = new WeakMap<Schema, Schema>();
 

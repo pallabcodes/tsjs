@@ -1,4 +1,4 @@
-import { joi, formatErrorWithTranslations, Infer, createSchema, alternatives, createAlternativesSchema } from '@roninbyte/joi-enhancer';
+import { joi, formatErrorWithTranslations, Infer, alternatives, createAlternativesSchema, Joi, createSchema } from '@roninbyte/joi-enhancer';
 
 // 1. Strongly-typed object schema
 const UserSchema = joi.object<{ username: string; age?: number }>({
@@ -19,7 +19,7 @@ const AltSchema = createAlternativesSchema(
 type AltType = Infer<typeof AltSchema>;
 
 // Now this will be a TS error (as expected):
-const altStringBool = AltSchema.validate(false); // ❌ Error: Argument of type 'false' is not assignable to parameter of type 'string | number'
+// const altStringBool = AltSchema.validate(false); // ❌ Error: Argument of type 'false' is not assignable to parameter of type 'string | number'
 
 const altString = AltSchema.validate('hello'); // ✅ OK, type hint: string | number
 const altNumber = AltSchema.validate(42);      // ✅ OK, type hint: string | number
@@ -44,20 +44,39 @@ const condExample: CondType = { type: 'other', value: 123 }; // This is valid
 console.log('Cond (valid):', CondSchema.validate(condExample));
 
 
-// 4. stripField
-const StripSchema = joi.object({
+// --- 4. stripField with type hints ---
+const StripSchema = joi.object<{
+  keep: string;
+  remove?: never;  // TypeScript will ensure this field is never present
+}>({
   keep: joi.string().required(),
   remove: joi.stripField(),
 });
-console.log('Strip:', StripSchema.validate({ keep: 'yes', remove: 'no' }));
 
-// 5. requireIf
-const ReqIfSchema = joi.object({
+type StripType = Infer<typeof StripSchema>;
+const stripped: StripType = StripSchema.validate({ keep: "value" });
+
+// console.log('Strip:', StripSchema.validate({ keep: 'value', remove: 'should not be here' }));
+
+// Type error if you try to access stripped.remove
+
+// --- 5. requireIf with proper type inference ---
+const ReqIfSchema = joi.object<{
+  status: 'active' | 'inactive';
+  reason?: string;
+}>({
   status: joi.string().valid('active', 'inactive'),
   reason: joi.requireIf(joi.string(), 'status', 'inactive'),
 });
-console.log('RequireIf (inactive):', ReqIfSchema.validate({ status: 'inactive', reason: 'why' }));
-console.log('RequireIf (active):', ReqIfSchema.validate({ status: 'active' }));
+
+
+type ReqIfType = Infer<typeof ReqIfSchema>;
+// This will error if status is 'inactive' and reason is missing
+const activeCase: ReqIfType = ReqIfSchema.validate({ status: 'active' });
+const inactiveCase: ReqIfType = ReqIfSchema.validate({
+  status: 'inactive',
+  reason: 'why'
+});
 
 // 6. isObjectSchema / isStringSchema
 console.log('isObjectSchema(UserSchema.raw):', joi.isObjectSchema(UserSchema.raw));
@@ -69,53 +88,153 @@ if (badResult.value) {
   // Now badResult.value is of type { username: string; age?: number }
 }
 
-// 8. forbidden
-const ForbidSchema = joi.object({
+// --- 8. forbidden with type hints ---
+const ForbidSchema = joi.object<{
+  visible: string;
+  secret?: never;  // TypeScript will ensure this can never exist
+}>({
   visible: joi.string(),
   secret: joi.forbidden(),
 });
-console.log('Forbid:', ForbidSchema.validate({ visible: 'ok', secret: 'nope' }));
 
-// 9. atLeastOneOf
-const AtLeastOneSchema = joi.atLeastOneOf(['a', 'b'])(joi.object({ a: joi.string(), b: joi.string() }).raw);
-console.log('AtLeastOneOf:', AtLeastOneSchema.validate({ a: 'x' }));
-console.log('AtLeastOneOf:', AtLeastOneSchema.validate({}));
+type ForbidType = Infer<typeof ForbidSchema>;
+const forbidResult: ForbidType = ForbidSchema.validate({ visible: 'ok' });
+// Error: const invalid = ForbidSchema.validate({ visible: 'ok', secret: 'nope' });
 
-// 10. mutuallyExclusive
-const MutExSchema = joi.mutuallyExclusive(['a', 'b'])(joi.object({ a: joi.string(), b: joi.string() }).raw);
-console.log('MutuallyExclusive (a):', MutExSchema.validate({ a: 'x' }));
-console.log('MutuallyExclusive (both):', MutExSchema.validate({ a: 'x', b: 'y' }));
+// --- 9. atLeastOneOf with union types ---
+type AtLeastOneType = {
+  a?: string;
+  b?: string;
+} & ({ a: string } | { b: string });  // Ensure at least one exists
 
-// 11. dynamicDefault
-const DynDefaultSchema = joi.object({
-  now: joi.dynamicDefault(joi.number().optional(), 'now', () => 42),
+const AtLeastOneSchema = joi.object<AtLeastOneType>({
+  a: joi.string(),
+  b: joi.string(),
 });
 
-console.log('DynamicDefault (empty):', DynDefaultSchema.validate({})); // Should print { now: 42 }
-console.log('DynamicDefault (with now):', DynDefaultSchema.validate({ now: 100 })); // Should print { now: 100 }
+// Access the raw Joi schema for atLeastOneOf, then wrap result back in SchemaWrapper
+const withAtLeastOne = createSchema<AtLeastOneType>(
+  // joi.atLeastOneOf(['a', 'b'])(AtLeastOneSchema.raw)
+  joi.atLeastOneOf(['a', 'b'])(AtLeastOneSchema.raw as Joi.ObjectSchema)
+);
 
-// 12. deepPartial
-const DeepSchema = joi.object({
+type AtLeastOneResult = Infer<typeof withAtLeastOne>;
+
+// Now you get proper type hints and runtime validation
+const invalid = withAtLeastOne.validate({}); // Will fail at runtime, type: AtLeastOneType
+const valid = withAtLeastOne.validate({ b: 'ok' }); // OK, type: AtLeastOneType
+
+// TypeScript will error on this:
+// withAtLeastOne.validate({ c: 'invalid' }); // Error: Object literal may only specify known properties
+
+// 10. mutuallyExclusive
+
+// Type-level mutually exclusive utility
+type MutuallyExclusive<A extends string, B extends string> =
+  | { [K in A]: string; } & { [K in B]?: never }
+  | { [K in B]: string; } & { [K in A]?: never };
+
+type MutExType = MutuallyExclusive<'a', 'b'>;
+
+const MutExSchema = createSchema<MutExType>(
+  joi.mutuallyExclusive(['a', 'b'])(
+    joi.object({
+      a: joi.string(),
+      b: joi.string(),
+    }).raw as Joi.ObjectSchema
+  )
+);
+
+type MutExResult = Infer<typeof MutExSchema>;
+
+// Valid: only 'a'
+const onlyA: MutExResult = MutExSchema.validate({ a: 'x' });
+// Valid: only 'b'
+const onlyB: MutExResult = MutExSchema.validate({ b: 'y' });
+
+
+// Uncommenting these lines will show TS errors in your IDE:
+// const both: MutExResult = MutExSchema.validate({ a: 'x', b: 'y' }); // ❌ TS error
+// const neither: MutExResult = MutExSchema.validate({}); // ❌ TS error
+
+console.log('MutuallyExclusive (a):', onlyA);
+console.log('MutuallyExclusive (b):', onlyB);
+
+
+// 11. dynamicDefault
+const DynDefaultSchema = joi.object<{ now?: number }>({
+  now: joi.dynamicDefault(joi.number(), 'now', () => 42),
+});
+
+type DynDefaultType = Infer<typeof DynDefaultSchema>;
+
+// Valid: omitted, gets default
+const withDefault: DynDefaultType = DynDefaultSchema.validate({});
+// Valid: provided, must be number
+const withNow: DynDefaultType = DynDefaultSchema.validate({ now: 100 });
+
+// Uncommenting this will show a TS error:
+// const invalid: DynDefaultType = DynDefaultSchema.validate({ now: "oops" }); // ❌ TS error
+
+console.log('DynamicDefault (empty):', withDefault); // { now: 42 }
+console.log('DynamicDefault (with now):', withNow);  // { now: 100 }
+
+
+
+const DeepSchema = joi.object<{ foo: { bar: string; baz: number } }>({
   foo: joi.object({
     bar: joi.string().required(),
     baz: joi.number().required(),
   }),
 });
+
 const DeepPartial = DeepSchema.deepPartial();
-console.log('DeepPartial:', DeepPartial.validate({ foo: { bar: 'ok' } }));
+type DeepPartialType = Infer<typeof DeepPartial>;
+
+// All fields optional at all levels
+const partial1: DeepPartialType = {};
+const partial2: DeepPartialType = { foo: {} };
+const partial3: DeepPartialType = { foo: { bar: 'ok' } };
+const partial4: DeepPartialType = { foo: { baz: 42 } };
+const partial5: DeepPartialType = { foo: { bar: 'ok', baz: 42 } };
+
+// Uncommenting this will show a TS error (extra field):
+// const invalid: DeepPartialType = { foo: { qux: true } }; // ❌ TS error
+
+console.log('DeepPartial:', DeepPartial.validate(partial3));
 
 // 13. pick and omit
 const Picked = UserSchema.pick(['username']);
-console.log('Pick:', Picked.validate({ username: 'only' }));
+console.log('Pick:', Picked.validate({ username: 'john' }));
+
 const Omitted = UserSchema.omit(['age']);
 console.log('Omit:', Omitted.validate({ username: 'no age' }));
 
 // 14. merge and extend
-const Extra = joi.object({ extra: joi.string() });
+const Extra = joi.object<{ extra: string }>({
+  extra: joi.string().required()
+});
+
+// Merge approach
 const Merged = UserSchema.merge(Extra);
-console.log('Merge:', Merged.validate({ username: 'a', extra: 'b' }));
-const Extended = UserSchema.extendWith({ extra: joi.string() });
-console.log('ExtendWith:', Extended.validate({ username: 'a', extra: 'b' }));
+type MergedType = Infer<typeof Merged>;
+
+// ExtendWith approach
+const Extended = UserSchema.extendWith<{ extra: string }>({
+  extra: joi.string().required()
+});
+type ExtendedType = Infer<typeof Extended>;
+
+// Now both of these will work without TypeScript errors
+const mergedValid = Merged.validate({
+  username: 'a',
+  extra: 'b'
+});
+
+const extendedValid = Extended.validate({
+  username: 'a',
+  extra: 'b'
+});
 
 // 15. withCustomValidator
 const CustomSchema = UserSchema.withCustomValidator('username', (value) => {
