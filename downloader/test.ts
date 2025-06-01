@@ -237,80 +237,258 @@ const extendedValid = Extended.validate({
 });
 
 // 15. withCustomValidator
-const CustomSchema = UserSchema.withCustomValidator('username', (value) => {
-  if (value === 'admin') throw new Error('Reserved');
-  return value;
-});
+const CustomSchema = UserSchema.withCustomValidator(
+  'username',
+  (value, helpers) => {
+    // Type hint: value is string (inferred from UserSchema)
+    if (value === 'admin') {
+      throw new Error('Reserved username');
+    }
+    return value;
+  },
+  'Username "admin" is reserved' // Optional custom message
+);
+
+type CustomType = Infer<typeof CustomSchema>;
+
+// This will show proper type hints
+const customValid: CustomType = CustomSchema.validate({
+  username: 'alice',
+
+}); // ✅ OK
+
 try {
+  // This will fail at runtime with our custom error
   CustomSchema.validate({ username: 'admin' });
 } catch (e) {
   console.log('CustomValidator:', (e as Error).message);
 }
 
-// 16. withRedactedFields
-const SensitiveSchema = joi.object<{ username: string; password: string }>({
-  username: joi.string(),
-  password: joi.string(),
+// Uncommenting these will show TS errors:
+// CustomSchema.validate({}); // ❌ TS error: missing username
+// CustomSchema.validate({ username: 42 }); // ❌ TS error: username must be string
+
+// 16. withRedactedFields - Type-safe sensitive data handling
+const SensitiveSchema = joi.object<{
+  username: string;
+  password: string;
+  email: string;
+}>({
+  username: joi.string().required(),
+  password: joi.string().required(),
+  email: joi.string().email().required(),
 });
-const user = SensitiveSchema.validate({ username: 'alice', password: 'secret' });
-const redact = SensitiveSchema.withRedactedFields(['password']);
-const { value: safeUser } = SensitiveSchema.safeValidate({ username: 'alice', password: 'secret' });
-if (safeUser) {
-  console.log('Redacted:', redact(safeUser));
+
+// Type inference works correctly
+type SensitiveType = Infer<typeof SensitiveSchema>;
+
+// Validate with type checking
+const sensitiveData = SensitiveSchema.validate({
+  username: 'alice',
+  password: 'secret123',
+  email: 'alice@example.com'
+});
+
+// Create type-safe redaction function
+const redact = SensitiveSchema.withRedactedFields(
+  ['password'], // TypeScript ensures this key exists
+  '[PROTECTED]'
+);
+
+// Safe validation with proper error handling
+const { value: safeUser, error } = SensitiveSchema.safeValidate({
+  username: 'alice',
+  password: 'secret123',
+  email: 'alice@example.com'
+});
+
+if (error) {
+  console.error('Validation failed:', error.message);
+} else if (safeUser) {
+  // Type hint shows safeUser is SensitiveType
+  const redactedUser = redact(safeUser);
+  console.log('Safe to log:', redactedUser);
+  // Output: { username: 'alice', password: '[PROTECTED]', email: 'alice@example.com' }
 }
 
-// 17. validateAsync
-const AsyncSchema = joi.object<{ email: string }>({
-  email: joi.string().email(),
+// These will show TypeScript errors:
+// redact({ notExists: 'bad' }); // ❌ TS error: unknown field
+// SensitiveSchema.withRedactedFields(['notExists']); // ❌ TS error: field doesn't exist
+// redact({ username: 42 }); // ❌ TS error: wrong type
+
+// 17. validateAsync with proper type checking
+const AsyncSchema = joi.object<{
+  email: string;
+  username?: string;
+}>({
+  email: joi.string().email().required(),
+  username: joi.string().optional()
 });
 
-AsyncSchema.validateAsync({ email: 'bad' }, [
-  async (value) => {
-    // value is now { email: string }
-    if (value.email === 'bad') throw new Error('Email taken');
-  }
-]).catch(e => console.log('Async validation:', e.message));
+type AsyncType = Infer<typeof AsyncSchema>;
 
-// 18. diff
-const v1 = joi.object({ a: joi.string(), b: joi.number() });
-const v2 = joi.object({ a: joi.number(), c: joi.string() });
-console.log('Diff:', v1.diff(v2));
+// Type-safe async validation
+async function checkEmailUnique(email: string): Promise<boolean> {
+  // Simulate DB check
+  return email !== 'taken@example.com';
+}
 
-// 19. generateExample
-console.log('Example:', UserSchema.generateExample());
+try {
+  // Now TypeScript will show proper hints and errors
+  const validated = await AsyncSchema.validateAsync(
+    {
+      email: 'test@example.com',  // TypeScript knows this is required
+      username: 'optional'        // TypeScript knows this is optional
+    },
+    [
+      // TypeScript knows 'value' has type AsyncType
+      async (value: AsyncType) => {
+        if (!await checkEmailUnique(value.email)) {
+          throw new Error('Email already taken');
+        }
+      }
+    ]
+  );
+
+  // TypeScript knows validated is AsyncType
+  console.log('Async validation success:', validated.email, validated.username);
+} catch (e) {
+  console.error('Async validation failed:', e instanceof Error ? e.message : e);
+}
+
+// These will now show proper TypeScript errors:
+// AsyncSchema.validateAsync({}); // ❌ TS error: missing email
+// AsyncSchema.validateAsync({ email: 42 }); // ❌ TS error: email must be string
+// AsyncSchema.validateAsync({ email: 'test', invalid: true }); // ❌ TS error: unknown property
+
+// 18. diff - Schema comparison with type safety
+const v1 = joi.object<{
+  a: string;
+  b: number;
+}>({
+  a: joi.string().required(),
+  b: joi.number().required()
+});
+
+const v2 = joi.object<{
+  a: number;  // Type changed
+  c: string;  // New field
+}>({
+  a: joi.number().required(),
+  c: joi.string().required()
+});
+
+// TypeScript knows this returns { added: string[]; removed: string[]; changed: string[]; }
+const schemaDiff = v1.diff(v2);
+console.log('Diff:', {
+  added: schemaDiff.added,     // ['c']
+  removed: schemaDiff.removed, // ['b']
+  changed: schemaDiff.changed  // ['a'] - type changed from string to number
+});
+
+// These will show TypeScript errors:
+// v1.diff(42); // ❌ TS error: Argument must be a SchemaWrapper
+// v1.diff(joi.string()); // ❌ TS error: Argument must be an object schema
+
+
+// 19. generateExample with type safety
+const example = UserSchema.generateExample();
+type ExampleType = typeof example; // Should match UserSchema type
+console.log('Example:', example); // { username: 'example', age: 42 }
 
 // 20. withTranslationKey + formatErrorWithTranslations
 const I18nSchema = joi.object<{ username: string }>({
   username: joi.string().required(),
 }).withTranslationKey('username', 'form.username');
+
 const translationMap = { 'form.username': 'Please enter your username.' };
-const { error: i18nError } = I18nSchema.raw.validate({});
+
+// Type-safe error handling
+const { error: i18nError } = I18nSchema.safeValidate({});
 if (i18nError) {
-  const formatted = formatErrorWithTranslations(i18nError, I18nSchema.raw, translationMap);
+  const formatted = formatErrorWithTranslations(
+    i18nError,
+    I18nSchema.raw,
+    translationMap
+  );
   console.log('I18n error:', formatted.details[0]?.message);
 }
 
-// 21. partial, required, extendWithDefaults
+// 21. partial, required, extendWithDefaults with type safety
 const Partial = UserSchema.partial();
-console.log('Partial:', Partial.validate({}));
+type PartialType = Infer<typeof Partial>;
+const partialValid: PartialType = Partial.validate({}); // OK
+
 const Required = UserSchema.required();
-console.log('Required:', Required.safeValidate({ username: 'a', age: 1 }));
+type RequiredType = Infer<typeof Required>;
+
+// Now you'll get proper type hints
+const requiredValidation = Required.safeValidate({
+  username: 'a',  // TypeScript hints this as string
+  age: 1         // TypeScript hints this as number
+});
+
+// Rename destructured variables to avoid conflict
+const {
+  value: requiredValue,
+  error: requiredError
+} = requiredValidation;
+
+if (requiredError) {
+  console.error('Validation failed:', requiredError.message);
+} else if (requiredValue) {
+  // TypeScript knows requiredValue is RequiredType here
+  console.log('Required:', requiredValue.username, requiredValue.age);
+}
+
 const Defaults = UserSchema.extendWithDefaults({ age: 99 });
-console.log('Defaults:', Defaults.validate({ username: 'a' }));
+type DefaultsType = Infer<typeof Defaults>;
+const defaultsValid = Defaults.validate({ username: 'a' });
+// TypeScript knows defaultsValid.age === 99
 
-// 22. pickBy, pickByType, omitBy
+console.log('Partial:', partialValid);
+console.log('Required:', requiredValidation);
+console.log('Defaults:', defaultsValid);
+
+// 22. pickBy, pickByType, omitBy with type safety
 const PickBy = UserSchema.pickBy((schema, key) => key === 'username');
-console.log('PickBy:', PickBy.validate({ username: 'a' }));
-const PickByType = UserSchema.pickByType('string');
-console.log('PickByType:', PickByType.validate({ username: 'a' }));
-const OmitBy = UserSchema.omitBy((schema, key) => key === 'age');
-console.log('OmitBy:', OmitBy.validate({ username: 'a' }));
+type PickByType = Infer<typeof PickBy>;
+const pickByValid: PickByType = PickBy.validate({ username: 'a' });
 
-// 23. describeWithExamples, getDependencyGraph, getFieldPresence, getVersion
-console.log('DescribeWithExamples:', UserSchema.describeWithExamples());
-console.log('DependencyGraph:', UserSchema.getDependencyGraph());
-console.log('FieldPresence:', UserSchema.getFieldPresence());
-console.log('Version:', UserSchema.withVersion('1.2.3').getVersion());
+const PickByType = UserSchema.pickByType('string');
+type PickByStringType = Infer<typeof PickByType>;
+const pickByTypeValid: PickByStringType = PickByType.validate({
+  username: 'a'
+});
+
+const OmitBy = UserSchema.omitBy((schema, key) => key === 'age');
+type OmitByType = Infer<typeof OmitBy>;
+const omitByValid: OmitByType = OmitBy.validate({ username: 'a' });
+
+// These will show TypeScript errors:
+// PickBy.validate({ age: 42 }); // ❌ Error: missing username
+// PickByType.validate({}); // ❌ Error: missing string fields
+// OmitBy.validate({ age: 42 }); // ❌ Error: age field not allowed
+
+
+// 23. Schema introspection with type safety: describeWithExamples, getDependencyGraph, getFieldPresence, getVersion
+const description = UserSchema.describeWithExamples();
+const dependencies = UserSchema.getDependencyGraph();
+const presence = UserSchema.getFieldPresence();
+const version = UserSchema.withVersion('1.2.3').getVersion();
+
+type PresenceMap = Record<keyof User, 'required' | 'optional' | 'forbidden'>;
+const fieldPresence = presence as PresenceMap;
+
+console.log('Description:', description);
+console.log('Dependencies:', dependencies);
+console.log('Field Presence:', fieldPresence);
+console.log('Version:', version);
+
+// Type checking ensures:
+// - Presence only includes valid field names
+// - Version is string
+// - Dependencies graph matches schema structure
 
 // --- Type hinting and error highlighting ---
 const user1 = UserSchema.validate({ username: 'alice' }); // age is optional, type hint shows both fields

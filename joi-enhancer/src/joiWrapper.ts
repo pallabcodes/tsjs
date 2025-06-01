@@ -130,18 +130,21 @@ export class SchemaWrapper<T> {
   }
 
   /**
-   * Zod-like safe validation: returns { value, error } instead of throwing.
+   * Safe validation that returns both value and error
    */
-  safeValidate(input: unknown): { value: T | undefined; error: ValidationError | undefined } {
-    const result = this.schema.validate(input, {
-      abortEarly: false,
-      allowUnknown: false,
-      stripUnknown: true,
-    });
-    return {
-      value: result.error ? undefined : (result.value as T),
-      error: result.error,
-    };
+  safeValidate(input: Partial<T>): {
+    value: T | undefined;
+    error: Joi.ValidationError | undefined;
+  } {
+    try {
+      const value = this.validateInternal(input);
+      return { value: value as T, error: undefined };
+    } catch (err) {
+      return {
+        value: undefined,
+        error: err as Joi.ValidationError
+      };
+    }
   }
 
   /**
@@ -300,16 +303,20 @@ export class SchemaWrapper<T> {
     if (!isObjectSchema(this.schema)) {
       throw new Error('withCustomValidator() is only supported on object schemas');
     }
-    const objectSchema = this.schema as Joi.ObjectSchema;
-    const described = objectSchema.describe();
-    if (!described.keys || !(key as string in described.keys)) {
-      throw new Error(`Key "${String(key)}" does not exist in schema.`);
-    }
-    // Extract the field schema, attach the custom validator, and re-attach to the object
-    let fieldSchema = objectSchema.extract(key as string);
-    fieldSchema = (fieldSchema as Schema).custom(validator, message);
-    const newSchema = objectSchema.keys({ [key]: fieldSchema });
-    return new SchemaWrapper<T>(newSchema);
+    const objectSchema = this.schema as ObjectSchema;
+    const field = objectSchema.extract(key as string);
+
+    const newField = field.custom((value, helpers) => {
+      try {
+        return validator(value, helpers);
+      } catch (e) {
+        return helpers.message({ custom: message ?? (e as Error).message });
+      }
+    });
+
+    return new SchemaWrapper<T>(
+      objectSchema.keys({ [key as string]: newField })
+    );
   }
 
   withTranslationKey<K extends keyof T>(field: K, translationKey: string): SchemaWrapper<T> {
@@ -366,16 +373,18 @@ export class SchemaWrapper<T> {
    * Returns a function that, when given an object, redacts the specified fields (sets them to '[REDACTED]').
    * Usage: const redact = schema.withRedactedFields(['password']); redact(obj)
    */
-  withRedactedFields(fields: (keyof T | string)[], redactedValue: any = '[REDACTED]') {
-    return (obj: Partial<T>): Partial<T> => {
-      if (!obj || typeof obj !== 'object') return obj;
-      const result = { ...obj } as Record<string, any>;
+  withRedactedFields(
+    fields: (keyof T | string)[],
+    redactedValue: any = '[REDACTED]'
+  ): (obj: Partial<T>) => Partial<T> {
+    return (obj: Partial<T>) => {
+      const result = { ...obj };
       for (const field of fields) {
         if (field in result) {
-          result[field as string] = redactedValue;
+          result[field as keyof T] = redactedValue;
         }
       }
-      return result as Partial<T>;
+      return result;
     };
   }
 
@@ -389,16 +398,78 @@ export class SchemaWrapper<T> {
    *   ]);
    */
   async validateAsync(
-    input: unknown,
+    input: T,  // Change from unknown to T to get proper type hints
     asyncValidators: Array<(value: T) => Promise<void>> = []
   ): Promise<T> {
     const value = this.validateInternal(input);
-
     for (const validator of asyncValidators) {
       await validator(value);
     }
-
     return value;
+  }
+
+  /**
+   * Makes all fields optional
+   */
+  partial(): SchemaWrapper<Partial<T>> {
+    if (!isObjectSchema(this.schema)) {
+      throw new Error('partial() is only supported on object schemas');
+    }
+    const objectSchema = this.schema as ObjectSchema;
+    const described = objectSchema.describe();
+    const keys = Object.keys(described.keys || {});
+    const partialSchemas: Record<string, Schema> = {};
+
+    for (const key of keys) {
+      partialSchemas[key] = objectSchema.extract(key).optional();
+    }
+
+    return new SchemaWrapper<Partial<T>>(Joi.object(partialSchemas));
+  }
+
+  /**
+   * Makes all fields required
+   */
+  required(): SchemaWrapper<Required<T>> {
+    if (!isObjectSchema(this.schema)) {
+      throw new Error('required() is only supported on object schemas');
+    }
+    const objectSchema = this.schema as ObjectSchema;
+    const described = objectSchema.describe();
+    const keys = Object.keys(described.keys || {});
+    const requiredSchemas: Record<string, Schema> = {};
+
+    for (const key of keys) {
+      requiredSchemas[key] = objectSchema.extract(key).required();
+    }
+
+    return new SchemaWrapper<Required<T>>(Joi.object(requiredSchemas));
+  }
+
+  /**
+   * Extends schema with default values
+   */
+  extendWithDefaults(defaults: Partial<T>): SchemaWrapper<T> {
+    if (!isObjectSchema(this.schema)) {
+      throw new Error('extendWithDefaults() is only supported on object schemas');
+    }
+    const objectSchema = this.schema as ObjectSchema;
+    const described = objectSchema.describe();
+    const keys = Object.keys(described.keys || {});
+    const extendedSchemas: Record<string, Schema> = {};
+
+    for (const key of keys) {
+      const fieldSchema = objectSchema.extract(key);
+      if (key in defaults) {
+        // Cast the default value to BasicType to satisfy Joi's type constraints
+        const defaultValue = defaults[key as keyof T] as Joi.BasicType;
+        extendedSchemas[key] = fieldSchema.default(defaultValue);
+      } else {
+        extendedSchemas[key] = fieldSchema;
+      }
+    }
+
+    return new SchemaWrapper<T>(Joi.object(extendedSchemas));
   }
 }
 

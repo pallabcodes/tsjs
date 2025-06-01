@@ -1,18 +1,36 @@
-import Joi, { AnySchema, ValidationError, WhenOptions, ObjectSchema, AlternativesSchema, Schema } from 'joi';
+import Joi, { AnySchema, ValidationError, WhenOptions, ObjectSchema, AlternativesSchema, Schema, BasicType } from 'joi';
 
 export declare class SchemaWrapper<T> {
   constructor(schema: ObjectSchema<any>);
 
   validate(input: unknown): T;
-  safeValidate(input: unknown): { value: T | undefined; error: ValidationError | undefined };
+  /**
+   * Safe validation that returns both value and error
+   */
+  safeValidate(input: Partial<T>): {
+    value: T | undefined;
+    error: ValidationError | undefined;
+  };
   extend<U>(extension: ObjectSchema<any>): SchemaWrapper<T & U>;
   pick<K extends keyof T>(keys: K[]): SchemaWrapper<Pick<T, K>>;
   omit<K extends keyof T>(keys: K[]): SchemaWrapper<Omit<T, K>>;
   conditional(ref: string, options: WhenOptions | WhenOptions[]): SchemaWrapper<T>;
   merge<U>(other: SchemaWrapper<U>): SchemaWrapper<T & U>;
+  /**
+   * Makes all fields optional
+   */
   partial(): SchemaWrapper<Partial<T>>;
+
+  /**
+   * Makes all fields required
+   */
   required(): SchemaWrapper<Required<T>>;
-  extendWithDefaults(defaults: Partial<T>): SchemaWrapper<T>;
+
+  /**
+   * Extends schema with default values
+   * @param defaults Partial object containing default values
+   */
+  extendWithDefaults(defaults: Partial<Record<keyof T, BasicType>>): SchemaWrapper<T>;
   extendWith<U>(fields: Record<string, Schema>): SchemaWrapper<T & U>;
   pickBy(predicate: (schema: Schema, key: string) => boolean): SchemaWrapper<Partial<T>>;
   pickByType(type: string): SchemaWrapper<Partial<T>>;
@@ -40,8 +58,8 @@ export declare class SchemaWrapper<T> {
 export type DeepPartial<T> = T extends Array<infer U>
   ? Array<DeepPartial<U>>
   : T extends object
-    ? { [K in keyof T]?: DeepPartial<T[K]> }
-    : T;
+  ? { [K in keyof T]?: DeepPartial<T[K]> }
+  : T;
 
 export declare function createSchema<T>(schema: ObjectSchema<any>): SchemaWrapper<T>;
 export declare function alternatives<T = any>(): AlternativesSchema<T>;
@@ -59,8 +77,8 @@ export declare function formatErrorWithCodes(error: ValidationError, codeMap: Re
   details: Array<{ path: string; message: string; type: string; code: string }>;
 };
 export declare function formatErrorWithTranslations(
-  error: ValidationError, 
-  schema: Schema | SchemaWrapper<any>, 
+  error: ValidationError,
+  schema: Schema | SchemaWrapper<any>,
   translationMap: Record<string, string>
 ): {
   message: string;
