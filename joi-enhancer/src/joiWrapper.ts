@@ -411,6 +411,45 @@ export class SchemaWrapper<T> {
   }
 
   /**
+   * Returns a new SchemaWrapper with an .omitFields(obj) method that removes the specified fields.
+   * Usage: const safe = schema.omitFields(['password']); safe.omitFields(obj)
+   */
+  withOmittedFields<K extends keyof T>(
+    fields: K[] | string[]
+  ): SchemaWrapper<Omit<T, K>> & { omitFields(obj: Partial<T>): Omit<Partial<T>, K> } {
+    const base = new SchemaWrapper<Omit<T, K>>(this.raw as any);
+
+    (base as any).omitFields = function (obj: Partial<T>): Omit<Partial<T>, K> {
+      const result = { ...obj };
+      for (const field of fields) {
+        delete (result as any)[field];
+      }
+      return result as Omit<Partial<T>, K>;
+    };
+
+    return base as any;
+  }
+
+  /**
+   * Async validation with optional async pipeline.
+   * Usage: await schema.validateAsync(input, [asyncValidator, ...])
+   */
+  async validateAsync(
+    input: unknown,
+    asyncValidators: Array<(value: T) => Promise<void>> = []
+  ): Promise<T> {
+    const { value, error } = this.safeValidate(input as Partial<T>);
+    if (error || !value) throw error || new Error('Validation failed');
+    if (asyncValidators) {
+      for (const validator of asyncValidators) {
+        await validator(value);
+      }
+    }
+    return value;
+  }
+
+
+  /**
    * Type-safe async validation pipeline.
    * Runs Joi validation, then applies user-provided async validators in sequence.
    * Each asyncValidator receives the validated value and must throw or return a value.
@@ -419,7 +458,7 @@ export class SchemaWrapper<T> {
    *     async (value) => { if (await existsInDb(value.email)) throw new Error('Email taken'); }
    *   ]);
    */
-  async validateAsync(
+  async validateAsyncOld(
     input: T,  // Change from unknown to T to get proper type hints
     asyncValidators: Array<(value: T) => Promise<void>> = []
   ): Promise<T> {

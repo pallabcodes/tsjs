@@ -5,7 +5,10 @@ import type { Infer } from '@roninbyte/joi-enhancer';
 const app = express();
 app.use(express.json());
 
-// --- 1. Registration Schema ---
+// --- 1. Define handler type ---
+type ExpressHandler = (req: Request, res: Response) => Promise<void> | void;
+
+// --- 2. Registration Schema & Handler ---
 const RegisterSchema = joi.object<{
   username: string;
   password: string;
@@ -17,11 +20,9 @@ const RegisterSchema = joi.object<{
 });
 type RegisterInput = Infer<typeof RegisterSchema>;
 
-// --- 2. Registration Endpoint ---
-// @ts-expect-error req, res types are not fully compatible with Express
-app.post('/register', (req: Request, res: Response) => {
+// Use Pick from the schema type instead of redundant interface
+const registerHandler: ExpressHandler = (req, res) => {
   const { value, error } = RegisterSchema.safeValidate(req.body);
-
   if (error) {
     const formatted = formatErrorWithTranslations(
       error,
@@ -32,15 +33,23 @@ app.post('/register', (req: Request, res: Response) => {
         'form.email': 'Please enter a valid email address.'
       }
     );
-    return res.status(400).json({ error: formatted.details[0]?.message });
+    res.status(400).json({ error: formatted.details[0]?.message });
+    return;
   }
 
-  // value is now fully typed as RegisterInput
-  const user: RegisterInput = value!;
-  res.status(201).json({ user: { username: user.username, email: user.email } });
-});
+  if (!value) {
+    res.status(500).json({
+      error: 'Internal validation error'
+    });
+    return;
+  }
 
-// --- 3. Login Schema with Custom Validator ---
+  // Use SchemaWrapper's .pick() method instead of TypeScript's Pick type
+  const safeUser = RegisterSchema.pick(['username', 'email']).validate(value);
+  res.status(201).json({ user: safeUser });
+};
+
+// --- 3. Login Schema & Handler ---
 const LoginSchema = joi.object<{
   username: string;
   password: string;
@@ -53,58 +62,64 @@ const LoginSchema = joi.object<{
 });
 type LoginInput = Infer<typeof LoginSchema>;
 
-// @ts-expect-error req, res types are not fully compatible with Express
-app.post('/login', (req: Request<any, any, LoginInput>, res: Response) => {
+const loginHandler: ExpressHandler = (req, res) => {
   const { value, error } = LoginSchema.safeValidate(req.body);
-
   if (error) {
-    return res.status(400).json({ error: error.message });
+    res.status(400).json({ error: error.message });
+    return;
   }
-
   const login: LoginInput = value!;
   res.status(200).json({ message: `Welcome, ${login.username}!` });
-});
+};
 
-// --- 4. Profile Update with Partial Schema ---
+// --- 4. Profile Update Schema & Handler ---
 const ProfileSchema = RegisterSchema.partial();
 type ProfileInput = Infer<typeof ProfileSchema>;
 
-// @ts-expect-error req, res types are not fully compatible with Express
-app.put('/profile', (req: Request<any, any, ProfileInput>, res: Response) => {
+const profileHandler: ExpressHandler = (req, res) => {
   const { value, error } = ProfileSchema.safeValidate(req.body);
-
   if (error) {
-    return res.status(400).json({ error: error.message });
+    res.status(400).json({ error: error.message });
+    return;
   }
-
   const profile: ProfileInput = value!;
   res.status(200).json({ updated: profile });
-});
+};
 
-// --- 5. Example: Redacted fields ---
+// --- 5. User Schema & Handler with Redacted and Omitted Fields ---
 const UserWithSecretSchema = RegisterSchema.withRedactedFields(['password']);
 
+const UserWithoutSecretSchema = RegisterSchema.withOmittedFields(['password']);
+
 type UserWithSecret = Infer<typeof UserWithSecretSchema>;
+type UserWithoutSecret = Infer<typeof UserWithoutSecretSchema>;
 
-const SafePartial = RegisterSchema.withRedactedFields(['password']).partial();
-
-type SafePartialUser = Infer<typeof SafePartial>;
-
-app.get('/user/:username', (req: Request, res: Response) => {
-  // Simulate fetching user
-  const user: UserWithSecret = {
+const userHandler: ExpressHandler = (req, res) => {
+  const user = {
     username: req.params.username,
     email: 'user@example.com',
     password: 'should-not-be-exposed'
   };
 
-  const safeUser = UserWithSecretSchema.redact(user);
-  // safeUser: { username: 'alice', email: 'alice@mail.com', password: '[REDACTED]' }
+  // Redact password (mask value)
+  const redactedUser = UserWithSecretSchema.redact(user);
 
-  res.json(safeUser);
-});
+  // Omit password (remove field)
+  const omittedUser = UserWithoutSecretSchema.omitFields(user);
 
-// --- 6. Start server ---
+  res.json({
+    redacted: redactedUser, // { username, email, password: '[REDACTED]' }
+    omitted: omittedUser    // { username, email }
+  });
+};
+
+// --- 6. Register Routes ---
+app.post('/register', registerHandler);
+app.post('/login', loginHandler);
+app.put('/profile', profileHandler);
+app.get('/user/:username', userHandler);
+
+// --- 7. Start Server ---
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Express API running on http://localhost:${PORT}`);

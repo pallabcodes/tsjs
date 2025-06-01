@@ -155,7 +155,7 @@ const AsyncUserSchema = joi.object<{
     const user = await AsyncUserSchema.validateAsync(
       { username: 'alice', email: 'taken@mail.com' },
       [
-        async value => await fakeEmailCheck(value.email),
+        async (value: { username: string; email: string }) => await fakeEmailCheck(value.email),
       ]
     );
     console.log('Async validated user:', user);
