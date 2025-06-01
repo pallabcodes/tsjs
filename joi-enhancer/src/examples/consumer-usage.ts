@@ -134,7 +134,7 @@ const user = SensitiveSchema.validate({
 
 // Redact sensitive fields before logging or returning
 const redact = SensitiveSchema.withRedactedFields(['password']);
-console.log('Redacted user:', redact(user)); // { username: 'alice', password: '[REDACTED]', email: 'alice@mail.com' }
+console.log('Redacted user:', redact.redact(user)); // <-- FIXED: use .redact(user)
 
 // Example 9: Async validation pipeline (e.g., uniqueness check)
 async function fakeEmailCheck(email: string) {

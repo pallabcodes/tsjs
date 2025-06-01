@@ -387,22 +387,27 @@ export class SchemaWrapper<T> {
   }
 
   /**
-   * Returns a function that, when given an object, redacts the specified fields (sets them to '[REDACTED]').
-   * Usage: const redact = schema.withRedactedFields(['password']); redact(obj)
+   * Returns a new SchemaWrapper with a .redact(obj) method that redacts the specified fields.
+   * Usage: const safe = schema.withRedactedFields(['password']); safe.redact(obj)
    */
-  withRedactedFields(
-    fields: (keyof T | string)[],
+  withRedactedFields<K extends keyof T>(
+    fields: K[] | string[],
     redactedValue: any = '[REDACTED]'
-  ): (obj: Partial<T>) => Partial<T> {
-    return (obj: Partial<T>) => {
+  ): SchemaWrapper<T> & { redact(obj: Partial<T>): Partial<T> } {
+    const base = new SchemaWrapper<T>(this.raw);
+
+    // Attach redact method for explicit usage
+    (base as any).redact = function (obj: Partial<T>): Partial<T> {
       const result = { ...obj };
       for (const field of fields) {
         if (field in result) {
-          result[field as keyof T] = redactedValue;
+          (result as any)[field] = redactedValue;
         }
       }
       return result;
     };
+
+    return base as any;
   }
 
   /**

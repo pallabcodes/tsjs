@@ -69,7 +69,7 @@
 * Example:
   ```typescript
   const redact = schema.withRedactedFields(['password']);
-  const safe = redact(validatedUser);
+  const safe = redact.redact(validatedUser);
   // safe.password === '[REDACTED]'
   ```
 
