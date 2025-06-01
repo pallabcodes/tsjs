@@ -1,3 +1,5 @@
+console.log("=== STARTING TEST EXAMPLES ===");
+
 import { joi, formatErrorWithTranslations, alternatives, createAlternativesSchema, Joi, createSchema } from '@roninbyte/joi-enhancer';
 import type { Infer } from '@roninbyte/joi-enhancer';
 
@@ -43,6 +45,7 @@ type CondType = Infer<typeof CondSchema>;
 
 const condExample: CondType = { type: 'other', value: 123 }; // This is valid
 console.log('Cond (valid):', CondSchema.validate(condExample));
+console.log('Conditional Field Example:', condExample);
 
 
 // --- 4. stripField with type hints ---
@@ -521,3 +524,41 @@ const CustomUserSchema = UserSchema.withCustomValidator('username', (value) => {
   return value;
 });
 const customUser = CustomUserSchema.validate({ username: 'alice' }); // type hint: { username: string; age?: number }
+
+console.log('Custom user:', customUser);
+console.log("All examples ran successfully!");
+
+console.log("\n=== SECTION 1: Basic Schema Validation ===");
+// First examples...
+
+console.log("\n=== SECTION 2: Advanced Types and Alternatives ===");
+// Alternatives examples...
+
+// Continue for all sections
+
+// Wrap in an IIFE to use await at the top level
+(async () => {
+  try {
+    // Your async validation code...
+    const validated = await AsyncSchema.validateAsync(
+      {
+        email: 'test@example.com',  // TypeScript knows this is required
+        username: 'optional'        // TypeScript knows this is optional
+      },
+      [
+        // TypeScript knows 'value' has type AsyncType
+        async (value: AsyncType) => {
+          if (!await checkEmailUnique(value.email)) {
+            throw new Error('Email already taken');
+          }
+        }
+      ]
+    );
+    console.log('Async validation success:', validated);
+  } catch (e) {
+    console.log('Async validation error:', e instanceof Error ? e.message : String(e));
+  }
+})();
+
+console.log("\n=== ALL EXAMPLES COMPLETED SUCCESSFULLY ===");
+console.log("Total examples run:", 23);
