@@ -1,4 +1,9 @@
-import { joi, Joi, InferJoiType, formatErrorWithTranslations } from '../index';
+import {
+  joi,
+  Joi,
+  Infer,  // Updated import
+  formatErrorWithTranslations
+} from '../index';
 
 // Example 1: Basic usage
 const userSchema = joi.object<{
@@ -8,7 +13,8 @@ const userSchema = joi.object<{
   username: joi.string().required(),
   age: joi.number().optional(),
 });
-type User = InferJoiType<typeof userSchema>;
+
+type User = Infer<typeof userSchema>;
 const validUser: User = userSchema.validate({ username: 'alice', age: 30 });
 console.log('Basic user validated:', validUser);
 
@@ -26,7 +32,7 @@ const UserSchema = joi.object<{
     otherwise: joi.forbidden(),
   }),
 });
-type User2 = InferJoiType<typeof UserSchema>;
+type User2 = Infer<typeof UserSchema>;
 const userObj: User2 = UserSchema.validate({
   username: 'alice',
   role: 'admin',
@@ -45,7 +51,7 @@ const AltSchema = joi.object<{
     { otherwise: joi.string().optional() },
   ]),
 });
-type Alt = InferJoiType<typeof AltSchema>;
+type Alt = Infer<typeof AltSchema>;
 const altValue: Alt = AltSchema.validate({ x: 'foo', y: 'bar' });
 console.log('Alt validated:', altValue);
 
@@ -101,10 +107,10 @@ const schema = joi.object<{
   username: joi.string().required(),
   age: joi.number().required(),
 })
-.withCustomValidator('username', (value) => {
-  if (value === 'admin') throw new Error('Username "admin" is reserved');
-  return value;
-}, 'Reserved username not allowed');
+  .withCustomValidator('username', (value) => {
+    if (value === 'admin') throw new Error('Username "admin" is reserved');
+    return value;
+  }, 'Reserved username not allowed');
 
 console.log(schema.validate({ username: 'alice', age: 30 })); // OK
 console.log(schema.validate({ username: 'admin', age: 30 })); // Throws with custom error

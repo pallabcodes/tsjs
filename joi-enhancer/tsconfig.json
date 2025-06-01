@@ -17,15 +17,18 @@
     "emitDecoratorMetadata": true,
     "sourceMap": true,
     "declaration": true,
+    "declarationMap": true,
     "resolveJsonModule": true,
     "allowJs": true,
-    "checkJs": true
+    "checkJs": true,
+    "importHelpers": true
   },
   "include": [
     "src/**/*"
   ],
   "exclude": [
     "build",
-    "node_modules"
+    "node_modules",
+    "dist"
   ]
 }

@@ -1,15 +1,15 @@
-import Joi, {
-  Schema,
-  ObjectSchema,
-  AlternativesSchema,
-  ValidationResult,
-  ValidationError,
-  AnySchema,
-  WhenOptions,
-} from 'joi';
+import Joi, { AlternativesSchema, AnySchema, ObjectSchema, Schema, ValidationError, WhenOptions } from 'joi';
 import toJsonSchema from 'joi-to-json-schema';
 
+/**
+ * Type inference helper for SchemaWrapper
+ * @example
+ * type UserType = Infer<typeof UserSchema>;
+ */
+export type Infer<T> = T extends SchemaWrapper<infer U> ? U : never;
+
 export class SchemaWrapper<T> {
+
   private readonly schema: Schema;
 
   constructor(schema: Schema) {
@@ -18,7 +18,7 @@ export class SchemaWrapper<T> {
 
   // Base validation method that accepts unknown input
   private validateInternal(input: unknown): T {
-    const result: ValidationResult = this.schema.validate(input, {
+    const result = this.schema.validate(input, {
       abortEarly: false,
       allowUnknown: false,
       stripUnknown: true,
@@ -297,7 +297,7 @@ export class SchemaWrapper<T> {
 
   withCustomValidator<K extends keyof T>(
     key: K,
-    validator: (value: T[K], helpers: Joi.CustomHelpers) => T[K],
+    validator: (value: T[K], helpers: Joi.CustomHelpers) => T[K] | Promise<T[K]>,
     message?: string
   ): SchemaWrapper<T> {
     if (!isObjectSchema(this.schema)) {
@@ -306,13 +306,30 @@ export class SchemaWrapper<T> {
     const objectSchema = this.schema as ObjectSchema;
     const field = objectSchema.extract(key as string);
 
-    const newField = field.custom((value, helpers) => {
-      try {
-        return validator(value, helpers);
-      } catch (e) {
-        return helpers.message({ custom: message ?? (e as Error).message });
-      }
-    });
+    // Detect if the validator is async or sync at runtime
+    const isAsync = validator.constructor.name === 'AsyncFunction';
+
+    const newField = isAsync
+      ? field.custom(
+        async (value, helpers) => {
+          try {
+            return await validator(value, helpers);
+          } catch (e) {
+            return helpers.message({ custom: message ?? (e as Error).message });
+          }
+        },
+        'custom'
+      )
+      : field.custom(
+        (value, helpers) => {
+          try {
+            return (validator as (v: T[K], h: Joi.CustomHelpers) => T[K])(value, helpers);
+          } catch (e) {
+            return helpers.message({ custom: message ?? (e as Error).message });
+          }
+        },
+        'custom'
+      );
 
     return new SchemaWrapper<T>(
       objectSchema.keys({ [key as string]: newField })
@@ -612,7 +629,6 @@ export function dynamicDefault<T extends Joi.Schema>(
   }) as T;
 }
 
-// --- Move these OUTSIDE the class ---
 export type DeepPartial<T> = T extends Array<infer U>
   ? Array<DeepPartial<U>>
   : T extends object

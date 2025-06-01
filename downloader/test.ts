@@ -1,4 +1,5 @@
-import { joi, formatErrorWithTranslations, Infer, alternatives, createAlternativesSchema, Joi, createSchema } from '@roninbyte/joi-enhancer';
+import { joi, formatErrorWithTranslations, alternatives, createAlternativesSchema, Joi, createSchema } from '@roninbyte/joi-enhancer';
+import type { Infer } from '@roninbyte/joi-enhancer';
 
 // 1. Strongly-typed object schema
 const UserSchema = joi.object<{ username: string; age?: number }>({

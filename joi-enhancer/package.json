@@ -5,6 +5,7 @@
   "main": "dist/index.js",
   "module": "dist/index.esm.js",
   "types": "dist/index.d.ts",
+  "type": "module",
   "files": [
     "dist"
   ],
@@ -13,14 +14,16 @@
       "import": "./dist/index.esm.js",
       "require": "./dist/index.js",
       "types": "./dist/index.d.ts"
-    },
-    "./advanced": {
-      "import": "./dist/advanced.esm.js",
-      "require": "./dist/advanced.js",
-      "types": "./dist/advanced.d.ts"
     }
   },
-  "type": "module",
+  "typesVersions": {
+    "*": {
+      "*": [
+        "dist/index.d.ts"
+      ]
+    }
+  },
+  "sideEffects": false,
   "scripts": {
     "build": "rollup -c",
     "clean": "rm -rf dist",
