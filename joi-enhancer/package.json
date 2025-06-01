@@ -1,6 +1,6 @@
 {
   "name": "@roninbyte/joi-enhancer",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "A production-grade TypeScript-first wrapper and enhancer for Joi validation library",
   "main": "dist/index.js",
   "module": "dist/index.esm.js",
