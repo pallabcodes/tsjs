@@ -8,7 +8,6 @@ try {
   });
 } catch {}
 // If you use a wrapper, patch that too:
-import { joi } from '../src/index';
 try {
   Object.defineProperty(joi, 'assert', {
     value: () => {},
@@ -26,8 +25,52 @@ try {
   });
 } catch {}
 
-import { expect, describe, it } from 'vitest';
-import type { SchemaWrapper } from '../src/index';
+import { describe, it, expect } from 'vitest';
+import { joi } from '../src';
+import type { ObjectSchema } from 'joi';
+import type { SchemaWrapper } from '../src/joiWrapper';
+
+describe('Deep Partial Validation', () => {
+  interface UserSchema {
+    user: {
+      profile: {
+        name: string;
+        settings: {
+          theme: 'light' | 'dark';
+        };
+      };
+    };
+  }
+
+  it('should validate deep partial objects', () => {
+    const schema = joi.object({
+      user: joi.object({
+        profile: joi.object({
+          name: joi.string().required(),
+          settings: joi.object({
+            theme: joi.string().valid('light', 'dark').required()
+          }).required().raw
+        }).required().raw
+      }).required().raw
+    });
+
+    // Get the Joi schema description
+    const description = (schema.raw as ObjectSchema).describe();
+    const keys = (description as any).keys;
+    expect(keys.user).toBeDefined();
+
+    const partialData = {
+      user: {
+        profile: {
+          name: 'John'
+        }
+      }
+    };
+
+    // Should throw because required fields are missing
+    expect(() => schema.validate(partialData)).toThrow();
+  });
+});
 
 describe('deepPartial', () => {
   it.skip('should validate deeply nested partial objects', () => {
@@ -77,7 +120,7 @@ describe('deepPartial', () => {
 
   it('should unwrap SchemaWrapper for extension', () => {
     const wrapped = joi.object<{ foo: string }>({ foo: joi.string() });
-    const extendedSchema = wrapped.raw.keys({
+    const extendedSchema = (wrapped.raw as ObjectSchema).keys({
       bar: Joi.number(),
     });
     const obj = joi.object({ foo: joi.object({ bar: Joi.number() }).raw });
