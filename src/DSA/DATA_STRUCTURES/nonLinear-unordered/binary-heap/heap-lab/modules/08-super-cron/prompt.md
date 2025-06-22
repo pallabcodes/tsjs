@@ -1,0 +1,1 @@
+so, far I have only seen heap with sliding queue and top K so there should be a full treasure chest to explore with helper data strucutres (regular, customized, out of the box and such) and same goes alorithmic patterns too off course

@@ -1,31 +1,18 @@
 {
   "compilerOptions": {
-    "target": "ESNext",
-    "module": "ESNext",
-    "moduleResolution": "Node",
-    "rootDir": "./src",
-    "outDir": "./build",
+    "target": "ES2020",
+    "module": "commonjs",
     "strict": true,
-    "noImplicitAny": true,
-    "noImplicitThis": true,
-    "noUncheckedIndexedAccess": true,
-    "noImplicitOverride": true,
     "esModuleInterop": true,
-    "forceConsistentCasingInFileNames": true,
     "skipLibCheck": true,
-    "experimentalDecorators": true,
-    "emitDecoratorMetadata": true,
-    "sourceMap": true,
-    "declaration": true,
-    "resolveJsonModule": true,
-    "allowJs": true, // Enable JS support
-    "checkJs": true // Type-check JS files
+    "forceConsistentCasingInFileNames": true,
+    "outDir": "./dist",
+    "sourceMap": true
   },
   "include": [
     "src/**/*"
   ],
   "exclude": [
-    "build",
     "node_modules"
   ]
 }
