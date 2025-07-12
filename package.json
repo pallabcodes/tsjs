@@ -30,6 +30,7 @@
     "express": "^4.21.2",
     "reflect-metadata": "^0.2.2",
     "ts-toolbelt": "^9.6.0",
-    "vitest": "^2.1.8"
+    "vitest": "^2.1.8",
+    "zod": "^4.0.5"
   }
 }
