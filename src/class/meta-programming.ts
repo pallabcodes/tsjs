@@ -12,7 +12,6 @@ function Singleton<T extends new (...args: any[]) => any>(constructor: T) {
       if (!instance) {
         instance = this as InstanceType<T>;
       }
-      // Do not return instance here (SonarLint S6635)
     }
   };
 }
@@ -21,42 +20,25 @@ function Singleton<T extends new (...args: any[]) => any>(constructor: T) {
 function LogProperty(): PropertyDecorator {
   return function (target: any, propertyKey: string | symbol) {
     let value = target[propertyKey];
-    const getter = () => {
-      console.log(`Getting ${String(propertyKey)}: ${value}`);
-      return value;
-    };
-    const setter = (newVal: any) => {
-      console.log(`Setting ${String(propertyKey)} to ${newVal}`);
-      value = newVal;
-    };
-    Object.defineProperty(target, propertyKey, { 
-      get: getter, 
-      set: setter,
+    Object.defineProperty(target, propertyKey, {
+      get() {
+        console.log(`Getting ${String(propertyKey)}: ${value}`);
+        return value;
+      },
+      set(newVal: any) {
+        console.log(`Setting ${String(propertyKey)} to ${newVal}`);
+        value = newVal;
+      },
       enumerable: true,
       configurable: true
     });
   };
 }
 
-// --- Method decorator ---
-function LogMethod(): MethodDecorator {
-  return function (
-    target: any,
-    propertyKey: string | symbol,
-    descriptor: PropertyDescriptor
-  ) {
-    const original = descriptor.value;
-    descriptor.value = function (this: any, ...args: any[]) {
-      console.log(`Calling ${String(propertyKey)} with`, args);
-      return original.apply(this, args);
-    };
-    return descriptor;
-  };
-}
-
-// --- Metadata decorator ---
 function TypeMeta(type: any): PropertyDecorator {
-  return Reflect.metadata("design:type", type);
+  return function (target: any, propertyKey: string | symbol) {
+    Reflect.defineMetadata("design:type", type, target, propertyKey);
+  };
 }
 
 // --- Serializable decorator ---
@@ -72,7 +54,6 @@ class MetaExample {
   @LogProperty()
   public data: string = "init";
 
-  @LogMethod()
   doSomething(x: number): number {
     return x * 2;
   }
