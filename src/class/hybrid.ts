@@ -22,7 +22,7 @@ function WithLogger<TBase extends Constructor>(Base: TBase) {
 function WithValidation<TBase extends Constructor>(Base: TBase) {
   return class extends Base {
     validate(): boolean {
-      const rules: ((self: any) => boolean)[] = Reflect.getMetadata("validation:rules", this) || [];
+      const rules: ((self: any) => boolean)[] = (Reflect as any).getMetadata?.("validation:rules", this) || [];
       return rules.every(rule => rule(this));
     }
   };
@@ -31,15 +31,36 @@ function WithValidation<TBase extends Constructor>(Base: TBase) {
 // --- Meta-programming: Decorator to add validation rules ---
 function ValidateRule(rule: (self: any) => boolean): PropertyDecorator {
   return function (target, propertyKey) {
-    const rules = Reflect.getMetadata("validation:rules", target) || [];
+    const rules = (Reflect as any).getMetadata?.("validation:rules", target) || [];
     rules.push((self: any) => rule(self[propertyKey]));
-    Reflect.defineMetadata("validation:rules", rules, target);
+    (Reflect as any).defineMetadata?.("validation:rules", rules, target);
   };
 }
 
 // --- Functional override: Compose methods at runtime ---
 function override<T, K extends keyof T>(obj: T, method: K, fn: (original: T[K]) => T[K]) {
   obj[method] = fn(obj[method]);
+}
+
+// --- Utility: Add a method to an object at runtime ---
+function addMethod<T, K extends string, F extends (...args: any[]) => any>(
+  obj: T,
+  name: K,
+  fn: F
+): asserts obj is T & { [key in K]: F } {
+  (obj as any)[name] = fn;
+}
+
+// --- Utility: Access control proxy ---
+function withAccessControl<T extends object>(obj: T, allowed: (keyof T)[]): T {
+  return new Proxy(obj, {
+    get(target, prop, receiver) {
+      if (typeof prop === "string" && allowed.includes(prop as keyof T)) {
+        return Reflect.get(target, prop, receiver);
+      }
+      throw new Error(`Access to property "${String(prop)}" is denied`);
+    }
+  });
 }
 
 // --- Compose a hybrid class ---
@@ -59,31 +80,8 @@ class User extends WithValidation(WithLogger(UserBase)) {
   }
 }
 
-// --- Meta-programming: Proxy for access control ---
-function withAccessControl<T extends object>(obj: T, allowed: (keyof T)[]) {
-  return new Proxy(obj, {
-    get(target, prop) {
-      if (allowed.includes(prop as keyof T)) {
-        return target[prop as keyof T];
-      }
-      throw new Error(`Access to property "${String(prop)}" is denied`);
-    }
-  });
-}
-
-// --- Advanced: Dynamic method injection (FP + Meta-programming) ---
-function addMethod<T extends object, K extends string, F extends (...args: any[]) => any>(
-  obj: T,
-  name: K,
-  fn: F
-): asserts obj is T & Record<K, F> {
-  Object.defineProperty(obj, name, {
-    value: fn,
-    writable: true,
-    configurable: true,
-    enumerable: false
-  });
-}
+// --- Usage ---
+const user = new User("Alice", 25);
 
 // Example: Add a dynamic "promote" method to User
 addMethod(user, "promote", function (this: User) {
@@ -92,12 +90,13 @@ addMethod(user, "promote", function (this: User) {
 });
 (user as any).promote(); // [User] Promoted!
 
-// Example: Compose transformations for a user object
 const anonymize = (u: User) => { u.name = "Anonymous"; return u; };
 const makeMinor = (u: User) => { u.age = 17; return u; };
 
-// --- Usage ---
-const user = new User("Alice", 25);
+// Compose transformations for a user object
+function pipe<T>(...fns: Array<(arg: T) => T>) {
+  return (x: T) => fns.reduce((v, f) => f(v), x);
+}
 
 const anonymizedMinor = pipe(anonymize, makeMinor)(user);
 anonymizedMinor.greet(); // [User] Hello, my name is Anonymous and I am 17
@@ -115,10 +114,10 @@ override(user, "greet", original => function(this: User) {
 user.greet(); // [User] Custom greeting! ... [User] Greeted successfully.
 
 // Add access control (meta-programming + FP)
-const secureUser = withAccessControl(user, ["name", "greet"]);
-console.log(secureUser.name); // Alice
-secureUser.greet(); // works
-// console.log(secureUser.age); // Throws error: Access to property "age" is denied
+const secureUser1 = withAccessControl(user, ["name", "greet"]);
+console.log(secureUser1.name); // Alice
+secureUser1.greet(); // works
+// console.log(secureUser1.age); // Throws error: Access to property "age" is denied
 
 // --- Advanced: Type-level programming for branded types ---
 type Brand<T, B> = T & { __brand: B };
@@ -129,20 +128,20 @@ function asUserId(id: string): UserId {
 }
 
 const id: UserId = asUserId("abc123");
-// id is now type-safe and cannot be mixed with plain strings
 
 // --- Advanced: Compile-time schema validation (with zod) ---
-import { z } from "zod";
+// Commented out to avoid error if zod is not installed
+// import { z } from "zod";
 
-const UserSchema = z.object({
-  name: z.string().min(1),
-  age: z.number().int().gte(18)
-});
-type UserFromSchema = z.infer<typeof UserSchema>;
+// const UserSchema = z.object({
+//   name: z.string().min(1),
+//   age: z.number().int().gte(18)
+// });
+// type UserFromSchema = z.infer<typeof UserSchema>;
 
-function createUserFromSchema(data: unknown): UserFromSchema {
-  return UserSchema.parse(data);
-}
+// function createUserFromSchema(data: unknown): UserFromSchema {
+//   return UserSchema.parse(data);
+// }
 
 // --- Advanced: Async decorator (meta-programming + FP) ---
 function AsyncLog(target: any, propertyKey: string, descriptor: PropertyDescriptor) {
@@ -162,30 +161,6 @@ class AsyncExample {
     return new Promise(resolve => setTimeout(() => resolve("data"), 100));
   }
 }
-
-// --- Usage ---
-// const user = new User("Alice", 25);
-user.greet(); // [User] Hello, my name is Alice and I am 25
-
-console.log("Valid?", user.validate()); // true
-user.greet(); // [User] Hello, my name is Alice and I am 25
-
-console.log("Valid?", user.validate()); // true
-
-// Override greet at runtime (FP style)
-override(user, "greet", original => function(this: User) {
-  this.log("Custom greeting!");
-  (original as Function).apply(this);
-  this.log("Greeted successfully.");
-});
-
-user.greet(); // [User] Custom greeting! ... [User] Greeted successfully.
-
-// Add access control (meta-programming + FP)
-const secureUser = withAccessControl(user, ["name", "greet"]);
-console.log(secureUser.name); // Alice
-secureUser.greet(); // works
-// console.log(secureUser.age); // Throws error: Access to property "age" is denied
 
 const asyncExample = new AsyncExample();
 asyncExample.fetchData().then(console.log);
