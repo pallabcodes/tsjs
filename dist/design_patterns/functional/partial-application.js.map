@@ -1,0 +1,1 @@
+{"version":3,"file":"partial-application.js","sourceRoot":"","sources":["../../../src/design_patterns/functional/partial-application.ts"],"names":[],"mappings":";AAAA,iGAAiG;AAEjG,MAAM,QAAQ,GAAG,CAAC,CAAS,EAAE,CAAS,EAAE,EAAE,CAAC,CAAC,GAAG,CAAC,CAAC;AAEjD,MAAM,MAAM,GAAG,QAAQ,CAAC,IAAI,CAAC,IAAI,EAAE,CAAC,CAAC,CAAC;AAEtC,MAAM,aAAa,GAAG,MAAM,CAAC,CAAC,CAAC,CAAC,CAAC,KAAK"}

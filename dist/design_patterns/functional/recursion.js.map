@@ -1,0 +1,1 @@
+{"version":3,"file":"recursion.js","sourceRoot":"","sources":["../../../src/design_patterns/functional/recursion.ts"],"names":[],"mappings":";AAAA,wCAAwC;AACxC,SAAS,SAAS,CAAC,CAAS;IACxB,IAAI,CAAC,KAAK,CAAC;QAAE,OAAO,CAAC,CAAC;IACtB,OAAO,CAAC,GAAG,SAAS,CAAC,CAAC,GAAG,CAAC,CAAC,CAAC;AAChC,CAAC;AAED,QAAQ;AACR,MAAM,KAAK,GAAG,SAAS,CAAC,CAAC,CAAC,CAAC,CAAC,gBAAgB"}
