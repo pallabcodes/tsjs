@@ -50,11 +50,14 @@ export class Greater {
   }
 }
 
+// Class generics examples
+export {};
+
 class Box<T = unknown> {
   public value!: T;
   public content = '';
 
-  sameAs(other: this): boolean {
+  sameAs(other: Box): boolean {
     return other.content === this.content;
   }
 
@@ -107,9 +110,11 @@ const fso: FileSystemObject = new FileRep('foo/bar.txt', 'foo');
 // Correctly check types using type guards
 if (fso.isFile()) {
   console.log('It is a file.');
-} else if (fso.isDirectory()) {
+}
+if (fso.isDirectory()) {
   console.log('It is a directory.');
-} else if (fso.isNetworked()) {
+}
+if (fso.isNetworked()) {
   console.log('It is networked.');
 }
 

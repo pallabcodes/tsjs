@@ -1,3 +1,6 @@
+// Class examples and patterns
+export {};
+
 class Visibility {
   private static digit = 0;
   private visible = true;

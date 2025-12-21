@@ -11,17 +11,17 @@
 // 5. **Virtual Proxy**: Handle resource-intensive objects by delaying their creation until required.
 //
 // #### 1. **Lazy Initialization**
-interface Subject {
+interface ProxySubject {
   request(): void;
 }
 
-class RealSubject implements Subject {
+class RealSubject implements ProxySubject {
   request(): void {
     console.log('RealSubject: Handling request.');
   }
 }
 
-class Proxy implements Subject {
+class LazyProxy implements ProxySubject {
   private realSubject: RealSubject | null = null;
 
   request(): void {
@@ -33,17 +33,17 @@ class Proxy implements Subject {
 }
 
 // Usage example
-const proxy = new Proxy();
-proxy.request(); // RealSubject: Handling request.
+const lazyProxy = new LazyProxy();
+lazyProxy.request(); // RealSubject: Handling request.
 
 // #### 2. **Access Control**
-class ProtectedResource implements Subject {
+class ProtectedResource implements ProxySubject {
   request(): void {
     console.log('Accessing protected resource...');
   }
 }
 
-class AccessControlProxy implements Subject {
+class AccessControlProxy implements ProxySubject {
   private realSubject: ProtectedResource | null = null;
 
   request(): void {
@@ -68,13 +68,13 @@ const accessProxy = new AccessControlProxy();
 accessProxy.request(); // Access Denied!
 
 // #### 3. **Logging and Monitoring**
-class Service implements Subject {
+class Service implements ProxySubject {
   request(): void {
     console.log('Service: Request received.');
   }
 }
 
-class LoggingProxy implements Subject {
+class LoggingProxy implements ProxySubject {
   private realSubject: Service | null = null;
 
   request(): void {
@@ -91,7 +91,7 @@ const loggingProxy = new LoggingProxy();
 loggingProxy.request(); // LoggingProxy: Logging request... Service: Request received.
 
 // #### 4. **Caching**
-class ExpensiveCalculation implements Subject {
+class ExpensiveCalculation implements ProxySubject {
   private result: number | null = null;
 
   request(): void {
@@ -105,7 +105,7 @@ class ExpensiveCalculation implements Subject {
   }
 }
 
-class CachingProxy implements Subject {
+class CachingProxy implements ProxySubject {
   private realSubject: ExpensiveCalculation | null = null;
 
   request(): void {
@@ -122,7 +122,7 @@ cachingProxy.request(); // Performing expensive calculation... Result: 42
 cachingProxy.request(); // Returning cached result... Result: 42
 
 // #### 5. **Virtual Proxy**
-class Image implements Subject {
+class ImageResource implements ProxySubject {
   private file: string;
 
   constructor(file: string) {
@@ -134,8 +134,8 @@ class Image implements Subject {
   }
 }
 
-class VirtualProxy implements Subject {
-  private realImage: Image | null = null;
+class VirtualProxy implements ProxySubject {
+  private realImage: ImageResource | null = null;
   private file: string;
 
   constructor(file: string) {
@@ -145,7 +145,7 @@ class VirtualProxy implements Subject {
   request(): void {
     if (!this.realImage) {
       console.log('Lazy loading image...');
-      this.realImage = new Image(this.file);
+      this.realImage = new ImageResource(this.file);
     }
     this.realImage.request();
   }

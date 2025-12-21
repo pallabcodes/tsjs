@@ -29,7 +29,6 @@ class AnimalFarm implements Iterable<Animal> {
     return {
       next(): IteratorResult<Animal> {
         if (index < animals.length) {
-          // @ts-expect-error whatever
           return {
             value: animals[index++], // Ensured to be a valid Animal
             done: false,

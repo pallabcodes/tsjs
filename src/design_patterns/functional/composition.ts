@@ -1,3 +1,6 @@
+// Function composition examples
+export {};
+
 // Function Composition : allows you to combine multiple functions into one.
 
 // Type-safe functions

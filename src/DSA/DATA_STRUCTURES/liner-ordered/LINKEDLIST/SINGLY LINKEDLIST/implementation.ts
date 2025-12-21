@@ -1,4 +1,3 @@
-Users/piconkayal/Projects/Personal/tsjs/src/DSA/DATA_STRUCTURES/liner-ordered/LINKEDLIST/SINGLY LINKEDLIST/implementation.ts
 class Node<T> {
   data: T;
   next: Node<T> | null;

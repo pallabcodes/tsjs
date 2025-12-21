@@ -1,3 +1,6 @@
+// Function currying examples
+export {};
+
 // currying: transforms a function that takes multiple arguments into a sequence of functions.
 const add = (a: number) => (b: number) => a + b;
 

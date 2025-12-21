@@ -8,6 +8,9 @@ console.log(isIterable({})); // false, plain object is not iterable by default
 console.log(isIterable([])); // true, arrays are iterable
 console.log(isIterable('string')); // true, strings are iterable
 
+// Class inheritance examples
+export {};
+
 // Creating a class `Game` with iterable functionality
 class Game implements Iterable<string> {
   // Define the [Symbol.iterator] method to make this class iterable
@@ -16,7 +19,6 @@ class Game implements Iterable<string> {
     let index = 0;
     return {
       next(): IteratorResult<string> {
-        // @ts-expect-error type error
         return {
           value: index < players.length ? players[index++] : '',
           done: index > players.length,
