@@ -1,0 +1,18 @@
+{
+  "name": "@apps/learning-lab",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "start": "tsx src/index.ts",
+    "build": "tsc",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@tooling/typescript-config": "workspace:*",
+    "@packages/frameworks": "workspace:*",
+    "@packages/dsa": "workspace:*",
+    "tsx": "^4.0.0",
+    "typescript": "^5.0.0",
+    "vitest": "^2.1.8"
+  }
+}

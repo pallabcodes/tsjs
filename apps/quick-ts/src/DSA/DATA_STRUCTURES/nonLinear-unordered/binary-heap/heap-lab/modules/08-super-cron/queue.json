@@ -1,0 +1,14 @@
+[
+  {
+    "id": "test-job",
+    "taskType": "log",
+    "scheduleMode": "interval",
+    "intervalMs": 5000,
+    "priority": 1,
+    "payload": {
+      "message": "Hello from API!"
+    },
+    "createdAt": 1750608839048,
+    "runAt": 1750608939249
+  }
+]

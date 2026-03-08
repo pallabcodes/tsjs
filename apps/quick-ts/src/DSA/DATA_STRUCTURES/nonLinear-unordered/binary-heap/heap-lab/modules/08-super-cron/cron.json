@@ -1,0 +1,33 @@
+[
+  {
+    "id": "email-task-1",
+    "cronExpr": "*/1 * * * *",
+    "taskType": "email",
+    "priority": 5,
+    "payload": {
+      "to": "you@example.com",
+      "subject": "Hello",
+      "body": "This is from super-cron!"
+    }
+  },
+  {
+    "id": "log-task-1",
+    "cronExpr": "*/2 * * * *",
+    "taskType": "log",
+    "priority": 1,
+    "payload": {
+      "message": "Every 2 mins log"
+    }
+  },
+  {
+    "id": "ping-api",
+    "cronExpr": "*/1 * * * *",
+    "taskType": "api",
+    "priority": 5,
+    "payload": {
+      "url": "https://httpbin.org/post",
+      "headers": { "X-Cron-Source": "super-cron" },
+      "body": { "hello": "from cron" }
+    }
+  }
+]
