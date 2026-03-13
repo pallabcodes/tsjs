@@ -20,6 +20,9 @@ importers:
       '@packages/frameworks':
         specifier: workspace:*
         version: link:../../packages/frameworks
+      '@packages/knowledge':
+        specifier: workspace:*
+        version: link:../../packages/knowledge
       '@tooling/typescript-config':
         specifier: workspace:*
         version: link:../../tooling/typescript-config
@@ -97,22 +100,6 @@ importers:
         specifier: ^10.9.2
         version: 10.9.2(@types/node@22.19.15)(typescript@5.9.3)
 
-  packages/dsa:
-    dependencies:
-      denque:
-        specifier: ^2.1.0
-        version: 2.1.0
-    devDependencies:
-      '@tooling/typescript-config':
-        specifier: workspace:*
-        version: link:../../tooling/typescript-config
-      typescript:
-        specifier: ^5.0.0
-        version: 5.9.3
-      vitest:
-        specifier: ^2.1.8
-        version: 2.1.9(@types/node@22.19.15)
-
   packages/frameworks:
     devDependencies:
       '@emotion/react':
@@ -130,6 +117,22 @@ importers:
       drizzle-orm:
         specifier: ^0.45.1
         version: 0.45.1
+      typescript:
+        specifier: ^5.0.0
+        version: 5.9.3
+      vitest:
+        specifier: ^2.1.8
+        version: 2.1.9(@types/node@22.19.15)
+
+  packages/knowledge:
+    dependencies:
+      denque:
+        specifier: ^2.1.0
+        version: 2.1.0
+    devDependencies:
+      '@tooling/typescript-config':
+        specifier: workspace:*
+        version: link:../../tooling/typescript-config
       typescript:
         specifier: ^5.0.0
         version: 5.9.3

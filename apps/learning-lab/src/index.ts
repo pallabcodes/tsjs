@@ -134,7 +134,7 @@ import {
     createContext,
     renderComponent,
     SuspenseTag
-} from '@packages/dsa';
+} from '@packages/knowledge';
 
 // 1. Hooks: Linked List State
 const Counter = () => {

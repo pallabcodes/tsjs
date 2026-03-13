@@ -10,7 +10,7 @@
   "devDependencies": {
     "@tooling/typescript-config": "workspace:*",
     "@packages/frameworks": "workspace:*",
-    "@packages/dsa": "workspace:*",
+    "@packages/knowledge": "workspace:*",
     "tsx": "^4.0.0",
     "typescript": "^5.0.0",
     "vitest": "^2.1.8"

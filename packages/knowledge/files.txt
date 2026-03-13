@@ -1,0 +1,290 @@
+[96msrc/tree/visitor/pipeline.ts[0m:[93m13[0m:[93m14[0m - [91merror[0m[90m TS2395: [0mIndividual declarations in merged declaration 'Task' must be all exported or all local.
+
+[7m13[0m export class Task {
+[7m  [0m [91m             ~~~~[0m
+
+[96msrc/tree/visitor/pipeline.ts[0m:[93m73[0m:[93m14[0m - [91merror[0m[90m TS2395: [0mIndividual declarations in merged declaration 'DAG' must be all exported or all local.
+
+[7m73[0m export class DAG {
+[7m  [0m [91m             ~~~[0m
+
+[96msrc/tree/visitor/pipeline.ts[0m:[93m185[0m:[93m14[0m - [91merror[0m[90m TS2395: [0mIndividual declarations in merged declaration 'Scheduler' must be all exported or all local.
+
+[7m185[0m export class Scheduler {
+[7m   [0m [91m             ~~~~~~~~~[0m
+
+[96msrc/tree/visitor/pipeline.ts[0m:[93m249[0m:[93m10[0m - [91merror[0m[90m TS2395: [0mIndividual declarations in merged declaration 'DAG' must be all exported or all local.
+
+[7m249[0m import { DAG } from "../core/DAG"
+[7m   [0m [91m         ~~~[0m
+
+[96msrc/tree/visitor/pipeline.ts[0m:[93m249[0m:[93m21[0m - [91merror[0m[90m TS2307: [0mCannot find module '../core/DAG' or its corresponding type declarations.
+
+[7m249[0m import { DAG } from "../core/DAG"
+[7m   [0m [91m                    ~~~~~~~~~~~~~[0m
+
+[96msrc/tree/visitor/pipeline.ts[0m:[93m250[0m:[93m10[0m - [91merror[0m[90m TS2395: [0mIndividual declarations in merged declaration 'Task' must be all exported or all local.
+
+[7m250[0m import { Task } from "../core/Task"
+[7m   [0m [91m         ~~~~[0m
+
+[96msrc/tree/visitor/pipeline.ts[0m:[93m250[0m:[93m22[0m - [91merror[0m[90m TS2307: [0mCannot find module '../core/Task' or its corresponding type declarations.
+
+[7m250[0m import { Task } from "../core/Task"
+[7m   [0m [91m                     ~~~~~~~~~~~~~~[0m
+
+[96msrc/tree/visitor/pipeline.ts[0m:[93m251[0m:[93m10[0m - [91merror[0m[90m TS2395: [0mIndividual declarations in merged declaration 'Scheduler' must be all exported or all local.
+
+[7m251[0m import { Scheduler } from "../core/Scheduler"
+[7m   [0m [91m         ~~~~~~~~~[0m
+
+[96msrc/tree/visitor/pipeline.ts[0m:[93m251[0m:[93m27[0m - [91merror[0m[90m TS2307: [0mCannot find module '../core/Scheduler' or its corresponding type declarations.
+
+[7m251[0m import { Scheduler } from "../core/Scheduler"
+[7m   [0m [91m                          ~~~~~~~~~~~~~~~~~~~[0m
+
+D:/refactor-media/references/node_modules/.pnpm/typescript@5.9.3/node_modules/typescript/lib/lib.es5.d.ts
+D:/refactor-media/references/node_modules/.pnpm/typescript@5.9.3/node_modules/typescript/lib/lib.es2015.d.ts
+D:/refactor-media/references/node_modules/.pnpm/typescript@5.9.3/node_modules/typescript/lib/lib.es2016.d.ts
+D:/refactor-media/references/node_modules/.pnpm/typescript@5.9.3/node_modules/typescript/lib/lib.es2017.d.ts
+D:/refactor-media/references/node_modules/.pnpm/typescript@5.9.3/node_modules/typescript/lib/lib.es2018.d.ts
+D:/refactor-media/references/node_modules/.pnpm/typescript@5.9.3/node_modules/typescript/lib/lib.es2019.d.ts
+D:/refactor-media/references/node_modules/.pnpm/typescript@5.9.3/node_modules/typescript/lib/lib.es2020.d.ts
+D:/refactor-media/references/node_modules/.pnpm/typescript@5.9.3/node_modules/typescript/lib/lib.es2021.d.ts
+D:/refactor-media/references/node_modules/.pnpm/typescript@5.9.3/node_modules/typescript/lib/lib.es2022.d.ts
+D:/refactor-media/references/node_modules/.pnpm/typescript@5.9.3/node_modules/typescript/lib/lib.es2023.d.ts
+D:/refactor-media/references/node_modules/.pnpm/typescript@5.9.3/node_modules/typescript/lib/lib.es2024.d.ts
+D:/refactor-media/references/node_modules/.pnpm/typescript@5.9.3/node_modules/typescript/lib/lib.esnext.d.ts
+D:/refactor-media/references/node_modules/.pnpm/typescript@5.9.3/node_modules/typescript/lib/lib.es2015.core.d.ts
+D:/refactor-media/references/node_modules/.pnpm/typescript@5.9.3/node_modules/typescript/lib/lib.es2015.collection.d.ts
+D:/refactor-media/references/node_modules/.pnpm/typescript@5.9.3/node_modules/typescript/lib/lib.es2015.generator.d.ts
+D:/refactor-media/references/node_modules/.pnpm/typescript@5.9.3/node_modules/typescript/lib/lib.es2015.iterable.d.ts
+D:/refactor-media/references/node_modules/.pnpm/typescript@5.9.3/node_modules/typescript/lib/lib.es2015.promise.d.ts
+D:/refactor-media/references/node_modules/.pnpm/typescript@5.9.3/node_modules/typescript/lib/lib.es2015.proxy.d.ts
+D:/refactor-media/references/node_modules/.pnpm/typescript@5.9.3/node_modules/typescript/lib/lib.es2015.reflect.d.ts
+D:/refactor-media/references/node_modules/.pnpm/typescript@5.9.3/node_modules/typescript/lib/lib.es2015.symbol.d.ts
+D:/refactor-media/references/node_modules/.pnpm/typescript@5.9.3/node_modules/typescript/lib/lib.es2015.symbol.wellknown.d.ts
+D:/refactor-media/references/node_modules/.pnpm/typescript@5.9.3/node_modules/typescript/lib/lib.es2016.array.include.d.ts
+D:/refactor-media/references/node_modules/.pnpm/typescript@5.9.3/node_modules/typescript/lib/lib.es2016.intl.d.ts
+D:/refactor-media/references/node_modules/.pnpm/typescript@5.9.3/node_modules/typescript/lib/lib.es2017.arraybuffer.d.ts
+D:/refactor-media/references/node_modules/.pnpm/typescript@5.9.3/node_modules/typescript/lib/lib.es2017.date.d.ts
+D:/refactor-media/references/node_modules/.pnpm/typescript@5.9.3/node_modules/typescript/lib/lib.es2017.object.d.ts
+D:/refactor-media/references/node_modules/.pnpm/typescript@5.9.3/node_modules/typescript/lib/lib.es2017.sharedmemory.d.ts
+D:/refactor-media/references/node_modules/.pnpm/typescript@5.9.3/node_modules/typescript/lib/lib.es2017.string.d.ts
+D:/refactor-media/references/node_modules/.pnpm/typescript@5.9.3/node_modules/typescript/lib/lib.es2017.intl.d.ts
+D:/refactor-media/references/node_modules/.pnpm/typescript@5.9.3/node_modules/typescript/lib/lib.es2017.typedarrays.d.ts
+D:/refactor-media/references/node_modules/.pnpm/typescript@5.9.3/node_modules/typescript/lib/lib.es2018.asyncgenerator.d.ts
+D:/refactor-media/references/node_modules/.pnpm/typescript@5.9.3/node_modules/typescript/lib/lib.es2018.asynciterable.d.ts
+D:/refactor-media/references/node_modules/.pnpm/typescript@5.9.3/node_modules/typescript/lib/lib.es2018.intl.d.ts
+D:/refactor-media/references/node_modules/.pnpm/typescript@5.9.3/node_modules/typescript/lib/lib.es2018.promise.d.ts
+D:/refactor-media/references/node_modules/.pnpm/typescript@5.9.3/node_modules/typescript/lib/lib.es2018.regexp.d.ts
+D:/refactor-media/references/node_modules/.pnpm/typescript@5.9.3/node_modules/typescript/lib/lib.es2019.array.d.ts
+D:/refactor-media/references/node_modules/.pnpm/typescript@5.9.3/node_modules/typescript/lib/lib.es2019.object.d.ts
+D:/refactor-media/references/node_modules/.pnpm/typescript@5.9.3/node_modules/typescript/lib/lib.es2019.string.d.ts
+D:/refactor-media/references/node_modules/.pnpm/typescript@5.9.3/node_modules/typescript/lib/lib.es2019.symbol.d.ts
+D:/refactor-media/references/node_modules/.pnpm/typescript@5.9.3/node_modules/typescript/lib/lib.es2019.intl.d.ts
+D:/refactor-media/references/node_modules/.pnpm/typescript@5.9.3/node_modules/typescript/lib/lib.es2020.bigint.d.ts
+D:/refactor-media/references/node_modules/.pnpm/typescript@5.9.3/node_modules/typescript/lib/lib.es2020.date.d.ts
+D:/refactor-media/references/node_modules/.pnpm/typescript@5.9.3/node_modules/typescript/lib/lib.es2020.promise.d.ts
+D:/refactor-media/references/node_modules/.pnpm/typescript@5.9.3/node_modules/typescript/lib/lib.es2020.sharedmemory.d.ts
+D:/refactor-media/references/node_modules/.pnpm/typescript@5.9.3/node_modules/typescript/lib/lib.es2020.string.d.ts
+D:/refactor-media/references/node_modules/.pnpm/typescript@5.9.3/node_modules/typescript/lib/lib.es2020.symbol.wellknown.d.ts
+D:/refactor-media/references/node_modules/.pnpm/typescript@5.9.3/node_modules/typescript/lib/lib.es2020.intl.d.ts
+D:/refactor-media/references/node_modules/.pnpm/typescript@5.9.3/node_modules/typescript/lib/lib.es2020.number.d.ts
+D:/refactor-media/references/node_modules/.pnpm/typescript@5.9.3/node_modules/typescript/lib/lib.es2021.promise.d.ts
+D:/refactor-media/references/node_modules/.pnpm/typescript@5.9.3/node_modules/typescript/lib/lib.es2021.string.d.ts
+D:/refactor-media/references/node_modules/.pnpm/typescript@5.9.3/node_modules/typescript/lib/lib.es2021.weakref.d.ts
+D:/refactor-media/references/node_modules/.pnpm/typescript@5.9.3/node_modules/typescript/lib/lib.es2021.intl.d.ts
+D:/refactor-media/references/node_modules/.pnpm/typescript@5.9.3/node_modules/typescript/lib/lib.es2022.array.d.ts
+D:/refactor-media/references/node_modules/.pnpm/typescript@5.9.3/node_modules/typescript/lib/lib.es2022.error.d.ts
+D:/refactor-media/references/node_modules/.pnpm/typescript@5.9.3/node_modules/typescript/lib/lib.es2022.intl.d.ts
+D:/refactor-media/references/node_modules/.pnpm/typescript@5.9.3/node_modules/typescript/lib/lib.es2022.object.d.ts
+D:/refactor-media/references/node_modules/.pnpm/typescript@5.9.3/node_modules/typescript/lib/lib.es2022.string.d.ts
+D:/refactor-media/references/node_modules/.pnpm/typescript@5.9.3/node_modules/typescript/lib/lib.es2022.regexp.d.ts
+D:/refactor-media/references/node_modules/.pnpm/typescript@5.9.3/node_modules/typescript/lib/lib.es2023.array.d.ts
+D:/refactor-media/references/node_modules/.pnpm/typescript@5.9.3/node_modules/typescript/lib/lib.es2023.collection.d.ts
+D:/refactor-media/references/node_modules/.pnpm/typescript@5.9.3/node_modules/typescript/lib/lib.es2023.intl.d.ts
+D:/refactor-media/references/node_modules/.pnpm/typescript@5.9.3/node_modules/typescript/lib/lib.es2024.arraybuffer.d.ts
+D:/refactor-media/references/node_modules/.pnpm/typescript@5.9.3/node_modules/typescript/lib/lib.es2024.collection.d.ts
+D:/refactor-media/references/node_modules/.pnpm/typescript@5.9.3/node_modules/typescript/lib/lib.es2024.object.d.ts
+D:/refactor-media/references/node_modules/.pnpm/typescript@5.9.3/node_modules/typescript/lib/lib.es2024.promise.d.ts
+D:/refactor-media/references/node_modules/.pnpm/typescript@5.9.3/node_modules/typescript/lib/lib.es2024.regexp.d.ts
+D:/refactor-media/references/node_modules/.pnpm/typescript@5.9.3/node_modules/typescript/lib/lib.es2024.sharedmemory.d.ts
+D:/refactor-media/references/node_modules/.pnpm/typescript@5.9.3/node_modules/typescript/lib/lib.es2024.string.d.ts
+D:/refactor-media/references/node_modules/.pnpm/typescript@5.9.3/node_modules/typescript/lib/lib.esnext.array.d.ts
+D:/refactor-media/references/node_modules/.pnpm/typescript@5.9.3/node_modules/typescript/lib/lib.esnext.collection.d.ts
+D:/refactor-media/references/node_modules/.pnpm/typescript@5.9.3/node_modules/typescript/lib/lib.esnext.intl.d.ts
+D:/refactor-media/references/node_modules/.pnpm/typescript@5.9.3/node_modules/typescript/lib/lib.esnext.disposable.d.ts
+D:/refactor-media/references/node_modules/.pnpm/typescript@5.9.3/node_modules/typescript/lib/lib.esnext.promise.d.ts
+D:/refactor-media/references/node_modules/.pnpm/typescript@5.9.3/node_modules/typescript/lib/lib.esnext.decorators.d.ts
+D:/refactor-media/references/node_modules/.pnpm/typescript@5.9.3/node_modules/typescript/lib/lib.esnext.iterator.d.ts
+D:/refactor-media/references/node_modules/.pnpm/typescript@5.9.3/node_modules/typescript/lib/lib.esnext.float16.d.ts
+D:/refactor-media/references/node_modules/.pnpm/typescript@5.9.3/node_modules/typescript/lib/lib.esnext.error.d.ts
+D:/refactor-media/references/node_modules/.pnpm/typescript@5.9.3/node_modules/typescript/lib/lib.esnext.sharedmemory.d.ts
+D:/refactor-media/references/node_modules/.pnpm/typescript@5.9.3/node_modules/typescript/lib/lib.decorators.d.ts
+D:/refactor-media/references/node_modules/.pnpm/typescript@5.9.3/node_modules/typescript/lib/lib.decorators.legacy.d.ts
+D:/refactor-media/references/packages/knowledge/src/tree/framework-processor/1-basic-hybrid.ts
+D:/refactor-media/references/packages/knowledge/src/tree/framework-processor/2-authentic-fiber.ts
+D:/refactor-media/references/packages/knowledge/src/tree/framework-processor/3-scheduler-lanes.ts
+D:/refactor-media/references/packages/knowledge/src/tree/framework-processor/4-keyed-reconciliation.ts
+D:/refactor-media/references/packages/knowledge/src/tree/framework-processor/5-hooks-engine.ts
+D:/refactor-media/references/packages/knowledge/src/tree/framework-processor/6-hooks-effects.ts
+D:/refactor-media/references/packages/knowledge/src/tree/framework-processor/7-context-propagation.ts
+D:/refactor-media/references/packages/knowledge/src/tree/framework-processor/8-suspense-logic.ts
+D:/refactor-media/references/packages/knowledge/src/index.ts
+D:/refactor-media/references/packages/knowledge/src/tree/dynamic_tree_construct_reconstruct/concurrent_tree_edit.ts
+D:/refactor-media/references/packages/knowledge/src/tree/dynamic_tree_construct_reconstruct/derived.ts
+D:/refactor-media/references/packages/knowledge/src/tree/dynamic_tree_construct_reconstruct/diff_of_two_trees.ts
+D:/refactor-media/references/packages/knowledge/src/tree/dynamic_tree_construct_reconstruct/incremental_tree_diff.ts
+D:/refactor-media/references/packages/knowledge/src/tree/dynamic_tree_construct_reconstruct/index.ts
+D:/refactor-media/references/packages/knowledge/src/tree/fiber/index.ts
+D:/refactor-media/references/packages/knowledge/src/tree/framework-processor/index.ts
+D:/refactor-media/references/packages/knowledge/src/tree/git-like-packfile-system/index.ts
+D:/refactor-media/references/packages/knowledge/src/tree/git-style-commit-dag/index.ts
+D:/refactor-media/references/packages/knowledge/src/tree/git-style-histogram-diff/index.ts
+D:/refactor-media/references/packages/knowledge/src/tree/git-style-markle-tree/index.ts
+D:/refactor-media/references/packages/knowledge/src/tree/git-style-myerrs-diff/index.ts
+D:/refactor-media/references/packages/knowledge/src/tree/git-style-patience-diff/index.ts
+D:/refactor-media/references/packages/knowledge/src/tree/git-style-recursive-file-merge/index.ts
+D:/refactor-media/references/packages/knowledge/src/tree/git-style-rename-detection/index.ts
+D:/refactor-media/references/packages/knowledge/src/tree/git-three-way-merge/index.ts
+D:/refactor-media/references/packages/knowledge/src/tree/virtualization/index.ts
+D:/refactor-media/references/packages/knowledge/src/tree/visitor/ast-like.ts
+D:/refactor-media/references/packages/knowledge/src/tree/visitor/compilers.ts
+D:/refactor-media/references/packages/knowledge/src/tree/visitor/cooperative-work-scheduler.ts
+D:/refactor-media/references/packages/knowledge/src/tree/visitor/distributed_execution_engines.ts
+D:/refactor-media/references/packages/knowledge/src/tree/visitor/generic.ts
+D:/refactor-media/references/node_modules/.pnpm/denque@2.1.0/node_modules/denque/index.d.ts
+D:/refactor-media/references/packages/knowledge/src/tree/visitor/index.ts
+D:/refactor-media/references/packages/knowledge/src/tree/visitor/minimal-reactive-distributive-dataflow-engine.ts
+D:/refactor-media/references/packages/knowledge/src/tree/visitor/pipeline.ts
+D:/refactor-media/references/packages/knowledge/src/tree/visitor/reactive-dataflow-engine.ts
+D:/refactor-media/references/packages/knowledge/src/tree/walker/index.ts
+D:/refactor-media/references/packages/knowledge/src/tree/zipper/index.ts
+D:/refactor-media/node_modules/@types/crypto-js/index.d.ts
+D:/refactor-media/node_modules/@types/google.maps/index.d.ts
+D:/refactor-media/node_modules/@types/json5/index.d.ts
+D:/refactor-media/node_modules/@types/lodash/common/common.d.ts
+D:/refactor-media/node_modules/@types/lodash/common/array.d.ts
+D:/refactor-media/node_modules/@types/lodash/common/collection.d.ts
+D:/refactor-media/node_modules/@types/lodash/common/date.d.ts
+D:/refactor-media/node_modules/@types/lodash/common/function.d.ts
+D:/refactor-media/node_modules/@types/lodash/common/lang.d.ts
+D:/refactor-media/node_modules/@types/lodash/common/math.d.ts
+D:/refactor-media/node_modules/@types/lodash/common/number.d.ts
+D:/refactor-media/node_modules/@types/lodash/common/object.d.ts
+D:/refactor-media/node_modules/@types/lodash/common/seq.d.ts
+D:/refactor-media/node_modules/@types/lodash/common/string.d.ts
+D:/refactor-media/node_modules/@types/lodash/common/util.d.ts
+D:/refactor-media/node_modules/@types/lodash/index.d.ts
+D:/refactor-media/node_modules/@types/node/assert.d.ts
+D:/refactor-media/node_modules/@types/node/assert/strict.d.ts
+D:/refactor-media/node_modules/buffer/index.d.ts
+D:/refactor-media/node_modules/undici-types/header.d.ts
+D:/refactor-media/node_modules/undici-types/readable.d.ts
+D:/refactor-media/node_modules/undici-types/file.d.ts
+D:/refactor-media/node_modules/undici-types/fetch.d.ts
+D:/refactor-media/node_modules/undici-types/formdata.d.ts
+D:/refactor-media/node_modules/undici-types/connector.d.ts
+D:/refactor-media/node_modules/undici-types/client.d.ts
+D:/refactor-media/node_modules/undici-types/errors.d.ts
+D:/refactor-media/node_modules/undici-types/dispatcher.d.ts
+D:/refactor-media/node_modules/undici-types/global-dispatcher.d.ts
+D:/refactor-media/node_modules/undici-types/global-origin.d.ts
+D:/refactor-media/node_modules/undici-types/pool-stats.d.ts
+D:/refactor-media/node_modules/undici-types/pool.d.ts
+D:/refactor-media/node_modules/undici-types/handlers.d.ts
+D:/refactor-media/node_modules/undici-types/balanced-pool.d.ts
+D:/refactor-media/node_modules/undici-types/agent.d.ts
+D:/refactor-media/node_modules/undici-types/mock-interceptor.d.ts
+D:/refactor-media/node_modules/undici-types/mock-agent.d.ts
+D:/refactor-media/node_modules/undici-types/mock-client.d.ts
+D:/refactor-media/node_modules/undici-types/mock-pool.d.ts
+D:/refactor-media/node_modules/undici-types/mock-errors.d.ts
+D:/refactor-media/node_modules/undici-types/proxy-agent.d.ts
+D:/refactor-media/node_modules/undici-types/api.d.ts
+D:/refactor-media/node_modules/undici-types/cookies.d.ts
+D:/refactor-media/node_modules/undici-types/patch.d.ts
+D:/refactor-media/node_modules/undici-types/filereader.d.ts
+D:/refactor-media/node_modules/undici-types/diagnostics-channel.d.ts
+D:/refactor-media/node_modules/undici-types/websocket.d.ts
+D:/refactor-media/node_modules/undici-types/content-type.d.ts
+D:/refactor-media/node_modules/undici-types/cache.d.ts
+D:/refactor-media/node_modules/undici-types/interceptors.d.ts
+D:/refactor-media/node_modules/undici-types/index.d.ts
+D:/refactor-media/node_modules/@types/node/globals.d.ts
+D:/refactor-media/node_modules/@types/node/async_hooks.d.ts
+D:/refactor-media/node_modules/@types/node/buffer.d.ts
+D:/refactor-media/node_modules/@types/node/child_process.d.ts
+D:/refactor-media/node_modules/@types/node/cluster.d.ts
+D:/refactor-media/node_modules/@types/node/console.d.ts
+D:/refactor-media/node_modules/@types/node/constants.d.ts
+D:/refactor-media/node_modules/@types/node/crypto.d.ts
+D:/refactor-media/node_modules/@types/node/dgram.d.ts
+D:/refactor-media/node_modules/@types/node/diagnostics_channel.d.ts
+D:/refactor-media/node_modules/@types/node/dns.d.ts
+D:/refactor-media/node_modules/@types/node/dns/promises.d.ts
+D:/refactor-media/node_modules/@types/node/domain.d.ts
+D:/refactor-media/node_modules/@types/node/dom-events.d.ts
+D:/refactor-media/node_modules/@types/node/events.d.ts
+D:/refactor-media/node_modules/@types/node/fs.d.ts
+D:/refactor-media/node_modules/@types/node/fs/promises.d.ts
+D:/refactor-media/node_modules/@types/node/http.d.ts
+D:/refactor-media/node_modules/@types/node/http2.d.ts
+D:/refactor-media/node_modules/@types/node/https.d.ts
+D:/refactor-media/node_modules/@types/node/inspector.d.ts
+D:/refactor-media/node_modules/@types/node/module.d.ts
+D:/refactor-media/node_modules/@types/node/net.d.ts
+D:/refactor-media/node_modules/@types/node/os.d.ts
+D:/refactor-media/node_modules/@types/node/path.d.ts
+D:/refactor-media/node_modules/@types/node/perf_hooks.d.ts
+D:/refactor-media/node_modules/@types/node/process.d.ts
+D:/refactor-media/node_modules/@types/node/punycode.d.ts
+D:/refactor-media/node_modules/@types/node/querystring.d.ts
+D:/refactor-media/node_modules/@types/node/readline.d.ts
+D:/refactor-media/node_modules/@types/node/readline/promises.d.ts
+D:/refactor-media/node_modules/@types/node/repl.d.ts
+D:/refactor-media/node_modules/@types/node/sea.d.ts
+D:/refactor-media/node_modules/@types/node/stream.d.ts
+D:/refactor-media/node_modules/@types/node/stream/promises.d.ts
+D:/refactor-media/node_modules/@types/node/stream/consumers.d.ts
+D:/refactor-media/node_modules/@types/node/stream/web.d.ts
+D:/refactor-media/node_modules/@types/node/string_decoder.d.ts
+D:/refactor-media/node_modules/@types/node/test.d.ts
+D:/refactor-media/node_modules/@types/node/timers.d.ts
+D:/refactor-media/node_modules/@types/node/timers/promises.d.ts
+D:/refactor-media/node_modules/@types/node/tls.d.ts
+D:/refactor-media/node_modules/@types/node/trace_events.d.ts
+D:/refactor-media/node_modules/@types/node/tty.d.ts
+D:/refactor-media/node_modules/@types/node/url.d.ts
+D:/refactor-media/node_modules/@types/node/util.d.ts
+D:/refactor-media/node_modules/@types/node/v8.d.ts
+D:/refactor-media/node_modules/@types/node/vm.d.ts
+D:/refactor-media/node_modules/@types/node/wasi.d.ts
+D:/refactor-media/node_modules/@types/node/worker_threads.d.ts
+D:/refactor-media/node_modules/@types/node/zlib.d.ts
+D:/refactor-media/node_modules/@types/node/globals.global.d.ts
+D:/refactor-media/node_modules/@types/node/index.d.ts
+D:/refactor-media/node_modules/@types/parse-json/index.d.ts
+D:/refactor-media/node_modules/@types/prop-types/index.d.ts
+D:/refactor-media/node_modules/@types/raf/index.d.ts
+D:/refactor-media/node_modules/@types/react/global.d.ts
+D:/refactor-media/node_modules/csstype/index.d.ts
+D:/refactor-media/node_modules/@types/react/index.d.ts
+D:/refactor-media/node_modules/@types/react-date-range/node_modules/date-fns/typings.d.ts
+D:/refactor-media/node_modules/@types/react-date-range/_util.d.ts
+D:/refactor-media/node_modules/@types/react-date-range/index.d.ts
+D:/refactor-media/node_modules/@types/react-dom/index.d.ts
+D:/refactor-media/node_modules/@types/react-google-recaptcha/index.d.ts
+D:/refactor-media/node_modules/@types/react-transition-group/config.d.ts
+D:/refactor-media/node_modules/@types/react-transition-group/Transition.d.ts
+D:/refactor-media/node_modules/@types/react-transition-group/CSSTransition.d.ts
+D:/refactor-media/node_modules/@types/react-transition-group/SwitchTransition.d.ts
+D:/refactor-media/node_modules/@types/react-transition-group/TransitionGroup.d.ts
+D:/refactor-media/node_modules/@types/react-transition-group/index.d.ts
+D:/refactor-media/node_modules/@types/readable-stream/node_modules/safe-buffer/index.d.ts
+D:/refactor-media/node_modules/@types/readable-stream/index.d.ts
+D:/refactor-media/node_modules/@types/ws/index.d.ts
+
+Found 9 errors in the same file, starting at: src/tree/visitor/pipeline.ts[90m:13[0m
+
