@@ -1,0 +1,7 @@
+{
+  "name": "zen-tui-native",
+  "version": "0.1.0",
+  "napi": {
+    "name": "zen_tui_native"
+  }
+}

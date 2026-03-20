@@ -1,0 +1,30 @@
+{
+  "name": "zen-tui",
+  "version": "0.1.0",
+  "private": true,
+  "description": "A high-performance Git TUI client powered by custom ZenEngine and SolidJS",
+  "type": "module",
+  "scripts": {
+    "dev": "ZEN_REGISTER_TRANSFORMER=1 bun src/main.tsx",
+    "start": "ZEN_REGISTER_TRANSFORMER=1 bun src/main.tsx",
+    "build:native": "napi build --platform --release --target aarch64-apple-darwin ./native",
+    "artifacts": "napi artifacts"
+  },
+  "napi": {
+    "name": "zen_tui_native",
+    "packageName": "zen-tui-native",
+    "packageJsonPath": "."
+  },
+  "dependencies": {
+    "@babel/core": "^7.29.0",
+    "@babel/preset-typescript": "^7.28.5",
+    "babel-preset-solid": "^1.9.10",
+    "solid-js": "^1.9.11"
+  },
+  "devDependencies": {
+    "@napi-rs/cli": "^3.5.1",
+    "@napi-rs/wasm-runtime": "^1.1.1",
+    "bun-types": "^1.3.11",
+    "typescript": "^5.7.2"
+  }
+}

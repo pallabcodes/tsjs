@@ -1,0 +1,12 @@
+# Industrial Sovereignty: Zen-TUI Ignore Rules
+node_modules/
+research/
+dist/
+build/
+*.node
+*.exe
+*.wasm
+.DS_Store
+.bun/
+bun.lockb
+*.log
