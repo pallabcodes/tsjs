@@ -1,7 +1,0 @@
-/Users/picon/Learning/knowledge/tsjs/apps/zen-tui/native/target/release/deps/form_urlencoded-adf5ec2b278435a5.d: /Users/picon/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/form_urlencoded-1.2.2/src/lib.rs
-
-/Users/picon/Learning/knowledge/tsjs/apps/zen-tui/native/target/release/deps/libform_urlencoded-adf5ec2b278435a5.rlib: /Users/picon/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/form_urlencoded-1.2.2/src/lib.rs
-
-/Users/picon/Learning/knowledge/tsjs/apps/zen-tui/native/target/release/deps/libform_urlencoded-adf5ec2b278435a5.rmeta: /Users/picon/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/form_urlencoded-1.2.2/src/lib.rs
-
-/Users/picon/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/form_urlencoded-1.2.2/src/lib.rs:

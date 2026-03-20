@@ -3,7 +3,7 @@ node_modules/
 research/
 dist/
 build/
-*.node
+native/target/
 *.exe
 *.wasm
 .DS_Store
