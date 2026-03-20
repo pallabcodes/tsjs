@@ -1,6 +1,7 @@
 {
   "name": "tsjs-monorepo",
   "version": "1.0.0",
+  "type": "module",
   "private": true,
   "description": "Monorepo for deconstructing frameworks, building custom npm packages, and practical DSA.",
   "scripts": {
@@ -11,7 +12,11 @@
   },
   "devDependencies": {
     "tsx": "^4.21.0",
-    "turbo": "^2.4.4"
+    "turbo": "^2.4.4",
+    "xstate": "^5.19.2",
+    "solid-js": "^1.8.15",
+    "typescript": "^5.7.2",
+    "@types/react": "^18.3.12"
   },
   "packageManager": "pnpm@10.30.3"
 }
