@@ -84,10 +84,6 @@ export const setProperty = (node: ZenNode | ZenTextNode, name: string, value: an
     (node.props as any)[name] = value;
   } else if (node instanceof ZenTextNode && name === 'children') {
     node.text = String(value);
-    if (activeLayout && node.nativeId) {
-       // Update text node length natively if it was width leaf
-       activeLayout.update_style(node.nativeId, "row", String(value).length, 1, null, null, null, null, null, null, null);
-    }
   }
 };
 

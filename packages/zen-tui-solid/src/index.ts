@@ -4,6 +4,19 @@ import { ZenRouter, ZenRoute } from './router.js';
 export * from './reconciler.js';
 export * from './renderer.js';
 
+// Global Input Subscribers (Singleton Engine)
+const inputHandlers: Array<(e: any) => void> = [];
+
+export function useInput(handler: (e: any) => void) {
+  inputHandlers.push(handler);
+}
+
+export function dispatchInput(e: any) {
+  for (const h of inputHandlers) {
+    h(e);
+  }
+}
+
 // Namespaced Component Factory
 export const Zen: any = {
   Box: (props: any) => {
@@ -23,7 +36,7 @@ export const Zen: any = {
     return el as any;
   },
   Divider: (props: any) => {
-    const el = createElement('box'); // using box for divider
+    const el = createElement('box');
     spread(el, () => ({ height: 1, width: "100%", ...props }), true);
     return el as any;
   },
@@ -43,10 +56,17 @@ export const Zen: any = {
   For: (props: any) => {
     const each = props.each || props.list || props.items;
     const render = props.children || props.render;
-    return createComponent(For, { each, children: render }) as any;
+    return createComponent(For as any, { 
+      get each() { return typeof each === 'function' ? each() : each; }, 
+      children: render 
+    }) as any;
   },
   Show: (props: any) => {
-    return createComponent(Show, { when: props.when, fallback: props.fallback, children: props.children }) as any;
+    return createComponent(Show as any, { 
+      get when() { return typeof props.when === 'function' ? props.when() : props.when; }, 
+      get fallback() { return props.fallback; }, 
+      children: props.children 
+    }) as any;
   },
   Router: (props: any) => {
     return createComponent(ZenRouter, props);

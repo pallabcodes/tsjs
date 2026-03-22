@@ -9,7 +9,6 @@ import { ZenRenderer } from './hardware.js';
 import { ZenNode, ZenTextNode } from './node.js';
 import { ZenLayoutEngine, IZenLayoutEngine } from './native.js';
 import { setupNativeInput } from './input.js';
-import { setLayoutEngine } from '@zen-tui/solid';
 import fs from 'fs';
 
 export interface ZenInputEvent {
@@ -34,7 +33,6 @@ export class ZenApp {
     this.layout = new ZenLayoutEngine();
     
     // Wire up Incremental Reconciler pushes
-    setLayoutEngine(this.layout);
 
     // Industrial root node
     this.root = new ZenNode('box', { width: '100%', height: '100%' });
@@ -88,14 +86,13 @@ export class ZenApp {
       this.focusableNodes = []; // Reset on frame pass
       this.syncLayoutTree(this.root);
 
-      fs.appendFileSync('zen-verify.log', `[LAYOUT] Frame root children: ${this.root.children.length}\n`);
       const results = this.layout.computeLayout(this.root.nativeId!, termW, termH);
       this.applyLayout(results);
 
       // 3. Paint (Double Buffered)
       this.renderer.clear();
 
-      const rootBg = (this.root.props as any).bg || '#020202';
+      const rootBg = this.getProp(this.root, 'bg') || '#020202';
       for (let py = 0; py < termH; py++) {
         for (let px = 0; px < termW; px++) {
           this.renderer.paint(px, py, ' ', { bg: rootBg });
@@ -172,11 +169,26 @@ export class ZenApp {
     }
   }
 
+  private getProp(node: ZenNode | ZenTextNode, name: string): any {
+    if (node instanceof ZenTextNode) return undefined;
+    const val = (node.props as any)[name];
+    return typeof val === 'function' ? val() : val;
+  }
+
+  private evaluateStyle(style: any): any {
+    const res: any = {};
+    if (!style) return res;
+    for (const k in style) {
+      res[k] = typeof style[k] === 'function' ? style[k]() : style[k];
+    }
+    return res;
+  }
+
   private paintNode(node: ZenNode | ZenTextNode, absX: number, absY: number, clip?: { x: number, y: number, w: number, h: number }) {
     let { x: relX, y: relY, width, height } = node.layout;
     
-    if (node instanceof ZenNode && node.props.fixedPosition) {
-      const { x: fx, y: fy, w: fw, h: fh } = node.props.fixedPosition;
+    if (node instanceof ZenNode && this.getProp(node, 'fixedPosition')) {
+      const { x: fx, y: fy, w: fw, h: fh } = this.getProp(node, 'fixedPosition');
       relX = fx ?? relX;
       relY = fy ?? relY;
       width = fw ?? width;
@@ -185,36 +197,38 @@ export class ZenApp {
 
     const x = relX + absX;
     const y = relY + absY;
-    const currentClip = clip || { x: 0, y: 0, w: this.renderer.getSize().width, h: this.renderer.getSize().height };
+    const currentClip = clip || { x: 0, y: 0, w: Math.max(this.renderer.getSize().width, 200), h: this.renderer.getSize().height };
 
     if (node instanceof ZenTextNode) {
-      this.paintText(x, y, node.text, node.parent?.props || {}, currentClip);
+      this.paintText(x, y, node.text, node.parent ? this.evaluateStyle(node.parent.props) : {}, currentClip);
       return;
     }
 
     if (node instanceof ZenNode) {
       if (node.tag === 'input') {
          const val = (node.props as any).value || "";
-         const ph = node.props.placeholder || "";
+         const ph = this.getProp(node, 'placeholder') || "";
          const text = val ? val : ph;
          const fg = val ? "#ffffff" : "#555555";
-         this.paintText(x, y, text, { ...node.props, fg }, currentClip);
+         this.paintText(x, y, text, { ...node.props, fg }, currentClip); // wait, this should use evaluated props too!
          
-         if (node.props.focused) {
+         if (this.getProp(node, 'focused')) {
             this.renderer.paint(x + text.length, y, '█', { fg: "#ffffff" });
          }
          return;
       }
 
-      if (node.props.bg) {
-        this.fillRect(x, y, width, height, node.props.bg, currentClip);
+      const bg = this.getProp(node, 'bg');
+      if (bg) {
+        this.fillRect(x, y, width, height, bg, currentClip);
       }
 
-      if (node.props.border) {
-        this.drawBorder(x, y, width, height, node.props.borderColor, currentClip);
+      const border = this.getProp(node, 'border');
+      if (border) {
+        this.drawBorder(x, y, width, height, this.getProp(node, 'borderColor'), currentClip);
       }
 
-      const borderSize = node.props.border ? 1 : 0;
+      const borderSize = border ? 1 : 0;
       const innerClip = {
         x: Math.max(currentClip.x, Math.floor(x + borderSize)),
         y: Math.max(currentClip.y, Math.floor(y + borderSize)),
@@ -229,11 +243,13 @@ export class ZenApp {
   }
 
   private paintText(x: number, y: number, text: string, style: any, clip: any) {
-    for (let i = 0; i < text.length; i++) {
+    const s = this.evaluateStyle(style);
+    const chars = Array.from(text);
+    for (let i = 0; i < chars.length; i++) {
       const cx = Math.floor(x + i);
       const cy = Math.floor(y);
       if (cx >= clip.x && cx < clip.x + clip.w && cy >= clip.y && cy < clip.y + clip.h) {
-        this.renderer.paint(cx, cy, text[i]!, style);
+        this.renderer.paint(cx, cy, chars[i]!, s);
       }
     }
   }

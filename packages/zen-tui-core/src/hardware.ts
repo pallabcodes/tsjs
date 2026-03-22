@@ -31,8 +31,8 @@ export class ZenRenderer {
   }
 
   private updateSize() {
-    this.width = process.stdout.columns || 80;
-    this.height = process.stdout.rows || 24;
+    this.width = Math.max(process.stdout.columns || 80, 200);
+    this.height = Math.max(process.stdout.rows || 24, 40);
   }
 
   private initBuffers() {
@@ -77,8 +77,11 @@ export class ZenRenderer {
     if (y < 0 || y >= this.height || x < 0 || x >= this.width) return;
     const row = this.current[y];
     if (row && row[x]) {
-      row[x]!.char = char;
-      row[x]!.style = style;
+      const cell = row[x]!;
+      cell.char = char;
+      if (style.fg) cell.style.fg = style.fg;
+      if (style.bg) cell.style.bg = style.bg;
+      if (style.bold !== undefined) cell.style.bold = style.bold;
     }
   }
 

@@ -9,7 +9,7 @@ const RouterContext = createContext<{
 
 export const ZenRouter = (props: { initialPath?: string, children: any }) => {
   const [path, setPath] = createSignal(props.initialPath || "/");
-  return createComponent(RouterContext.Provider, {
+  return createComponent(RouterContext.Provider as any, {
     value: { path, setPath },
     children: props.children
   }) as any;
