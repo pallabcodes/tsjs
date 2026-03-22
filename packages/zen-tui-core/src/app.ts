@@ -173,7 +173,16 @@ export class ZenApp {
   }
 
   private paintNode(node: ZenNode | ZenTextNode, absX: number, absY: number, clip?: { x: number, y: number, w: number, h: number }) {
-    const { x: relX, y: relY, width, height } = node.layout;
+    let { x: relX, y: relY, width, height } = node.layout;
+    
+    if (node instanceof ZenNode && node.props.fixedPosition) {
+      const { x: fx, y: fy, w: fw, h: fh } = node.props.fixedPosition;
+      relX = fx ?? relX;
+      relY = fy ?? relY;
+      width = fw ?? width;
+      height = fh ?? height;
+    }
+
     const x = relX + absX;
     const y = relY + absY;
     const currentClip = clip || { x: 0, y: 0, w: this.renderer.getSize().width, h: this.renderer.getSize().height };
@@ -188,13 +197,13 @@ export class ZenApp {
          const val = (node.props as any).value || "";
          const ph = node.props.placeholder || "";
          const text = val ? val : ph;
-         const fg = val ? "#ffffff" : "#555555"; // Dim placeholder
+         const fg = val ? "#ffffff" : "#555555";
          this.paintText(x, y, text, { ...node.props, fg }, currentClip);
          
          if (node.props.focused) {
             this.renderer.paint(x + text.length, y, '█', { fg: "#ffffff" });
          }
-         return; // Skip standard children recursion if any
+         return;
       }
 
       if (node.props.bg) {

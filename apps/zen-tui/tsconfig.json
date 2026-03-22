@@ -16,7 +16,7 @@
     "strictNullChecks": true,
     "outDir": "dist",
     "skipLibCheck": true,
-    "types": ["bun-types", "node"],
+    "types": ["bun-types"],
     "baseUrl": ".",
     "paths": {
       "zen-reconciler": ["./src/engine/reconciler.ts"]

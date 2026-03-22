@@ -36,6 +36,7 @@ export interface ZenProps {
   onSubmit?: (val: string) => void;
   placeholder?: string;
   focused?: boolean;
+  fixedPosition?: { x?: number, y?: number, w?: number, h?: number };
   children?: any;
 }
 
