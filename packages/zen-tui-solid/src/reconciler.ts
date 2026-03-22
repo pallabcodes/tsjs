@@ -5,9 +5,8 @@
  * custom ZenNode tree and Rust-taffy layout.
  */
 
+import { ZenNode, ZenTextNode, getNextId } from '@zen-tui/core';
 import { createZenRenderer } from './renderer.js';
-import { ZenNode, ZenTextNode } from './node.js';
-import { getNextId } from './utils.js';
 
 /**
  * SolidJS Universal Adapter Interface.

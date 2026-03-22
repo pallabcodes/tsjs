@@ -1,0 +1,12 @@
+{
+  "name": "@zen-tui/core",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "./src/index.ts",
+  "files": [
+    "src"
+  ],
+  "dependencies": {
+    "node-calls-python": "^1.7.4"
+  }
+}

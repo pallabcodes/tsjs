@@ -4,7 +4,7 @@
  * Provides secondary modal layers for complex Git operations (Commit, Rebase, etc.)
  */
 
-import { Show, For, memo } from "../../engine/reconciler.ts";
+import { Show, For, memo, Zen } from "@zen-tui/solid";
 import { C } from "../../app/App.tsx";
 import { HDivider, SelDot, fit } from "../views/StandardView.tsx";
 
@@ -12,121 +12,121 @@ import { HDivider, SelDot, fit } from "../views/StandardView.tsx";
 
 function CommitView() {
   return (
-    <box flexDirection="column" width="100%" height="100%" bg={C.bg} padding={1}>
-      <text bold fg={C.blue}>COMMIT CHANGES</text>
+    <Zen.Box flexDirection="column" width="100%" height="100%" bg={C.bg} padding={1}>
+      <Zen.Text bold fg={C.blue}>COMMIT CHANGES</Zen.Text>
       <HDivider />
-      <box height={1} />
-      <text fg={C.text}>Message:</text>
-      <box height={3} width="100%" bg={C.activeBg} paddingX={1}>
-        <text fg={C.text}>feat: implemented sovereign reactivity engine</text>
-      </box>
-      <box height={1} />
-      <text fg={C.dim}>[Ctrl+Enter] to commit  [Esc] to cancel</text>
-    </box>
+      <Zen.Box height={1} />
+      <Zen.Text fg={C.text}>Message:</Zen.Text>
+      <Zen.Box height={3} width="100%" bg={C.activeBg} paddingX={1}>
+        <Zen.Text fg={C.text}>feat: implemented sovereign reactivity engine</Zen.Text>
+      </Zen.Box>
+      <Zen.Box height={1} />
+      <Zen.Text fg={C.dim}>[Ctrl+Enter] to commit  [Esc] to cancel</Zen.Text>
+    </Zen.Box>
   );
 }
 
 function RebaseView() {
   return (
-    <box flexDirection="column" width="100%" height="100%" bg={C.bg} padding={1}>
-      <text bold fg={C.orange}>INTERACTIVE REBASE</text>
+    <Zen.Box flexDirection="column" width="100%" height="100%" bg={C.bg} padding={1}>
+      <Zen.Text bold fg={C.orange}>INTERACTIVE REBASE</Zen.Text>
       <HDivider />
-      <box height={1} />
-      <For each={[
+      <Zen.Box height={1} />
+      <Zen.For each={[
         { op: "pick", hash: "a3f7c21", msg: "feat: add sovereign layout" },
         { op: "edit", hash: "8d4e1b9", msg: "fix: viewport fill bleed" },
         { op: "pick", hash: "c92fa03", msg: "refactor: StandardView" },
       ]}>
         {(item: any) => (
-          <box flexDirection="row" width="100%" height={1}>
-            <text fg={C.blue}>{item.op} </text>
-            <text fg={C.yellow}>{item.hash} </text>
-            <text fg={C.text}>{item.msg}</text>
-          </box>
+          <Zen.Box flexDirection="row" width="100%" height={1}>
+            <Zen.Text fg={C.blue}>{item.op} </Zen.Text>
+            <Zen.Text fg={C.yellow}>{item.hash} </Zen.Text>
+            <Zen.Text fg={C.text}>{item.msg}</Zen.Text>
+          </Zen.Box>
         )}
-      </For>
-    </box>
+      </Zen.For>
+    </Zen.Box>
   );
 }
 
 function CherryPickView() {
   return (
-    <box flexDirection="column" width="100%" height="100%" bg={C.bg} padding={1}>
-      <text bold fg={C.cyan}>CHERRY PICK</text>
+    <Zen.Box flexDirection="column" width="100%" height="100%" bg={C.bg} padding={1}>
+      <Zen.Text bold fg={C.cyan}>CHERRY PICK</Zen.Text>
       <HDivider />
-      <box height={1} />
-      <text fg={C.text}>Pick commit </text><text fg={C.yellow}>f3e1d0a</text><text fg={C.text}> onto main?</text>
-      <box height={1} />
-      <text fg={C.dim}>[Enter] confirm  [Esc] cancel</text>
-    </box>
+      <Zen.Box height={1} />
+      <Zen.Text fg={C.text}>Pick commit </Zen.Text><Zen.Text fg={C.yellow}>f3e1d0a</Zen.Text><Zen.Text fg={C.text}> onto main?</Zen.Text>
+      <Zen.Box height={1} />
+      <Zen.Text fg={C.dim}>[Enter] confirm  [Esc] cancel</Zen.Text>
+    </Zen.Box>
   );
 }
 
 function MergeView() {
   return (
-    <box flexDirection="column" width="100%" height="100%" bg={C.bg} padding={1}>
-      <text bold fg={C.green}>MERGE BRANCH</text>
+    <Zen.Box flexDirection="column" width="100%" height="100%" bg={C.bg} padding={1}>
+      <Zen.Text bold fg={C.green}>MERGE BRANCH</Zen.Text>
       <HDivider />
-      <box height={1} />
-      <text fg={C.text}>Merge </text><text fg={C.blue}>feat/reactivity</text><text fg={C.text}> into </text><text fg={C.green}>main</text>
-      <box height={1} />
-      <text fg={C.dim}>[Enter] confirm  [Esc] cancel</text>
-    </box>
+      <Zen.Box height={1} />
+      <Zen.Text fg={C.text}>Merge </Zen.Text><Zen.Text fg={C.blue}>feat/reactivity</Zen.Text><Zen.Text fg={C.text}> into </Zen.Text><Zen.Text fg={C.green}>main</Zen.Text>
+      <Zen.Box height={1} />
+      <Zen.Text fg={C.dim}>[Enter] confirm  [Esc] cancel</Zen.Text>
+    </Zen.Box>
   );
 }
 
 function ResetView() {
   return (
-    <box flexDirection="column" width="100%" height="100%" bg={C.bg} padding={1}>
-      <text bold fg={C.red}>GIT RESET</text>
+    <Zen.Box flexDirection="column" width="100%" height="100%" bg={C.bg} padding={1}>
+      <Zen.Text bold fg={C.red}>GIT RESET</Zen.Text>
       <HDivider />
-      <box height={1} />
-      <text fg={C.text}>Reset current branch to </text><text fg={C.yellow}>HEAD~1</text>
-      <box height={1} />
-      <box flexDirection="row">
-        <text fg={C.dim}>[1] </text><text fg={C.green}>Soft  </text>
-        <text fg={C.dim}>[2] </text><text fg={C.yellow}>Mixed  </text>
-        <text fg={C.dim}>[3] </text><text fg={C.red}>Hard</text>
-      </box>
-    </box>
+      <Zen.Box height={1} />
+      <Zen.Text fg={C.text}>Reset current branch to </Zen.Text><Zen.Text fg={C.yellow}>HEAD~1</Zen.Text>
+      <Zen.Box height={1} />
+      <Zen.Box flexDirection="row">
+        <Zen.Text fg={C.dim}>[1] </Zen.Text><Zen.Text fg={C.green}>Soft  </Zen.Text>
+        <Zen.Text fg={C.dim}>[2] </Zen.Text><Zen.Text fg={C.yellow}>Mixed  </Zen.Text>
+        <Zen.Text fg={C.dim}>[3] </Zen.Text><Zen.Text fg={C.red}>Hard</Zen.Text>
+      </Zen.Box>
+    </Zen.Box>
   );
 }
 
 function AmendView() {
   return (
-    <box flexDirection="column" width="100%" height="100%" bg={C.bg} padding={1}>
-      <text bold fg={C.yellow}>AMEND COMMIT</text>
+    <Zen.Box flexDirection="column" width="100%" height="100%" bg={C.bg} padding={1}>
+      <Zen.Text bold fg={C.yellow}>AMEND COMMIT</Zen.Text>
       <HDivider />
-      <box height={1} />
-      <text fg={C.text}>Amending </text><text fg={C.blue}>7a2b9c1</text>
-      <box height={1} />
-      <text fg={C.dim}>Update message and stage changes...</text>
-    </box>
+      <Zen.Box height={1} />
+      <Zen.Text fg={C.text}>Amending </Zen.Text><Zen.Text fg={C.blue}>7a2b9c1</Zen.Text>
+      <Zen.Box height={1} />
+      <Zen.Text fg={C.dim}>Update message and stage changes...</Zen.Text>
+    </Zen.Box>
   );
 }
 
 function SubmoduleView() {
   return (
-    <box flexDirection="column" width="100%" height="100%" bg={C.bg} padding={1}>
-      <text bold fg={C.blue}>SUBMODULES</text>
+    <Zen.Box flexDirection="column" width="100%" height="100%" bg={C.bg} padding={1}>
+      <Zen.Text bold fg={C.blue}>SUBMODULES</Zen.Text>
       <HDivider />
-      <box height={1} />
-      <text fg={C.text}>lib/engine: </text><text fg={C.green}>Up to date</text>
-      <text fg={C.text}>lib/layout: </text><text fg={C.yellow}>Update available (+4 commits)</text>
-    </box>
+      <Zen.Box height={1} />
+      <Zen.Text fg={C.text}>lib/engine: </Zen.Text><Zen.Text fg={C.green}>Up to date</Zen.Text>
+      <Zen.Text fg={C.text}>lib/layout: </Zen.Text><Zen.Text fg={C.yellow}>Update available (+4 commits)</Zen.Text>
+    </Zen.Box>
   );
 }
 
 function StashView() {
   return (
-    <box flexDirection="column" width="100%" height="100%" bg={C.bg} padding={1}>
-      <text bold fg={C.cyan}>STASH OPERATONS</text>
+    <Zen.Box flexDirection="column" width="100%" height="100%" bg={C.bg} padding={1}>
+      <Zen.Text bold fg={C.cyan}>STASH OPERATONS</Zen.Text>
       <HDivider />
-      <box height={1} />
-      <text fg={C.text}>Save current changes to stash?</text>
-      <box height={1} />
-      <text fg={C.dim}>[s] save  [p] pop latest  [l] list</text>
-    </box>
+      <Zen.Box height={1} />
+      <Zen.Text fg={C.text}>Save current changes to stash?</Zen.Text>
+      <Zen.Box height={1} />
+      <Zen.Text fg={C.dim}>[s] save  [p] pop latest  [l] list</Zen.Text>
+    </Zen.Box>
   );
 }
 
@@ -134,21 +134,15 @@ function StashView() {
 
 export default function WorkflowOverlay(props: { mode: () => any }) {
   return (
-    <>
-      {memo(() => {
-        const m = props.mode();
-        
-        if (m === "commit") return <CommitView />;
-        if (m === "rebase") return <RebaseView />;
-        if (m === "cherry") return <CherryPickView />;
-        if (m === "merge")  return <MergeView />;
-        if (m === "reset")  return <ResetView />;
-        if (m === "amend")  return <AmendView />;
-        if (m === "submod") return <SubmoduleView />;
-        if (m === "stash")  return <StashView />;
-        
-        return null;
-      })()}
-    </>
+    <Zen.Router initialPath={props.mode() || "/"}>
+      <Zen.Route path="commit"><CommitView /></Zen.Route>
+      <Zen.Route path="rebase"><RebaseView /></Zen.Route>
+      <Zen.Route path="cherry"><CherryPickView /></Zen.Route>
+      <Zen.Route path="merge"><MergeView /></Zen.Route>
+      <Zen.Route path="reset"><ResetView /></Zen.Route>
+      <Zen.Route path="amend"><AmendView /></Zen.Route>
+      <Zen.Route path="submod"><SubmoduleView /></Zen.Route>
+      <Zen.Route path="stash"><StashView /></Zen.Route>
+    </Zen.Router>
   );
 }

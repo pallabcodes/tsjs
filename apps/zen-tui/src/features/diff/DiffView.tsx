@@ -2,6 +2,8 @@
  * Zen-TUI: Diff View & Status View Placeholder (Refactored)
  * 
  * Simplified for the "Full Control Edition" build.
+ * 
+ *  My feedback: same fixes / improvement should apply here as WorkflowOverlay.concept.tsx
  */
 
 import { createSignal, onMount } from "solid-js"
@@ -12,9 +14,9 @@ export default function DiffView() {
   onMount(() => setDiff(getDiff()))
 
   return (
-    <box flexDirection="column">
-      <box bg="#1A1A2E" padding={1}><text fg="#4ECDC4">◈ DIFF</text></box>
-      <box padding={1}><text fg="#A6ACCD">{diff() || "No changes."}</text></box>
-    </box>
+    <Zen.Box flexDirection="column">
+      <Zen.Box bg="#1A1A2E" padding={1}><Zen.Text fg="#4ECDC4">◈ DIFF</Zen.Text></Zen.Box>
+      <Zen.Box padding={1}><Zen.Text fg="#A6ACCD">{diff() || "No changes."}</Zen.Text></Zen.Box>
+    </Zen.Box>
   )
 }

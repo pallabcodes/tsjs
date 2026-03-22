@@ -5,8 +5,8 @@
   "description": "A high-performance Git TUI client powered by custom ZenEngine and SolidJS",
   "type": "module",
   "scripts": {
-    "dev": "ZEN_REGISTER_TRANSFORMER=1 bun src/main.tsx",
-    "start": "ZEN_REGISTER_TRANSFORMER=1 bun src/main.tsx",
+    "dev": "bun src/main.tsx",
+    "start": "bun src/main.tsx",
     "build:native": "napi build --platform --release --target aarch64-apple-darwin ./native",
     "artifacts": "napi artifacts"
   },
@@ -16,9 +16,8 @@
     "packageJsonPath": "."
   },
   "dependencies": {
-    "@babel/core": "^7.29.0",
-    "@babel/preset-typescript": "^7.28.5",
-    "babel-preset-solid": "^1.9.10",
+    "@zen-tui/core": "workspace:*",
+    "@zen-tui/solid": "workspace:*",
     "solid-js": "^1.9.11"
   },
   "devDependencies": {

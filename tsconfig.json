@@ -10,7 +10,9 @@
     "baseUrl": ".",
     "paths": {
       "@shared/*": ["src/shared/*"],
-      "@native/*": ["src/native/*"]
+      "@native/*": ["src/native/*"],
+      "@zen-tui/core": ["packages/zen-tui-core/src/index.ts"],
+      "@zen-tui/solid": ["packages/zen-tui-solid/src/index.ts"]
     }
   },
   "exclude": ["node_modules", "dist"]

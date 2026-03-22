@@ -1,5 +1,7 @@
 /**
  * Zen-TUI: Branch View (Refactored)
+ * 
+ *  My feedback: same fixes / improvement should apply here as WorkflowOverlay.concept.tsx
  */
 
 import { createSignal, For, onMount } from "solid-js"
@@ -20,30 +22,30 @@ export default function BranchView() {
   })
 
   return (
-    <box flexDirection="column">
-       <box bg="#1A1A2E" padding={1}>
-         <text fg="#AB47BC">⎇ BRANCHES </text>
-         <text fg="#81D4FA">│ {current()} │ </text>
-         <text fg="#78909C">{branches().length} total</text>
-       </box>
+    <Zen.Box flexDirection="column">
+      <Zen.Box bg="#1A1A2E" padding={1}>
+        <Zen.Text fg="#AB47BC">⎇ BRANCHES </Zen.Text>
+        <Zen.Text fg="#81D4FA">│ {current()} │ </Zen.Text>
+        <Zen.Text fg="#78909C">{branches().length} total</Zen.Text>
+      </Zen.Box>
 
-       <box flexDirection="column">
-         <For each={branches()}>
-           {(branch, idx) => {
-             const isSelected = createMemo(() => idx() === selectedIndex())
-             return (
-               <box bg={isSelected() ? "#1A237E" : undefined}>
-                  <text fg={branch.isCurrent ? "#66BB6A" : isSelected() ? "#E0E0E0" : "#90A4AE"}>
-                    {branch.isCurrent ? "● " : "  "}
-                    {branch.name.padEnd(20)}
-                    <text fg="#546E7A"> → {branch.upstream || "no upstream"}</text>
-                  </text>
-               </box>
-             )
-           }}
-         </For>
-       </box>
-    </box>
+      <Zen.Box flexDirection="column">
+        <Zen.For each={branches()}>
+          {(branch, idx) => {
+            const isSelected = createMemo(() => idx() === selectedIndex())
+            return (
+              <Zen.Box bg={isSelected() ? "#1A237E" : undefined}>
+                <Zen.Text fg={branch.isCurrent ? "#66BB6A" : isSelected() ? "#E0E0E0" : "#90A4AE"}>
+                  {branch.isCurrent ? "● " : "  "}
+                  {branch.name.padEnd(20)}
+                  <Zen.Text fg="#546E7A"> → {branch.upstream || "no upstream"}</Zen.Text>
+                </Zen.Text>
+              </Zen.Box>
+            )
+          }}
+        </Zen.For>
+      </Zen.Box>
+    </Zen.Box>
   )
 }
 

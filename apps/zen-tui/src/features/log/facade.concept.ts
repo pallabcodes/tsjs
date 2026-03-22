@@ -3,6 +3,8 @@
  * 
  * The single public SDK for the Log feature engine.
  * Consumers (App Shell, Rebase flow) use this to project and interact with history.
+ * 
+ * My feedback: since it uses @ts-ignore that means it patched so not accetpable. Otherwise, it is fine
  */
 
 // @ts-ignore
@@ -16,8 +18,8 @@ export interface LogFacade {
    * Initialize a log projection. 
    * Triggers the underlying Git stream and projection engine.
    */
-  open(options: { 
-    mode: LogProjectionMode; 
+  open(options: {
+    mode: LogProjectionMode;
     filter?: string;
     branch?: string;
   }): Promise<void>;
@@ -25,8 +27,8 @@ export interface LogFacade {
   /**
    * Update the current projection mode or filter without restarting the engine.
    */
-  updateProjection(input: { 
-    mode?: LogProjectionMode; 
+  updateProjection(input: {
+    mode?: LogProjectionMode;
     filter?: string;
   }): void;
 
@@ -43,10 +45,10 @@ export interface LogFacade {
   mutate: {
     /** Update commit identity (author/email) for a specific SHA */
     updateIdentity(sha: string, author: { name: string; email: string }): Promise<void>;
-    
+
     /** Safely remove commits from current history */
     prune(shas: string[]): Promise<void>;
-    
+
     /** Reorder specific commits (used by advanced history surgery) */
     reorder(shas: string[]): Promise<void>;
   };
@@ -66,7 +68,7 @@ export interface LogFacade {
    * Turns domain LogRows into TUI-ready models (colors, symbols).
    */
   presenter: {
-    getTuiRow: (row: LogRow) => TuiLogRow; 
+    getTuiRow: (row: LogRow) => TuiLogRow;
   };
 }
 
@@ -78,16 +80,16 @@ export const log: LogFacade = {
     const _rows = engine.projectHistory(100);
     // Future projection logic...
   },
-  updateProjection: () => {},
-  select: () => {},
-  focus: () => {},
+  updateProjection: () => { },
+  select: () => { },
+  focus: () => { },
   mutate: {
     updateIdentity: async (sha, identity) => {
       const engine = new NativeLogEngine(process.cwd());
       engine.updateIdentity(sha, identity.name, identity.email);
     },
-    prune: async () => {},
-    reorder: async () => {},
+    prune: async () => { },
+    reorder: async () => { },
   },
   selectors: {
     getRows: () => [],

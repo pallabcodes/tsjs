@@ -13,7 +13,7 @@
  *   "stash"   → Stash/pop/apply/drop
  */
 
-import { createSignal, createEffect, onMount, memo } from "../engine/reconciler.ts";
+import { createSignal, onMount, memo, Zen } from "@zen-tui/solid";
 import StandardView from "../features/views/StandardView.tsx";
 import WorkflowOverlay from "../features/workflows/WorkflowOverlay.tsx";
 
@@ -39,7 +39,6 @@ export default function App(props: { onInput?: (e: any) => void }) {
   const [mode, setMode] = createSignal<WorkflowMode>(null);
   const [sel, setSel] = createSignal(0);
 
-  // --- SOVEREIGN INPUT WIRE-UP ---
   onMount(() => {
     if (props.onInput) {
       props.onInput(handleInput);
@@ -49,22 +48,17 @@ export default function App(props: { onInput?: (e: any) => void }) {
   const maxSel = () => tab() === 0 ? 9 : tab() === 1 ? 4 : tab() === 2 ? 5 : 4;
 
   const handleInput = (e: any) => {
-    // If a workflow modal is active, let it handle input
     if (mode() !== null) {
       if (e.name === "escape" || e.name === "q") setMode(null);
       return;
     }
-
     if (e.name === "q") process.exit(0);
-
-    // Tab navigation
     if (e.name === "1") { setTab(0); setSel(0); }
     if (e.name === "2") { setTab(1); setSel(0); }
     if (e.name === "3") { setTab(2); setSel(0); }
     if (e.name === "4") { setTab(3); setSel(0); }
     if (e.name === "tab") { setTab((t: number) => (t + 1) % 4); setSel(0); }
 
-    // Workflow shortcuts
     if (e.name === "c") setMode("commit");
     if (e.name === "r") setMode("rebase");
     if (e.name === "C") setMode("cherry");
@@ -74,7 +68,6 @@ export default function App(props: { onInput?: (e: any) => void }) {
     if (e.name === "S") setMode("submod");
     if (e.name === "z") setMode("stash");
 
-    // List navigation
     if (e.name === "up" || e.name === "k") setSel((s: number) => Math.max(0, s - 1));
     if (e.name === "down" || e.name === "j") setSel((s: number) => Math.min(maxSel() - 1, s + 1));
   };
@@ -86,59 +79,51 @@ export default function App(props: { onInput?: (e: any) => void }) {
     return "c:commit  r:rebase  C:cherry-pick  m:merge  R:reset  a:amend  S:submodule  z:stash  q:quit";
   };
 
-  import('fs').then(fs => fs.appendFileSync('zen-verify.log', '[APP] Executing App Component...\n'));
-
   return (
-    <box flexDirection="column" width="100%" height="100%" bg={C.bg}>
+    <Zen.Box flexDirection="column" width="100%" height="100%" bg={C.bg}>
       
-      {/* HEADER — Clean, minimal, no clutter */}
-      <box height={1} width="100%" flexDirection="row" bg={C.bg} paddingX={1}>
-        <text bold fg={C.blue}>zen</text>
-        <text fg={C.dim}>  </text>
-        <text fg={C.text}>my-project</text>
-        <text fg={C.dim}>  </text>
-        <text bold fg={C.green}>main</text>
-        <text fg={C.dim}>  </text>
-        <text fg={C.subtext}>+2 ~4</text>
-        <box flexGrow={1} bg={C.bg} />
+      <Zen.Box height={1} width="100%" flexDirection="row" bg={C.bg} paddingX={1}>
+        <Zen.Text bold fg={C.blue}>zen</Zen.Text>
+        <Zen.Text fg={C.dim}>  </Zen.Text>
+        <Zen.Text fg={C.text}>my-project</Zen.Text>
+        <Zen.Text fg={C.dim}>  </Zen.Text>
+        <Zen.Text bold fg={C.green}>main</Zen.Text>
+        <Zen.Text fg={C.dim}>  </Zen.Text>
+        <Zen.Text fg={C.subtext}>+2 ~4</Zen.Text>
+        <Zen.Box flexGrow={1} bg={C.bg} />
         {mode() !== null && (
-          <text bold fg={C.orange}>{mode()!.toUpperCase()} </text>
+          <Zen.Text bold fg={C.orange}>{mode()!.toUpperCase()} </Zen.Text>
         )}
-        <text fg={C.green}>synced</text>
-      </box>
+        <Zen.Text fg={C.green}>synced</Zen.Text>
+      </Zen.Box>
 
-      {/* TABS */}
-      <box height={1} width="100%" flexDirection="row" bg={C.bg} paddingX={1}>
-        <text bold fg={isT(0) ? C.text : C.dim}>{isT(0) ? "[" : " "}1:Log{isT(0) ? "]" : " "} </text>
-        <text bold fg={isT(1) ? C.text : C.dim}>{isT(1) ? "[" : " "}2:Files{isT(1) ? "]" : " "} </text>
-        <text bold fg={isT(2) ? C.text : C.dim}>{isT(2) ? "[" : " "}3:Branches{isT(2) ? "]" : " "} </text>
-        <text bold fg={isT(3) ? C.text : C.dim}>{isT(3) ? "[" : " "}4:Stash{isT(3) ? "]" : " "} </text>
-        <box flexGrow={1} bg={C.bg} />
-      </box>
+      <Zen.Box height={1} width="100%" flexDirection="row" bg={C.bg} paddingX={1}>
+        <Zen.Text bold fg={isT(0) ? C.text : C.dim}>{isT(0) ? "[" : " "}1:Log{isT(0) ? "]" : " "} </Zen.Text>
+        <Zen.Text bold fg={isT(1) ? C.text : C.dim}>{isT(1) ? "[" : " "}2:Files{isT(1) ? "]" : " "} </Zen.Text>
+        <Zen.Text bold fg={isT(2) ? C.text : C.dim}>{isT(2) ? "[" : " "}3:Branches{isT(2) ? "]" : " "} </Zen.Text>
+        <Zen.Text bold fg={isT(3) ? C.text : C.dim}>{isT(3) ? "[" : " "}4:Stash{isT(3) ? "]" : " "} </Zen.Text>
+        <Zen.Box flexGrow={1} bg={C.bg} />
+      </Zen.Box>
 
-      {/* DIVIDER */}
-      <box height={1} width="100%" flexDirection="row" bg={C.bg}>
-        <box flexGrow={1} height={1} bg={C.border} />
-      </box>
+      <Zen.Box height={1} width="100%" flexDirection="row" bg={C.bg}>
+        <Zen.Box flexGrow={1} height={1} bg={C.border} />
+      </Zen.Box>
 
-      {/* MAIN CONTENT — Workflow overlay OR base views */}
-      <box flexGrow={1} flexDirection="column" width="100%" bg={C.bg}>
+      <Zen.Box flexGrow={1} flexDirection="column" width="100%" bg={C.bg}>
         {memo(() => {
           const m = mode();
           if (m !== null) return <WorkflowOverlay mode={mode} />;
           return <StandardView tab={tab} sel={sel} />;
         })()}
-      </box>
+      </Zen.Box>
 
-      {/* FOOTER DIVIDER */}
-      <box height={1} width="100%" flexDirection="row" bg={C.bg}>
-        <box flexGrow={1} height={1} bg={C.border} />
-      </box>
+      <Zen.Box height={1} width="100%" flexDirection="row" bg={C.bg}>
+        <Zen.Box flexGrow={1} height={1} bg={C.border} />
+      </Zen.Box>
 
-      {/* FOOTER HOTKEYS */}
-      <box height={1} width="100%" flexDirection="row" bg={C.bg} paddingX={1}>
-        <text fg={C.dim}>{hotkeys()}</text>
-      </box>
-    </box>
+      <Zen.Box height={1} width="100%" flexDirection="row" bg={C.bg} paddingX={1}>
+        <Zen.Text fg={C.dim}>{hotkeys()}</Zen.Text>
+      </Zen.Box>
+    </Zen.Box>
   );
 }

@@ -3,7 +3,7 @@
  */
 
 // @ts-ignore
-import { createRenderer } from "/Users/picon/Learning/knowledge/tsjs/apps/zen-tui/node_modules/solid-js/universal/dist/universal.js";
+import { createRenderer } from "solid-js/universal";
 
 /**
  * The Universal Renderer Bridge.

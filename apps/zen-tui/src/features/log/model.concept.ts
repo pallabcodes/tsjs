@@ -3,9 +3,11 @@
  * 
  * Defines the core types and state for the task-oriented Log engine.
  * Reflects the "Taste-first" philosophy: obvious structure, no boolean soup.
+ * 
+ * My feedback: this is clean enough so this fine as it is.
  */
 
-export type LogProjectionMode = 
+export type LogProjectionMode =
   | 'focus'      // HUD: Current work & upstream drift awareness
   | 'review'     // PR/Branch comparison & ancestry review
   | 'mutation'   // Interactive History Mutation (USP: Identity/Pruning)
@@ -20,7 +22,7 @@ export interface LogRow {
   date: string;
   subject: string;
   isHead: boolean;
-  
+
   // View-ready metadata for the TUI
   lanes: number[];        // Visual graph connectivity
   isSelected: boolean;
@@ -34,7 +36,7 @@ export interface LogState {
     filter: string;
     branch?: string;
   };
-  
+
   rows: LogRow[];
   selectedIndex: number;
   focusedSha?: string;

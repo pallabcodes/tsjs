@@ -4,6 +4,8 @@
  * Pure TypeScript Git operations using child_process.
  * This is the fallback layer when the Rust N-API binary is unavailable.
  * In production, hot paths would be replaced by the native engine.
+ * --
+ * My feedback: this file fine as it is
  */
 
 import { execSync } from "child_process"

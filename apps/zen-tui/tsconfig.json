@@ -3,7 +3,7 @@
     "target": "ESNext",
     "module": "ESNext",
     "moduleResolution": "bundler",
-    "jsx": "preserve",
+    "jsx": "react-jsx",
     "jsxImportSource": "solid-js",
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
@@ -23,5 +23,5 @@
     }
   },
   "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist", "native", "research"]
+  "exclude": ["node_modules", "dist", "native", "research", "**/*.concept.ts", "**/*.concept.tsx"]
 }

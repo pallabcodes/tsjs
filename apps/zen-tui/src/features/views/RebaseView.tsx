@@ -1,15 +1,17 @@
 /**
  * Zen-TUI — Rebase View (Dynamic Resize + Demo-Ready)
+ * 
+ *  My feedback: same fixes / improvement should apply here as WorkflowOverlay.concept.tsx
  */
 
 import { For } from "solid-js";
 import { C } from "../../app/App.js";
 
 const PLAN = [
-  { act: "pick",   hash: "a3f7c21", msg: "feat: add sovereign layout engine" },
+  { act: "pick", hash: "a3f7c21", msg: "feat: add sovereign layout engine" },
   { act: "squash", hash: "8d4e1b9", msg: "fix: viewport fill prevents terminal bleed" },
-  { act: "drop",   hash: "c92fa03", msg: "refactor: extract StandardView component" },
-  { act: "pick",   hash: "1e8b4d6", msg: "feat: add interactive rebase workflow" },
+  { act: "drop", hash: "c92fa03", msg: "refactor: extract StandardView component" },
+  { act: "pick", hash: "1e8b4d6", msg: "feat: add interactive rebase workflow" },
 ];
 
 function fit(s: string, len: number): string {
@@ -19,76 +21,76 @@ function fit(s: string, len: number): string {
 }
 
 const HDivider = () => (
-  <box flexDirection="row" width="100%" height={1} bg={C.bg}>
-     <box height={1} flexGrow={1} bg={C.border} />
-  </box>
+  <Zen.Box flexDirection="row" width="100%" height={1} bg={C.bg}>
+    <Zen.Box height={1} flexGrow={1} bg={C.border} />
+  </Zen.Box>
 );
 
 export default function RebaseView(props: { sel: number }) {
   return (
-    <box flexDirection="row" width="100%" height="100%" bg={C.bg}>
-      
+    <Zen.Box flexDirection="row" width="100%" height="100%" bg={C.bg}>
+
       {/* LEFT: Rebase Plan */}
-      <box width="65%" flexDirection="column" height="100%" bg={C.bg}>
-         <box height={1} width="100%" bg={C.bg} paddingX={1}>
-           <text fg={C.dim}>ACTION    HASH     COMMIT MESSAGE</text>
-         </box>
-         <HDivider />
-         
-         <box flexGrow={1} flexDirection="column" width="100%" bg={C.bg}>
-           <For each={PLAN}>
-             {(it, i) => {
-               const actColor = it.act === "drop" ? C.red : (it.act === "squash" ? C.yellow : C.green);
-               return (
-                 <box flexDirection="row" width="100%" height={1} bg={props.sel === i() ? C.activeBg : C.bg} paddingX={1}>
-                    <text fg={props.sel === i() ? C.blue : C.bg}>{props.sel === i() ? ">" : " "}</text>
-                    <text bold fg={actColor}>{fit(it.act.toUpperCase(), 10)}</text>
-                    <text fg={C.yellow}>{it.hash} </text>
-                    <text fg={C.text}>{fit(it.msg, 45)}</text>
-                 </box>
-               );
-             }}
-           </For>
-           <box height={2} bg={C.bg} />
-           <box flexDirection="row" bg={C.bg} paddingX={2}>
-              <text fg={C.dim}>Rebasing </text>
-              <text bold fg={C.blue}>feat/sovereign </text>
-              <text fg={C.dim}>onto </text>
-              <text bold fg={C.green}>main </text>
-              <text fg={C.dim}>(4 commits)</text>
-           </box>
-         </box>
-      </box>
+      <Zen.Box width="65%" flexDirection="column" height="100%" bg={C.bg}>
+        <Zen.Box height={1} width="100%" bg={C.bg} paddingX={1}>
+          <Zen.Text fg={C.dim}>ACTION    HASH     COMMIT MESSAGE</Zen.Text>
+        </Zen.Box>
+        <HDivider />
+
+        <Zen.Box flexGrow={1} flexDirection="column" width="100%" bg={C.bg}>
+          <Zen.For each={PLAN}>
+            {(it, i) => {
+              const actColor = it.act === "drop" ? C.red : (it.act === "squash" ? C.yellow : C.green);
+              return (
+                <Zen.Box flexDirection="row" width="100%" height={1} bg={props.sel === i() ? C.activeBg : C.bg} paddingX={1}>
+                  <Zen.Text fg={props.sel === i() ? C.blue : C.bg}>{props.sel === i() ? ">" : " "}</Zen.Text>
+                  <Zen.Text bold fg={actColor}>{fit(it.act.toUpperCase(), 10)}</Zen.Text>
+                  <Zen.Text fg={C.yellow}>{it.hash} </Zen.Text>
+                  <Zen.Text fg={C.text}>{fit(it.msg, 45)}</Zen.Text>
+                </Zen.Box>
+              );
+            }}
+          </Zen.For>
+          <Zen.Box height={2} bg={C.bg} />
+          <Zen.Box flexDirection="row" bg={C.bg} paddingX={2}>
+            <Zen.Text fg={C.dim}>Rebasing </Zen.Text>
+            <Zen.Text bold fg={C.blue}>feat/sovereign </Zen.Text>
+            <Zen.Text fg={C.dim}>onto </Zen.Text>
+            <Zen.Text bold fg={C.green}>main </Zen.Text>
+            <Zen.Text fg={C.dim}>(4 commits)</Zen.Text>
+          </Zen.Box>
+        </Zen.Box>
+      </Zen.Box>
 
       {/* RIGHT: Rebase Tools */}
-      <box width="35%" flexDirection="column" height="100%" bg={C.bg} paddingLeft={2}>
-         <text bold fg={C.text}>REBASE TOOLS</text>
-         <box height={1} bg={C.bg} />
-         <HDivider />
-         <box height={1} bg={C.bg} />
-         
-         <box flexDirection="column" bg={C.bg}>
-            <box flexDirection="row" bg={C.bg}><text bold fg={C.green}>p </text><text fg={C.dim}>pick   - use commit as-is</text></box>
-            <box flexDirection="row" bg={C.bg}><text bold fg={C.yellow}>s </text><text fg={C.dim}>squash - meld into previous</text></box>
-            <box flexDirection="row" bg={C.bg}><text bold fg={C.red}>d </text><text fg={C.dim}>drop   - discard commit</text></box>
-            <box flexDirection="row" bg={C.bg}><text bold fg={C.blue}>r </text><text fg={C.dim}>reword - edit message</text></box>
-            <box flexDirection="row" bg={C.bg}><text bold fg={C.orange}>e </text><text fg={C.dim}>edit   - stop for amending</text></box>
-            <box flexDirection="row" bg={C.bg}><text bold fg={C.cyan}>f </text><text fg={C.dim}>fixup  - squash silently</text></box>
-         </box>
-         
-         <box height={1} bg={C.bg} />
-         <HDivider />
-         <box height={1} bg={C.bg} />
-         
-         <box flexDirection="column" bg={C.bg}>
-            <text fg={C.subtext}>[Enter] Execute rebase plan</text>
-            <text fg={C.dim}>[Esc]   Abort and restore</text>
-            <box height={1} bg={C.bg} />
-            <text fg={C.dim}>Move commits with j/k</text>
-            <text fg={C.dim}>Change action with hotkey</text>
-         </box>
-      </box>
+      <Zen.Box width="35%" flexDirection="column" height="100%" bg={C.bg} paddingLeft={2}>
+        <Zen.Text bold fg={C.text}>REBASE TOOLS</Zen.Text>
+        <Zen.Box height={1} bg={C.bg} />
+        <HDivider />
+        <Zen.Box height={1} bg={C.bg} />
 
-    </box>
+        <Zen.Box flexDirection="column" bg={C.bg}>
+          <Zen.Box flexDirection="row" bg={C.bg}><Zen.Text bold fg={C.green}>p </Zen.Text><Zen.Text fg={C.dim}>pick   - use commit as-is</Zen.Text></Zen.Box>
+          <Zen.Box flexDirection="row" bg={C.bg}><Zen.Text bold fg={C.yellow}>s </Zen.Text><Zen.Text fg={C.dim}>squash - meld into previous</Zen.Text></Zen.Box>
+          <Zen.Box flexDirection="row" bg={C.bg}><Zen.Text bold fg={C.red}>d </Zen.Text><Zen.Text fg={C.dim}>drop   - discard commit</Zen.Text></Zen.Box>
+          <Zen.Box flexDirection="row" bg={C.bg}><Zen.Text bold fg={C.blue}>r </Zen.Text><Zen.Text fg={C.dim}>reword - edit message</Zen.Text></Zen.Box>
+          <Zen.Box flexDirection="row" bg={C.bg}><Zen.Text bold fg={C.orange}>e </Zen.Text><Zen.Text fg={C.dim}>edit   - stop for amending</Zen.Text></Zen.Box>
+          <Zen.Box flexDirection="row" bg={C.bg}><Zen.Text bold fg={C.cyan}>f </Zen.Text><Zen.Text fg={C.dim}>fixup  - squash silently</Zen.Text></Zen.Box>
+        </Zen.Box>
+
+        <Zen.Box height={1} bg={C.bg} />
+        <HDivider />
+        <Zen.Box height={1} bg={C.bg} />
+
+        <Zen.Box flexDirection="column" bg={C.bg}>
+          <Zen.Text fg={C.subtext}>[Enter] Execute rebase plan</Zen.Text>
+          <Zen.Text fg={C.dim}>[Esc]   Abort and restore</Zen.Text>
+          <Zen.Box height={1} bg={C.bg} />
+          <Zen.Text fg={C.dim}>Move commits with j/k</Zen.Text>
+          <Zen.Text fg={C.dim}>Change action with hotkey</Zen.Text>
+        </Zen.Box>
+      </Zen.Box>
+
+    </Zen.Box>
   );
 }
