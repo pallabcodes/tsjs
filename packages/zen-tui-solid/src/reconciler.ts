@@ -5,49 +5,78 @@
  * custom ZenNode tree and Rust-taffy layout.
  */
 
-import { ZenNode, ZenTextNode, getNextId } from '@zen-tui/core';
+import { ZenNode, ZenTextNode, getNextId, IZenLayoutEngine } from '@zen-tui/core';
 import { createZenRenderer } from './renderer.js';
 
-/**
- * SolidJS Universal Adapter Interface.
- * 
- * We provide the low-level 'How to manipulate a ZenNode' logic.
- * Solid's createRenderer provides the high-level 'When to update' logic.
- */
+let activeLayout: IZenLayoutEngine | null = null;
+
+export const setLayoutEngine = (engine: IZenLayoutEngine) => {
+  activeLayout = engine;
+};
+
+const parseSize = (val: any) => {
+  if (typeof val === 'number') return val;
+  if (typeof val === 'string' && val.endsWith('%')) {
+    return -parseFloat(val); // Backwards negative percentages compatibility
+  }
+  return null;
+};
+
+import fs from 'fs';
+
 // 1. Define the Low-Level Adapters (SPI)
 export const createElement = (tag: string): ZenNode => {
-  import('fs').then(fs => fs.appendFileSync('zen-verify.log', `[RECONCILER] createElement: ${tag}\n`));
-  return new ZenNode(tag, {}, getNextId(tag));
+  const node = new ZenNode(tag, {}, getNextId(tag));
+  if (activeLayout) {
+    node.nativeId = activeLayout.createNode("column", null, null, 0, 0, 0, 0, 0, 0, null, null, null, null, null);
+  }
+  console.log(`[RECONCILER] CreateElement: ${tag} -> Native: ${node.nativeId}`);
+  return node;
 };
 
 export const createTextNode = (text: string | number): ZenTextNode => {
-  return new ZenTextNode(String(text), undefined, getNextId('text'));
+  const node = new ZenTextNode(String(text), undefined, getNextId('text'));
+  if (activeLayout) {
+    node.nativeId = activeLayout.createNode("row", String(text).length, 1, 0, 0, 0, 0, 0, 0, null, null, null, null, null);
+  }
+  return node;
 };
 
-export const replaceNode = (parent: ZenNode | ZenTextNode, newNode: ZenNode | ZenTextNode, oldNode: ZenNode | ZenTextNode): void => {
-  if (!(parent instanceof ZenNode)) return;
-  const index = parent.children.indexOf(oldNode as any);
-  if (index !== -1) {
-    parent.children[index] = newNode as any;
-    newNode.parent = parent;
-    oldNode.parent = undefined;
+export const replaceText = (node: ZenNode | ZenTextNode, value: string): void => {
+  if (node instanceof ZenTextNode) {
+    node.text = value;
   }
 };
 
-export const insertNode = (parent: ZenNode | ZenTextNode, node: ZenNode | ZenTextNode, anchor?: ZenNode | ZenTextNode): void => {
-  import('fs').then(fs => fs.appendFileSync('zen-verify.log', `[RECONCILER] insertNode called\n`));
+export const isTextNode = (node: ZenNode | ZenTextNode): boolean => {
+  return node instanceof ZenTextNode;
+};
 
+export const insertNode = (parent: ZenNode | ZenTextNode, node: ZenNode | ZenTextNode, anchor?: ZenNode | ZenTextNode): void => {
   if (!(parent instanceof ZenNode)) return;
+  console.log(`[RECONCILER] Insert: ${node instanceof ZenNode ? node.tag : 'text'} Into: ${parent.tag} (P_Native: ${parent.nativeId}, N_Native: ${node.nativeId})`);
+  
   if (anchor) {
     const index = parent.children.indexOf(anchor as any);
     if (index !== -1) {
       parent.children.splice(index, 0, node as any);
       node.parent = parent;
+      if (activeLayout && parent.nativeId && node.nativeId) {
+        activeLayout.addChild(parent.nativeId, node.nativeId);
+      }
       return;
     }
   }
   parent.children.push(node as any);
   node.parent = parent;
+  if (activeLayout && parent.nativeId && node.nativeId) {
+    try {
+      activeLayout.addChild(parent.nativeId, node.nativeId);
+      fs.appendFileSync('zen-verify.log', `[RECONCILER] AddChild Success: P=${parent.nativeId} C=${node.nativeId}\n`);
+    } catch (e: any) {
+      fs.appendFileSync('zen-verify.log', `[FATAL ADD_CHILD] Error: ${e.message || e}\n`);
+    }
+  }
 };
 
 export const setProperty = (node: ZenNode | ZenTextNode, name: string, value: any): void => {
@@ -55,6 +84,10 @@ export const setProperty = (node: ZenNode | ZenTextNode, name: string, value: an
     (node.props as any)[name] = value;
   } else if (node instanceof ZenTextNode && name === 'children') {
     node.text = String(value);
+    if (activeLayout && node.nativeId) {
+       // Update text node length natively if it was width leaf
+       activeLayout.update_style(node.nativeId, "row", String(value).length, 1, null, null, null, null, null, null, null);
+    }
   }
 };
 
@@ -69,6 +102,9 @@ export const removeNode = (parent: ZenNode | ZenTextNode, node: ZenNode | ZenTex
   if (index !== -1) {
     parent.children.splice(index, 1);
     node.parent = undefined;
+    if (activeLayout && parent.nativeId && node.nativeId) {
+       activeLayout.removeChild(parent.nativeId, node.nativeId);
+    }
   }
 };
 
@@ -93,7 +129,8 @@ export const getNextSibling = (node: ZenNode | ZenTextNode): ZenNode | ZenTextNo
 export const renderer = createZenRenderer<ZenNode | ZenTextNode>({
   createElement,
   createTextNode,
-  replaceNode,
+  replaceText,
+  isTextNode,
   insertNode,
   setProperty,
   getProperty,

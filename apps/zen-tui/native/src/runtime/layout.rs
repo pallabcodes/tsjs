@@ -30,7 +30,12 @@ impl ZenLayoutEngine {
         padding_right: Option<f64>,
         padding_bottom: Option<f64>,
         padding_left: Option<f64>,
-        gap: Option<f64>
+        gap: Option<f64>,
+        position_type: Option<String>,
+        top: Option<f64>,
+        right: Option<f64>,
+        bottom: Option<f64>,
+        left: Option<f64>
     ) -> u32 {
         let mut style = Style::DEFAULT;
         
@@ -39,6 +44,18 @@ impl ZenLayoutEngine {
             "column" => FlexDirection::Column,
             _ => FlexDirection::Column,
         };
+
+        if let Some(pos) = position_type {
+            style.position = match pos.as_str() {
+                "absolute" => Position::Absolute,
+                _ => Position::Relative,
+            };
+        }
+
+        if let Some(t) = top { style.inset.top = length(t as f32); }
+        if let Some(r) = right { style.inset.right = length(r as f32); }
+        if let Some(b) = bottom { style.inset.bottom = length(b as f32); }
+        if let Some(l) = left { style.inset.left = length(l as f32); }
 
         if let Some(w) = width { 
             if w < 0.0 {
@@ -75,6 +92,68 @@ impl ZenLayoutEngine {
         let parent = *self.nodes.get(&parent_id).expect("Parent node not found");
         let child = *self.nodes.get(&child_id).expect("Child node not found");
         self.taffy.add_child(parent, child).expect("Failed to add child");
+    }
+
+    #[napi]
+    pub fn remove_child(&mut self, parent_id: u32, child_id: u32) {
+        let parent = *self.nodes.get(&parent_id).expect("Parent node not found");
+        let child = *self.nodes.get(&child_id).expect("Child node not found");
+        self.taffy.remove_child(parent, child).expect("Failed to remove child");
+    }
+
+    #[napi]
+    pub fn update_style(&mut self, 
+        node_id: u32,
+        flex_direction: String, 
+        width: Option<f64>, 
+        height: Option<f64>,
+        flex_grow: Option<f64>,
+        gap: Option<f64>,
+        position_type: Option<String>,
+        top: Option<f64>,
+        right: Option<f64>,
+        bottom: Option<f64>,
+        left: Option<f64>
+    ) {
+        let node = *self.nodes.get(&node_id).expect("Node not found");
+        let mut style = self.taffy.style(node).unwrap().clone();
+        
+        style.flex_direction = match flex_direction.as_str() {
+            "row" => FlexDirection::Row,
+            "column" => FlexDirection::Column,
+            _ => style.flex_direction,
+        };
+
+        if let Some(pos) = position_type {
+            style.position = match pos.as_str() {
+                "absolute" => Position::Absolute,
+                _ => Position::Relative,
+            };
+        }
+
+        if let Some(t) = top { style.inset.top = length(t as f32); }
+        if let Some(r) = right { style.inset.right = length(r as f32); }
+        if let Some(b) = bottom { style.inset.bottom = length(b as f32); }
+        if let Some(l) = left { style.inset.left = length(l as f32); }
+
+        if let Some(w) = width { 
+            if w < 0.0 {
+                style.size.width = percent((-w) as f32 / 100.0);
+            } else {
+                style.size.width = length(w as f32); 
+            }
+        }
+        if let Some(h) = height { 
+            if h < 0.0 {
+                style.size.height = percent((-h) as f32 / 100.0);
+            } else {
+                style.size.height = length(h as f32); 
+            }
+        }
+        if let Some(g) = flex_grow { style.flex_grow = g as f32; }
+        if let Some(g) = gap { style.gap = length(g as f32); }
+
+        self.taffy.set_style(node, style).unwrap();
     }
 
     #[napi]

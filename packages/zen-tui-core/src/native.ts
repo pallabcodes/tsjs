@@ -24,9 +24,28 @@ export interface IZenLayoutEngine {
     paddingRight: number,
     paddingBottom: number,
     paddingLeft: number,
-    gap: number
+    gap: number,
+    position_type: string | null,
+    top: number | null,
+    right: number | null,
+    bottom: number | null,
+    left: number | null
   ): number;
   addChild(parent: number, child: number): void;
+  removeChild(parent: number, child: number): void;
+  update_style(
+    node_id: number,
+    flexDirection: string,
+    width: number | null,
+    height: number | null,
+    flexGrow: number | null,
+    gap: number | null,
+    position_type: string | null,
+    top: number | null,
+    right: number | null,
+    bottom: number | null,
+    left: number | null
+  ): void;
   computeLayout(root: number, width: number, height: number): number[];
 }
 

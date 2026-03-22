@@ -9,6 +9,7 @@ import { ZenRenderer } from './hardware.js';
 import { ZenNode, ZenTextNode } from './node.js';
 import { ZenLayoutEngine, IZenLayoutEngine } from './native.js';
 import { setupNativeInput } from './input.js';
+import { setLayoutEngine } from '@zen-tui/solid';
 import fs from 'fs';
 
 export interface ZenInputEvent {
@@ -22,16 +23,25 @@ export class ZenApp {
   public renderer: ZenRenderer;
   public root: ZenNode;
   public onInput?: (event: ZenInputEvent) => void;
-  private layout: IZenLayoutEngine;
+  public layout: IZenLayoutEngine;
+  public activeFocusId: number | null = null;
+  public focusableNodes: number[] = [];
   private nodeMap = new Map<number, ZenNode | ZenTextNode>();
   private cleanupInput?: () => void;
 
   constructor() {
     this.renderer = new ZenRenderer();
     this.layout = new ZenLayoutEngine();
+    
+    // Wire up Incremental Reconciler pushes
+    setLayoutEngine(this.layout);
 
     // Industrial root node
     this.root = new ZenNode('box', { width: '100%', height: '100%' });
+    
+    // Create native node for root manually as boot strap
+    this.root.nativeId = this.layout.createNode("column", -100, -100, 0, 0, 0, 0, 0, 0, null, null, null, null, null);
+    this.nodeMap.set(this.root.nativeId!, this.root);
 
     this.setup();
   }
@@ -56,15 +66,11 @@ export class ZenApp {
     setInterval(() => {
       const { width: termW, height: termH } = this.renderer.getSize();
       
-      // 1. Process Input is now async via setupNativeInput callback
-
-      // 2. Compute Layout (Fluid & Responsive)
       const MIN_W = 40;
       const MIN_H = 10;
       const isTooSmall = termW < MIN_W || termH < MIN_H;
 
       if (isTooSmall) {
-        // Render Safety View (Industrial Shield)
         this.renderer.clear();
         const msg = ` RESIZE WINDOW (MIN ${MIN_W}x${MIN_H}) `;
         this.renderer.paint(
@@ -77,11 +83,11 @@ export class ZenApp {
         return;
       }
 
-      // STATE CLEAN: Fresh layout every frame (Zero-Ghost-Node Architecture)
-      this.layout = new ZenLayoutEngine();
+      // INCREMENTAL SYNC: Just refresh nodeMap pointers, do not recreate Rust nodes
       this.nodeMap.clear();
-
+      this.focusableNodes = []; // Reset on frame pass
       this.syncLayoutTree(this.root);
+
       fs.appendFileSync('zen-verify.log', `[LAYOUT] Frame root children: ${this.root.children.length}\n`);
       const results = this.layout.computeLayout(this.root.nativeId!, termW, termH);
       this.applyLayout(results);
@@ -89,7 +95,6 @@ export class ZenApp {
       // 3. Paint (Double Buffered)
       this.renderer.clear();
 
-      // CRITICAL: Fill entire viewport with the root bg to prevent terminal bleed-through
       const rootBg = (this.root.props as any).bg || '#020202';
       for (let py = 0; py < termH; py++) {
         for (let px = 0; px < termW; px++) {
@@ -106,66 +111,48 @@ export class ZenApp {
     if (event.name === 'q' || (event.name === 'c' && event.ctrl)) {
       this.destroy();
     }
+
+    if (event.name === 'tab') {
+      if (this.focusableNodes.length === 0) return;
+      const currentIndex = this.activeFocusId ? this.focusableNodes.indexOf(this.activeFocusId) : -1;
+      const nextIndex = (currentIndex + 1) % this.focusableNodes.length;
+      this.activeFocusId = this.focusableNodes[nextIndex]!;
+      
+      for (const id of this.focusableNodes) {
+         const n = this.nodeMap.get(id);
+         if (n instanceof ZenNode) {
+            n.props.focused = (id === this.activeFocusId);
+         }
+      }
+    }
+
+    if (this.activeFocusId) {
+      const node = this.nodeMap.get(this.activeFocusId);
+      if (node instanceof ZenNode && node.tag === 'input') {
+         if (event.name === 'return' && node.props.onSubmit) {
+            node.props.onSubmit((node.props as any).value || "");
+         } else if (event.name === 'backspace') {
+            const v = (node.props as any).value || "";
+            (node.props as any).value = v.slice(0, -1);
+         } else if (event.name.length === 1) {
+            (node.props as any).value = ((node.props as any).value || "") + event.name;
+         }
+      }
+    }
   }
 
   private syncLayoutTree(node: ZenNode | ZenTextNode) {
-    const parseSize = (val: any) => {
-      if (typeof val === 'number') return val;
-      if (typeof val === 'string' && val.endsWith('%')) {
-        return -parseFloat(val); // Hack: pass negative numbers to represent percentages in Rust
+    if (node.nativeId) {
+      this.nodeMap.set(node.nativeId, node);
+      if (node instanceof ZenNode && (node.tag === 'input' || node.props.onSubmit)) {
+         this.focusableNodes.push(node.nativeId);
+         if (!this.activeFocusId) this.activeFocusId = node.nativeId; // Auto-focus first input
       }
-      return null;
-    };
-
+    }
+    
     if (node instanceof ZenNode) {
-      const style = node.props;
-      const bp = style.border ? 1 : 0; // Border padding
-
-      const basePadding = typeof style.padding === 'number' ? style.padding : 0;
-      const px = typeof style.paddingX === 'number' ? style.paddingX : 0;
-      
-      const pTop = basePadding + (typeof style.paddingTop === 'number' ? style.paddingTop : 0) + bp;
-      const pBottom = basePadding + (typeof style.paddingBottom === 'number' ? style.paddingBottom : 0) + bp;
-      const pLeft = basePadding + px + (typeof style.paddingLeft === 'number' ? style.paddingLeft : 0) + bp;
-      const pRight = basePadding + px + (typeof style.paddingRight === 'number' ? style.paddingRight : 0) + bp;
-
-      node.nativeId = this.layout.createNode(
-        style.flexDirection || "column",
-        parseSize(style.width),
-        parseSize(style.height),
-        style.flexGrow ?? 0,
-        pTop,
-        pRight,
-        pBottom,
-        pLeft,
-        style.gap ?? 0
-      );
-      this.nodeMap.set(node.nativeId!, node);
-
-      if (node.parent && node.parent.nativeId) {
-        this.layout.addChild(node.parent.nativeId, node.nativeId);
-      }
-
       for (const child of node.children) {
         this.syncLayoutTree(child);
-      }
-    } else if (node instanceof ZenTextNode) {
-      // MEASURE & REVEAL: Text nodes are layout leaves
-      node.nativeId = this.layout.createNode(
-        "row",
-        node.text.length,
-        1,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0
-      );
-      this.nodeMap.set(node.nativeId!, node);
-
-      if (node.parent && node.parent.nativeId) {
-        this.layout.addChild(node.parent.nativeId, node.nativeId);
       }
     }
   }
@@ -197,6 +184,19 @@ export class ZenApp {
     }
 
     if (node instanceof ZenNode) {
+      if (node.tag === 'input') {
+         const val = (node.props as any).value || "";
+         const ph = node.props.placeholder || "";
+         const text = val ? val : ph;
+         const fg = val ? "#ffffff" : "#555555"; // Dim placeholder
+         this.paintText(x, y, text, { ...node.props, fg }, currentClip);
+         
+         if (node.props.focused) {
+            this.renderer.paint(x + text.length, y, '█', { fg: "#ffffff" });
+         }
+         return; // Skip standard children recursion if any
+      }
+
       if (node.props.bg) {
         this.fillRect(x, y, width, height, node.props.bg, currentClip);
       }
