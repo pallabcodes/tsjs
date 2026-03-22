@@ -87,6 +87,12 @@ export class ZenRenderer {
     let lastFg = '';
     let lastBg = '';
     let lastBold = false;
+    
+    // CRITICAL: The fallback bg prevents terminal profile from leaking through.
+    // ANSI code 49m means "reset bg to terminal default" which IS the user's iTerm green.
+    // By NEVER emitting 49m and always providing an explicit 24-bit bg, we guarantee
+    // zero terminal bleed-through regardless of the user's terminal profile.
+    const FALLBACK_BG = '#020202';
 
     for (let y = 0; y < this.height; y++) {
       const rowCurr = this.current[y];
@@ -97,27 +103,24 @@ export class ZenRenderer {
         const curr = rowCurr[x]!;
         const prev = rowPrev[x]!;
 
-        if (curr.char !== prev.char || JSON.stringify(curr.style) !== JSON.stringify(prev.style)) {
+        if (curr.char !== prev.char || curr.style.fg !== prev.style.fg || curr.style.bg !== prev.style.bg || curr.style.bold !== prev.style.bold) {
           output += `\x1b[${y + 1};${x + 1}H`;
           
-          if (curr.style.fg) {
-            if (curr.style.fg !== lastFg) {
-              output += `\x1b[38;2;${this.hexToRgb(curr.style.fg)}m`;
-              lastFg = curr.style.fg;
+          const fg = curr.style.fg || '';
+          if (fg !== lastFg) {
+            if (fg) {
+              output += `\x1b[38;2;${this.hexToRgb(fg)}m`;
+            } else {
+              output += `\x1b[39m`;
             }
-          } else if (lastFg !== '') {
-            output += `\x1b[39m`;
-            lastFg = '';
+            lastFg = fg;
           }
 
-          if (curr.style.bg) {
-            if (curr.style.bg !== lastBg) {
-              output += `\x1b[48;2;${this.hexToRgb(curr.style.bg)}m`;
-              lastBg = curr.style.bg;
-            }
-          } else if (lastBg !== '') {
-            output += `\x1b[49m`;
-            lastBg = '';
+          // NEVER emit \x1b[49m. Always use explicit 24-bit bg.
+          const bg = curr.style.bg || FALLBACK_BG;
+          if (bg !== lastBg) {
+            output += `\x1b[48;2;${this.hexToRgb(bg)}m`;
+            lastBg = bg;
           }
 
           if (curr.style.bold && !lastBold) {

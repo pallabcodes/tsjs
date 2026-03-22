@@ -1,32 +1,88 @@
 /**
- * Zen-TUI: Git Status View (Industrial Art)
+ * Zen-TUI — Sidebar List Component
+ *
+ * Renders different data based on `view` prop:
+ *   files    → Unstaged/staged file list with M/A/D/U status
+ *   branches → Local + remote branches with tracking status
+ *   commits  → Commit history with short graph
+ *   stash    → Stash entries
  */
 
 import { For } from "solid-js";
 
 const FILES = [
-  { name: "renderer.ts", status: "M", color: "#fab387", icon: "󰛄" },
-  { name: "plugin.ts", status: "A", color: "#a6e3a1", icon: "" },
-  { name: "App.tsx", status: "M", color: "#fab387", icon: "󰛄" },
-  { name: "node.ts", status: "M", color: "#fab387", icon: "󰛄" },
+  { label: "M  src/engine/app.ts",     detail: "+42 -8" },
+  { label: "M  src/app/App.tsx",       detail: "+187 -95" },
+  { label: "A  src/features/log.tsx",  detail: "+52" },
+  { label: "M  package.json",          detail: "+3 -1" },
 ];
 
-export default function StatusView(props: { selectedIndex: number }) {
+const BRANCHES = [
+  { label: "* main",            detail: "origin/main" },
+  { label: "  feat/sovereign",  detail: "behind 2" },
+  { label: "  fix/clipping",    detail: "ahead 1" },
+];
+
+const COMMITS = [
+  { label: "* 7c2e1f4 feat: sovereignty",      detail: "2m" },
+  { label: "* 4d3b0c2 refactor: transformer",  detail: "5m" },
+  { label: "* 2e9a8d4 fix: ANSI bleeding",     detail: "1h" },
+  { label: "| b5c7d8k chore: renderer",         detail: "2h" },
+  { label: "* a1b2c3d docs: plan update",       detail: "1d" },
+];
+
+const STASH = [
+  { label: "stash@{0}: WIP on main",   detail: "3h" },
+  { label: "stash@{1}: experiment",     detail: "2d" },
+];
+
+const C = {
+  base:     "#1e1e2e",
+  crust:    "#11111b",
+  surface0: "#313244",
+  text:     "#cdd6f4",
+  overlay0: "#6c7086",
+  blue:     "#89b4fa",
+  green:    "#a6e3a1",
+  red:      "#f38ba8",
+  peach:    "#fab387",
+  yellow:   "#f9e2af",
+  teal:     "#94e2d5",
+};
+
+const DATA: Record<string, Array<{label: string; detail: string}>> = {
+  files: FILES,
+  branches: BRANCHES,
+  commits: COMMITS,
+  stash: STASH,
+};
+
+export default function StatusView(props: { selectedIndex: number; view: string }) {
+  const items = () => DATA[props.view] || FILES;
+
   return (
-    <box flexDirection="column" gap={0}>
-      <For each={FILES}>
-        {(f, i) => (
-          <box flexDirection="row" height={1} gap={2} padding={0} bg={props.selectedIndex === i() ? "#313244" : undefined}>
-            {/* Status Pill Badge */}
-            <box width={3} bg={f.color} paddingX={1}>
-              <text bold fg="#1e1e2e">{f.status}</text>
+    <box flexDirection="column" width="100%" bg={C.base}>
+      <For each={items()}>
+        {(item, i) => {
+          const isSel = () => props.selectedIndex === i();
+          const lc = () => {
+            if (isSel()) return C.crust;
+            const c0 = item.label.charAt(0);
+            if (c0 === "M" || c0 === "|") return C.peach;
+            if (c0 === "A") return C.green;
+            if (c0 === "D") return C.red;
+            if (c0 === "*") return C.yellow;
+            if (c0 === "s") return C.teal;
+            return C.text;
+          };
+          return (
+            <box flexDirection="row" width="100%" height={1} bg={isSel() ? C.blue : C.base} paddingX={1}>
+              <text fg={lc()}>{item.label}</text>
+              <box flexGrow={1} />
+              <text fg={isSel() ? C.crust : C.overlay0}>{item.detail}</text>
             </box>
-            <box flexDirection="row" gap={1}>
-              <text fg={props.selectedIndex === i() ? "#fab387" : f.color}>{props.selectedIndex === i() ? "󰄬" : f.icon}</text>
-              <text fg={props.selectedIndex === i() ? "#ffffff" : "#cdd6f4"}>{f.name}</text>
-            </box>
-          </box>
-        )}
+          );
+        }}
       </For>
     </box>
   );

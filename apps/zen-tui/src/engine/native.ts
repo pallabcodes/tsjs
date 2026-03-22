@@ -20,7 +20,10 @@ export interface IZenLayoutEngine {
     width: number | null,
     height: number | null,
     flexGrow: number,
-    padding: number,
+    paddingTop: number,
+    paddingRight: number,
+    paddingBottom: number,
+    paddingLeft: number,
     gap: number
   ): number;
   addChild(parent: number, child: number): void;

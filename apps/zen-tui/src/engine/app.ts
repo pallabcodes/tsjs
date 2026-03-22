@@ -82,6 +82,15 @@ export class ZenApp {
 
       // 3. Paint (Double Buffered)
       this.renderer.clear();
+
+      // CRITICAL: Fill entire viewport with the root bg to prevent terminal bleed-through
+      const rootBg = (this.root.props as any).bg || '#020202';
+      for (let py = 0; py < termH; py++) {
+        for (let px = 0; px < termW; px++) {
+          this.renderer.paint(px, py, ' ', { bg: rootBg });
+        }
+      }
+
       this.paintNode(this.root, 0, 0);
       this.renderer.flush();
     }, 32);
@@ -106,15 +115,25 @@ export class ZenApp {
 
     if (node instanceof ZenNode) {
       const style = node.props;
-      const padding = typeof style.padding === 'number' ? style.padding : 0;
-      const borderPadding = style.border ? 1 : 0;
+      const bp = style.border ? 1 : 0; // Border padding
+
+      const basePadding = typeof style.padding === 'number' ? style.padding : 0;
+      const px = typeof style.paddingX === 'number' ? style.paddingX : 0;
+      
+      const pTop = basePadding + (typeof style.paddingTop === 'number' ? style.paddingTop : 0) + bp;
+      const pBottom = basePadding + (typeof style.paddingBottom === 'number' ? style.paddingBottom : 0) + bp;
+      const pLeft = basePadding + px + (typeof style.paddingLeft === 'number' ? style.paddingLeft : 0) + bp;
+      const pRight = basePadding + px + (typeof style.paddingRight === 'number' ? style.paddingRight : 0) + bp;
 
       node.nativeId = this.layout.createNode(
         style.flexDirection || "column",
         parseSize(style.width, termW),
         parseSize(style.height, termH),
         style.flexGrow ?? 0,
-        padding + borderPadding,
+        pTop,
+        pRight,
+        pBottom,
+        pLeft,
         style.gap ?? 0
       );
       this.nodeMap.set(node.nativeId!, node);
@@ -132,6 +151,9 @@ export class ZenApp {
         "row",
         node.text.length,
         1,
+        0,
+        0,
+        0,
         0,
         0,
         0
@@ -228,17 +250,17 @@ export class ZenApp {
     };
 
     for (let i = 1; i < iw - 1; i++) {
-      paintSafe(ix + i, iy, "═");
-      paintSafe(ix + i, iy + ih - 1, "═");
+      paintSafe(ix + i, iy, "─");
+      paintSafe(ix + i, iy + ih - 1, "─");
     }
     for (let i = 1; i < ih - 1; i++) {
-      paintSafe(ix, iy + i, "║");
-      paintSafe(ix + iw - 1, iy + i, "║");
+      paintSafe(ix, iy + i, "│");
+      paintSafe(ix + iw - 1, iy + i, "│");
     }
-    paintSafe(ix, iy, "╔");
-    paintSafe(ix + iw - 1, iy, "╗");
-    paintSafe(ix, iy + ih - 1, "╚");
-    paintSafe(ix + iw - 1, iy + ih - 1, "╝");
+    paintSafe(ix, iy, "╭");
+    paintSafe(ix + iw - 1, iy, "╮");
+    paintSafe(ix, iy + ih - 1, "╰");
+    paintSafe(ix + iw - 1, iy + ih - 1, "╯");
   }
 
   public destroy() {

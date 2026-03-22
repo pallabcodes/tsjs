@@ -26,7 +26,10 @@ impl ZenLayoutEngine {
         width: Option<f64>, 
         height: Option<f64>,
         flex_grow: Option<f64>,
-        padding: Option<f64>,
+        padding_top: Option<f64>,
+        padding_right: Option<f64>,
+        padding_bottom: Option<f64>,
+        padding_left: Option<f64>,
         gap: Option<f64>
     ) -> u32 {
         let mut style = Style::DEFAULT;
@@ -40,7 +43,12 @@ impl ZenLayoutEngine {
         if let Some(w) = width { style.size.width = length(w as f32); }
         if let Some(h) = height { style.size.height = length(h as f32); }
         if let Some(g) = flex_grow { style.flex_grow = g as f32; }
-        if let Some(p) = padding { style.padding = length(p as f32); }
+        
+        if let Some(p) = padding_top { style.padding.top = length(p as f32); }
+        if let Some(p) = padding_right { style.padding.right = length(p as f32); }
+        if let Some(p) = padding_bottom { style.padding.bottom = length(p as f32); }
+        if let Some(p) = padding_left { style.padding.left = length(p as f32); }
+
         if let Some(g) = gap { style.gap = length(g as f32); }
 
         let node = self.taffy.new_leaf(style).unwrap();

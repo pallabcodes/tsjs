@@ -1,142 +1,121 @@
 /**
- * Zen-TUI: The definitive "Stunning & Stable" Dashboard
+ * Zen-TUI — Demo-Ready Git Workflow Application (Dynamic Resize)
  * 
- * Modular Design System with Catppuccin inspired tokens.
+ * Green bleed: FIXED at renderer level (never emits ANSI 49m).
+ * Resize: Passes terminal width to all child views for dynamic column calculation.
+ * Every box explicitly sets bg={C.bg}.
  */
 
-import { createSignal, onMount } from "solid-js";
+import { createSignal } from "solid-js";
 import { JSX } from "../engine/jsx-runtime.js";
-import LogView from "../features/log/LogView.js";
-import StatusView from "../features/status/StatusView.js";
+import StandardView from "../features/views/StandardView.js";
+import RebaseView from "../features/views/RebaseView.js";
+import ResetModal from "../features/modals/ResetModal.js";
 
-// Design Token: Catppuccin (Mocha)
-const THEME = {
-  bg: "#1e1e2e",
-  surface: "#313244",
-  overlay: "#45475a",
-  border: "#45475a", // Changed from #585b70
-  text: "#cdd6f4",
-  subtext: "#a6adc8",
-  accent: "#f5c2e7",
-  peach: "#fab387",
-  green: "#a6e3a1",
-  blue: "#89b4fa",
-  lavender: "#b4befe", // New
-  focus: "#fab387", // New
+export const C = {
+  bg:       "#020202",
+  activeBg: "#161622",
+  border:   "#282838",
+  
+  text:     "#e2e4e9",
+  subtext:  "#8b8fa3",
+  dim:      "#484c5e",
+  
+  blue:     "#5b9df9",
+  green:    "#4ade80",
+  red:      "#f87171",
+  yellow:   "#fbbf24",
+  cyan:     "#67e8f9",
+  orange:   "#fb923c",
 };
 
 export default function App(props: { onInput?: (e: any) => void }) {
-  const [activeTab, setActiveTab] = createSignal(1);
-  const [selectedIndex, setSelectedIndex] = createSignal(0);
+  const [tab, setTab] = createSignal(0);
+  const [showReset, setShowReset] = createSignal(false);
+  const [sel, setSel] = createSignal(0);
 
-  // Handle local focus and selection switching
+  const maxSel = () => tab() === 0 ? 9 : tab() === 1 ? 4 : tab() === 2 ? 5 : 4;
+
   const handleInput = (e: any) => {
-    if (e.name === "1") { setActiveTab(1); setSelectedIndex(0); }
-    if (e.name === "2") { setActiveTab(2); setSelectedIndex(0); }
-    if (e.name === "3") { setActiveTab(3); setSelectedIndex(0); }
-    if (e.name === "4") { setActiveTab(4); setSelectedIndex(0); }
+    if (showReset()) {
+      if (e.name === "escape" || e.name === "q") setShowReset(false);
+      return;
+    }
+    if (e.name === "q") process.exit(0);
+    if (e.name === "1") { setTab(0); setSel(0); }
+    if (e.name === "2") { setTab(1); setSel(0); }
+    if (e.name === "3") { setTab(2); setSel(0); }
+    if (e.name === "4") { setTab(3); setSel(0); }
+    if (e.name === "tab") { setTab(t => (t + 1) % 4); setSel(0); }
+    if (e.name === "R" || e.name === "r") setShowReset(true);
+    if (e.name === "up" || e.name === "k") setSel(s => Math.max(0, s - 1));
+    if (e.name === "down" || e.name === "j") setSel(s => Math.min(maxSel() - 1, s + 1));
+  };
 
-    if (e.name === "up") setSelectedIndex(prev => Math.max(0, prev - 1));
-    if (e.name === "down") setSelectedIndex(prev => prev + 1);
+  const isT = (n: number) => tab() === n;
+
+  const hotkeys = () => {
+    if (tab() === 3) return "p:pick  s:squash  r:reword  d:drop  e:edit  Enter:apply  Esc:abort";
+    if (tab() === 1) return "s:stage  u:unstage  d:discard  a:stage-all  c:commit  p:push  q:quit";
+    if (tab() === 2) return "Enter:checkout  n:new  d:delete  m:merge  r:rebase  q:quit";
+    return "Enter:detail  c:cherry-pick  r:revert  R:reset  i:rebase-i  q:quit";
   };
 
   return (
-    <box flexDirection="column" height="100%" bg={THEME.bg}>
+    <box flexDirection="column" width="100%" height="100%" bg={C.bg}>
       
-      {/* 1. INDUSTRIAL MARQUEE HUD (Powerline Style) */}
-      <box height={1} flexDirection="row" bg={THEME.surface}>
-        <box bg={THEME.peach} paddingX={1}>
-          <text bold fg={THEME.bg}> ◈ ZEN_AUTONOMY </text>
-        </box>
-        <text fg={THEME.peach}></text>
-        <text fg={THEME.subtext} italic> workflow:git_sovereign </text>
-        <box flexGrow={1} />
-        <text fg={THEME.green}></text>
-        <box bg={THEME.green} paddingX={1}>
-          <text bold fg={THEME.bg}>󰄬 ENGINE_READY </text>
-        </box>
-        <box bg={THEME.bg} paddingX={1}>
-           <text fg={THEME.subtext}>20:45:50</text>
-        </box>
+      {/* ROW 1: Header */}
+      <box height={1} width="100%" flexDirection="row" bg={C.bg} paddingX={1}>
+        <text bold fg={C.blue}>zen </text>
+        <text fg={C.dim}>| </text>
+        <text fg={C.subtext}>my-project </text>
+        <text fg={C.dim}>on </text>
+        <text bold fg={C.green}>main </text>
+        <text fg={C.dim}>| </text>
+        <text fg={C.subtext}>+2 ~4 -0 </text>
+        <box flexGrow={1} bg={C.bg} />
+        <text fg={C.dim}>synced </text>
+        <text fg={C.green}>origin/main</text>
       </box>
 
-      {/* 2. MAIN QUADRANT GRID */}
-      <box flexGrow={1} flexDirection="row" gap={0} padding={1}>
-        
-        {/* LEFT COLUMN (35%) */}
-        <box width="35%" flexDirection="column" gap={1}>
-          
-          {/* PANEL 1: SOURCES */}
-          <box flexGrow={2} flexDirection="column" border borderColor={activeTab() === 1 ? THEME.focus : THEME.border}>
-            <box height={1} bg={activeTab() === 1 ? THEME.focus : THEME.surface} paddingX={1}>
-              <text bold fg={activeTab() === 1 ? THEME.bg : THEME.text}> SOURCES [UNSTAGED]</text>
-            </box>
-            <box flexGrow={1} padding={1}>
-               <StatusView selectedIndex={activeTab() === 1 ? selectedIndex() : -1} />
-            </box>
-          </box>
-
-          {/* PANEL 2: BRANCHES */}
-          <box flexGrow={1} flexDirection="column" border borderColor={activeTab() === 2 ? THEME.focus : THEME.border}>
-            <box height={1} bg={activeTab() === 2 ? THEME.focus : THEME.surface} paddingX={1}>
-              <text bold fg={activeTab() === 2 ? THEME.bg : THEME.text}> BRANCHES [LOCAL]</text>
-            </box>
-            <box flexGrow={1} padding={1}>
-              <box flexDirection="column">
-                <text fg={activeTab() === 2 && selectedIndex() === 0 ? THEME.focus : THEME.blue}> main</text>
-                <text fg={activeTab() === 2 && selectedIndex() === 1 ? THEME.focus : THEME.subtext}>  feat/sovereign-layout</text>
-                <text fg={activeTab() === 2 && selectedIndex() === 2 ? THEME.focus : THEME.subtext}>  fix/clipping-nesting</text>
-              </box>
-            </box>
-          </box>
-
-          {/* PANEL 3: TELEMETRY */}
-          <box height={6} flexDirection="column" border borderColor={activeTab() === 3 ? THEME.focus : THEME.border}>
-            <box flexGrow={1} padding={1}>
-              <box flexDirection="column">
-                <text bold fg={THEME.blue}>󰙅 GIT_TELEMETRY</text>
-                <text fg={THEME.subtext}>Stash: 2 items</text>
-                <text fg={THEME.subtext}>Remotes: origin</text>
-              </box>
-            </box>
-          </box>
-        </box>
-
-        {/* RIGHT COLUMN (65%) */}
-        <box width="65%" paddingLeft={1}>
-          <box flexGrow={1} flexDirection="column" border borderColor={activeTab() === 4 ? THEME.focus : THEME.border}>
-             <box height={1} bg={activeTab() === 4 ? THEME.focus : THEME.surface} paddingX={1}>
-               <text bold fg={activeTab() === 4 ? THEME.bg : THEME.text}>󰋚 LOG_STREAM [/MAIN]</text>
-             </box>
-             <box flexGrow={1} padding={1}>
-               <LogView />
-             </box>
-          </box>
-        </box>
+      {/* ROW 2: Tabs */}
+      <box height={1} width="100%" flexDirection="row" bg={C.bg} paddingX={1}>
+        <text bold fg={isT(0) ? C.text : C.dim}>{isT(0) ? "[" : " "}1:Log{isT(0) ? "]" : " "} </text>
+        <text bold fg={isT(1) ? C.text : C.dim}>{isT(1) ? "[" : " "}2:Files{isT(1) ? "]" : " "} </text>
+        <text bold fg={isT(2) ? C.text : C.dim}>{isT(2) ? "[" : " "}3:Branches{isT(2) ? "]" : " "} </text>
+        <text bold fg={isT(3) ? C.text : C.dim}>{isT(3) ? "[" : " "}4:Stash{isT(3) ? "]" : " "} </text>
+        <box flexGrow={1} bg={C.bg} />
+        {tab() === 3 && <text bold fg={C.red}>REBASE ACTIVE</text>}
       </box>
 
-      {/* 3. COMMAND FOOTER (Powerline Style) */}
-      <box height={1} bg={THEME.surface} flexDirection="row">
-        <box bg={THEME.peach} paddingX={1}>
-          <text bold fg={THEME.bg}> COMMAND_HUD </text>
-        </box>
-        <text fg={THEME.peach}></text>
-        <box flexDirection="row" gap={2} paddingX={1}>
-           <text fg={THEME.peach}>[1-4] Nav</text>
-           <text fg={THEME.green}>[S] Stage</text>
-           <text fg={THEME.blue}>[C] Commit</text>
-        </box>
-        <box flexGrow={1} />
-        <text fg={THEME.lavender}></text>
-        <box bg={THEME.lavender} paddingX={1}>
-          <text bold fg={THEME.bg}> main</text>
-        </box>
+      {/* ROW 3: Divider */}
+      <box height={1} width="100%" flexDirection="row" bg={C.bg}>
+        <box flexGrow={1} height={1} bg={C.border} />
       </box>
 
-      {/* REACTION: Inject handleInput to global engine */}
-      <box display="none">
-        {(() => { if (props.onInput) props.onInput(handleInput); return null; })()}
+      {/* ROW 4+: Main Content */}
+      <box flexGrow={1} flexDirection="column" width="100%" bg={C.bg}>
+        {tab() === 3 ? <RebaseView sel={sel()} /> : <StandardView tab={tab()} sel={sel()} />}
       </box>
+
+      {/* FOOTER: Divider */}
+      <box height={1} width="100%" flexDirection="row" bg={C.bg}>
+        <box flexGrow={1} height={1} bg={C.border} />
+      </box>
+
+      {/* FOOTER: Hotkeys */}
+      <box height={1} width="100%" flexDirection="row" bg={C.bg} paddingX={1}>
+        <text fg={C.dim}>{hotkeys()}</text>
+      </box>
+
+      {/* MODAL OVERLAY */}
+      {showReset() && (
+        <box style={{ position: "absolute" }} flexDirection="column" width="100%" height="100%">
+           <ResetModal />
+        </box>
+      )}
+
+      <box display="none">{(() => { if (props.onInput) props.onInput(handleInput); return null; })()}</box>
     </box>
   );
 }

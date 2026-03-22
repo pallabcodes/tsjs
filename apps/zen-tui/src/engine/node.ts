@@ -13,6 +13,11 @@ export interface ZenProps {
   height?: number | string;
   flexGrow?: number;
   padding?: number;
+  paddingX?: number;
+  paddingLeft?: number;
+  paddingRight?: number;
+  paddingTop?: number;
+  paddingBottom?: number;
   gap?: number;
   border?: boolean | string;
   borderColor?: string;
@@ -21,9 +26,11 @@ export interface ZenProps {
   bold?: boolean;
   italic?: boolean;
   underline?: boolean;
+  display?: string;
   onSubmit?: (val: string) => void;
   placeholder?: string;
   focused?: boolean;
+  children?: any;
 }
 
 /**
