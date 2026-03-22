@@ -3,7 +3,6 @@
  */
 
 import { For } from "solid-js";
-import { JSX } from "../../engine/jsx-runtime.js";
 import { C } from "../../app/App.js";
 
 const PLAN = [

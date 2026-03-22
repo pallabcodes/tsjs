@@ -2,7 +2,6 @@
  * Zen-TUI — Reset Modal (Demo-Ready)
  */
 
-import { JSX } from "../../engine/jsx-runtime.js";
 import { C } from "../../app/App.js";
 
 export default function ResetModal() {

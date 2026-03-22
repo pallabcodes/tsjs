@@ -40,8 +40,20 @@ impl ZenLayoutEngine {
             _ => FlexDirection::Column,
         };
 
-        if let Some(w) = width { style.size.width = length(w as f32); }
-        if let Some(h) = height { style.size.height = length(h as f32); }
+        if let Some(w) = width { 
+            if w < 0.0 {
+                style.size.width = percent((-w) as f32 / 100.0);
+            } else {
+                style.size.width = length(w as f32); 
+            }
+        }
+        if let Some(h) = height { 
+            if h < 0.0 {
+                style.size.height = percent((-h) as f32 / 100.0);
+            } else {
+                style.size.height = length(h as f32); 
+            }
+        }
         if let Some(g) = flex_grow { style.flex_grow = g as f32; }
         
         if let Some(p) = padding_top { style.padding.top = length(p as f32); }

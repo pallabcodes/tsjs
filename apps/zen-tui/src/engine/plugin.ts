@@ -5,7 +5,9 @@
  * directly into our sovereign ZenEngine reconciler.
  */
 
+// @ts-ignore
 import { transformAsync } from "@babel/core";
+import fs from 'fs';
 // @ts-ignore
 import ts from "@babel/preset-typescript";
 // @ts-ignore
@@ -18,17 +20,18 @@ export function createZenTransformer() {
     setup(build) {
       // 1. Intercept all TSX/JSX files
       build.onLoad({ filter: /\.[t|j]sx$/ }, async (args) => {
+        import('fs').then(fs => fs.appendFileSync('zen-verify.log', `[PLUGIN] Intercepted: ${args.path}\n`));
         const file = Bun.file(args.path);
         const code = await file.text();
 
-        // 2. Transform using Babel + Solid Universal Preset
+        // 3. Transform using Babel + Solid Universal Preset
         const result = await transformAsync(code, {
           filename: args.path,
           presets: [
             [
               solid,
               {
-                moduleName: "zen-reconciler", // This points to our reconciler export
+                moduleName: "/Users/picon/Learning/knowledge/tsjs/apps/zen-tui/src/engine/reconciler.ts",
                 generate: "universal",
               },
             ],
@@ -40,14 +43,6 @@ export function createZenTransformer() {
           contents: result?.code ?? "",
           loader: "js",
         };
-      });
-
-      // 2. Intercept SolidJS to prevent Server/Web condition leaks
-      build.onLoad({ filter: /solid-js\/web\/dist\/server\.js$/ }, async (args) => {
-          // Force Solid to use its core reactive logic, bypassing the 'notSup' server guards
-          const path = args.path.replace("server.js", "solid.js");
-          const code = await Bun.file(path).text();
-          return { contents: code, loader: "js" };
       });
     },
   });

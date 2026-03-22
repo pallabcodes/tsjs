@@ -7,7 +7,9 @@
 
 import { ZenRenderer } from './hardware.js';
 import { ZenNode, ZenTextNode } from './node.js';
-import { ZenLayoutEngine, ZenInput, IZenLayoutEngine, IZenInput } from './native.js';
+import { ZenLayoutEngine, IZenLayoutEngine } from './native.js';
+import { setupNativeInput } from './input.js';
+import fs from 'fs';
 
 export interface ZenInputEvent {
   name: string;
@@ -21,13 +23,12 @@ export class ZenApp {
   public root: ZenNode;
   public onInput?: (event: ZenInputEvent) => void;
   private layout: IZenLayoutEngine;
-  private input: IZenInput;
   private nodeMap = new Map<number, ZenNode | ZenTextNode>();
+  private cleanupInput?: () => void;
 
   constructor() {
     this.renderer = new ZenRenderer();
     this.layout = new ZenLayoutEngine();
-    this.input = new ZenInput();
 
     // Industrial root node
     this.root = new ZenNode('box', { width: '100%', height: '100%' });
@@ -39,6 +40,12 @@ export class ZenApp {
     this.renderer.enterAltScreen();
     this.renderer.hideCursor();
 
+    this.cleanupInput = setupNativeInput((event) => {
+      fs.appendFileSync('/Users/picon/Learning/knowledge/tsjs/apps/zen-tui/zen-input.log', `[ENGINE] EVENT: ${event.name}\n`);
+      this.handleInput(event);
+      if (this.onInput) this.onInput(event);
+    });
+
     this.run(); // Call the new run method
 
     process.on('SIGINT', () => this.destroy());
@@ -48,26 +55,24 @@ export class ZenApp {
   public run() {
     setInterval(() => {
       const { width: termW, height: termH } = this.renderer.getSize();
-      const isTooSmall = termW < 80 || termH < 20;
+      
+      // 1. Process Input is now async via setupNativeInput callback
 
-      // 1. Process Input
-      const eventJson = this.input.pollEvent(16);
-      if (eventJson) {
-        try {
-          const event = JSON.parse(eventJson) as ZenInputEvent;
-          this.handleInput(event);
-          if (this.onInput) this.onInput(event);
-        } catch (e) {
-          // Silent fail
-        }
-      }
+      // 2. Compute Layout (Fluid & Responsive)
+      const MIN_W = 40;
+      const MIN_H = 10;
+      const isTooSmall = termW < MIN_W || termH < MIN_H;
 
-      // 2. Compute Layout (Rust Taffy)
       if (isTooSmall) {
         // Render Safety View (Industrial Shield)
         this.renderer.clear();
-        const msg = ` TERMINAL_SIZE_ERROR: MIN (80x20) REQ: CUR (${termW}x${termH}) `;
-        this.renderer.paint(Math.floor((termW - msg.length) / 2), Math.floor(termH / 2), msg, { bg: "#FF5252", fg: "#FFFFFF", bold: true });
+        const msg = ` RESIZE WINDOW (MIN ${MIN_W}x${MIN_H}) `;
+        this.renderer.paint(
+          Math.floor((termW - msg.length) / 2),
+          Math.floor(termH / 2),
+          msg,
+          { fg: "#f87171", bg: "#000000", bold: true }
+        );
         this.renderer.flush();
         return;
       }
@@ -77,6 +82,7 @@ export class ZenApp {
       this.nodeMap.clear();
 
       this.syncLayoutTree(this.root);
+      fs.appendFileSync('zen-verify.log', `[LAYOUT] Frame root children: ${this.root.children.length}\n`);
       const results = this.layout.computeLayout(this.root.nativeId!, termW, termH);
       this.applyLayout(results);
 
@@ -103,12 +109,10 @@ export class ZenApp {
   }
 
   private syncLayoutTree(node: ZenNode | ZenTextNode) {
-    const { width: termW, height: termH } = this.renderer.getSize();
-
-    const parseSize = (val: any, max: number) => {
+    const parseSize = (val: any) => {
       if (typeof val === 'number') return val;
       if (typeof val === 'string' && val.endsWith('%')) {
-        return Math.floor((parseFloat(val) / 100) * max);
+        return -parseFloat(val); // Hack: pass negative numbers to represent percentages in Rust
       }
       return null;
     };
@@ -127,8 +131,8 @@ export class ZenApp {
 
       node.nativeId = this.layout.createNode(
         style.flexDirection || "column",
-        parseSize(style.width, termW),
-        parseSize(style.height, termH),
+        parseSize(style.width),
+        parseSize(style.height),
         style.flexGrow ?? 0,
         pTop,
         pRight,
@@ -266,6 +270,7 @@ export class ZenApp {
   public destroy() {
     this.renderer.showCursor();
     this.renderer.exitAltScreen();
+    this.cleanupInput?.();
     process.exit(0);
   }
 }

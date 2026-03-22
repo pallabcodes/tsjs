@@ -26,6 +26,7 @@ export interface ZenProps {
   bold?: boolean;
   italic?: boolean;
   underline?: boolean;
+  strike?: boolean;
   display?: string;
   onSubmit?: (val: string) => void;
   placeholder?: string;

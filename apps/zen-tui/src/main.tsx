@@ -1,15 +1,29 @@
-/**
- * Zen-TUI: Main Entry Point
- * 
- * Boots the custom ZenEngine using the Sovereign Reconciler.
- */
+import "./engine/plugin.js";
+import "./engine/plugin";
 
-import { render } from './engine/reconciler.js';
-import { ZenApp } from './engine/app.js';
-import App from './app/App.js';
+// --- BOOTSTRAP ---
+async function bootstrap() {
+  console.log("ZEN-TUI: Sovereign Reactivity Bootstrapping...");
+  
+  // 1. Re-import reconciler and App ONLY AFTER the plugin is registered
+  const { render } = await import('./engine/reconciler.ts');
+  const { ZenApp } = await import('./engine/app.ts');
+  const { default: App } = await import('./app/App.tsx');
+  
+  // 2. Initialize the High-Performance Zen Engine
+  const zen = new ZenApp();
+  
+  // 3. Render the App Shell
+  import('fs').then(fs => fs.appendFileSync('zen-verify.log', '[MAIN] App instantiating...\n'));
+  render(() => {
+    import('fs').then(fs => fs.appendFileSync('zen-verify.log', '[MAIN] Reactive Root Executed.\n'));
+    try {
+      return <App onInput={(l: any) => zen.onInput = l} />;
+    } catch (err: any) {
+      import('fs').then(fs => fs.appendFileSync('zen-verify.log', `[FATAL ERROR IN RENDER] ${err.stack || err}\n`));
+      return null;
+    }
+  }, zen.root);
+}
 
-// 1. Initialize the High-Performance Zen Engine
-const zen = new ZenApp();
-
-// 2. Render the App Shell into the Zen Root
-render(() => <App onInput={(l) => zen.onInput = l} />, zen.root);
+bootstrap().catch(console.error);

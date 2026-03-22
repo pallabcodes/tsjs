@@ -10,6 +10,8 @@
     "strict": true,
     "noImplicitAny": true,
     "noImplicitReturns": true,
+    "allowImportingTsExtensions": true,
+    "noEmit": true,
     "noFallthroughCasesInSwitch": true,
     "strictNullChecks": true,
     "outDir": "dist",

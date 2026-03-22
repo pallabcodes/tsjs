@@ -2,6 +2,8 @@ use crossterm::event::{self, Event, KeyCode, KeyEvent, KeyModifiers};
 use napi_derive::napi;
 use std::time::Duration;
 
+use crossterm::terminal;
+
 #[napi]
 pub struct ZenInput {
     // Shared state if needed
@@ -11,6 +13,7 @@ pub struct ZenInput {
 impl ZenInput {
     #[napi(constructor)]
     pub fn new() -> Self {
+        let _ = terminal::enable_raw_mode();
         Self {}
     }
 
@@ -44,3 +47,4 @@ impl ZenInput {
         format!("{{\"name\": \"{}\", \"ctrl\": {}, \"alt\": {}, \"shift\": {}}}", name, ctrl, alt, shift)
     }
 }
+impl Drop for ZenInput { fn drop(&mut self) { crossterm::terminal::disable_raw_mode().ok(); } }
