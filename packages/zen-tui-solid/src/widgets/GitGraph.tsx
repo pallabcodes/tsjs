@@ -25,18 +25,17 @@ interface GitGraphProps {
 }
 
 export function GitGraph(props: GitGraphProps) {
-  const COLORS = ["#a855f7", "#3b82f6", "#2dd4bf"]; // Purple, Blue, Teal
+  const COLORS = ["#8b5cf6", "#06b6d4", "#10b981", "#f59e0b"]; // Violet, Cyan, Emerald, Amber
   const W = props.width || 60;
 
   return (
-    <Box flexDirection="column" gap={0}>
+    <Box flexDirection="column" gap={0} bg="#020617">
       {props.commits.map((commit, idx) => {
         const lane = commit.track ?? 0;
-        const color = COLORS[lane % COLORS.length];
         const isSelected = props.focused && idx === (props.selectedIdx ?? 0);
 
-        // Render multiple lanes to match mockup high-density graph
-        const lanes = [0, 1, 2]; // Fixed lanes for now to match three-column mockup density
+        // Professional Multi-Lane Engine (Mockup Accurate)
+        const lanes = [0, 1, 2]; // 3-lane density for Keynote
         
         return (
           <Box 
@@ -44,31 +43,37 @@ export function GitGraph(props: GitGraphProps) {
             bg={isSelected ? "#1e293b" : undefined}
             padding={{ left: 1, right: 1 }}
           >
-            <Box width={10} flexDirection="row">
+            {/* Lane Cluster: Curved Visualization */}
+            <Box width={12} flexDirection="row">
                {lanes.map(l => {
                  const isCommitLane = l === lane;
-                 const isCurved = l > lane;
-                 // Premium Curved Layout (Mockup Style)
+                 const isCurved = l > lane; 
+                 // Premium Curved Layout Logic
                  let connector = "│ ";
-                 if (isCommitLane) connector = isSelected ? "* " : "o ";
-                 else if (isCurved) connector = "╭─";
-                 
-                 const laneColor = isCommitLane ? (isSelected ? "#4ade80" : COLORS[l % COLORS.length]) : "#1e293b";
-                 return <Text fg={laneColor} value={connector} />;
+                 if (isCommitLane) {
+                   connector = isSelected ? "● " : "○ ";
+                 } else if (isCurved) {
+                   connector = "╭─";
+                 }
+
+                 const laneColor = isCommitLane ? (isSelected ? "#10b981" : COLORS[l % COLORS.length]) : "#1e293b";
+                 return <Text fg={laneColor} bold={isCommitLane} value={connector} />;
                })}
                <Show when={commit.isHead}>
-                  <Text fg="#4ade80" bold={true} value="* " />
+                  <Text fg="#10b981" bold={true} value="* " />
                </Show>
             </Box>
 
+            {/* Commit Metadata */}
             <Text fg={isSelected ? "#60a5fa" : "#64748b"}>
-              {commit.hash.slice(0, 7)}
+              {`${commit.hash.slice(0, 7)}  `}
             </Text>
             
-            <Box width={1} />
-
-            <Text fg={isSelected ? "#f1f5f9" : "#cbd5e1"}>
-              {truncate(commit.msg, W - 22)}
+            <Text 
+              fg={isSelected ? "#f8fafc" : "#cbd5e1"} 
+              bold={isSelected}
+            >
+              {truncate(commit.msg, W - 25, "...")}
             </Text>
           </Box>
         );

@@ -5,10 +5,10 @@
 /**
  * Standard TUI text truncation with ellipsis.
  */
-export function truncate(text: string, maxWidth: number): string {
+export function truncate(text: string, maxWidth: number, indicator: string = "…"): string {
   if (maxWidth <= 0) return "";
   if (text.length <= maxWidth) return text;
-  return text.slice(0, maxWidth - 1) + "…";
+  return text.slice(0, maxWidth - indicator.length) + indicator;
 }
 
 /**

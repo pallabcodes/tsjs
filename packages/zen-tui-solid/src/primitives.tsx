@@ -9,13 +9,21 @@ import { ZenProps } from '@zen-tui/node';
 export type { ZenProps };
 import { createRUCNode, registry } from './core/node.js';
 import { requestFrame } from './core/pipeline.js';
-import { createRenderEffect, children, Show } from 'solid-js';
+import { createRenderEffect, children, Show, createSignal } from 'solid-js';
 
 export interface ZenComponentProps extends ZenProps {
   children?: any;
   title?: string;
   focused?: boolean;
 }
+
+// Reactive Dimensions
+const [w, setw] = createSignal(150);
+const [h, seth] = createSignal(50);
+export const W = w;
+export const H = h;
+export const setW = setw;
+export const setH = seth;
 
 /**
  * Box: High-performance flexbox container.
@@ -58,9 +66,11 @@ export const Text = (props: ZenComponentProps): any => {
   const sync = () => {
     Object.assign(node.props, props);
     const content = resolved();
-    node.props.value = Array.isArray(content) 
+    const finalValue = (Array.isArray(content) 
       ? content.map(c => String(c)).join('') 
-      : String(content || '');
+      : String(content || ''));
+    
+    node.props.value = finalValue || String(props.value || '');
     node.dirty = true;
     requestFrame();
   };
@@ -76,14 +86,15 @@ export const Text = (props: ZenComponentProps): any => {
  * 'Commercial Grade' iteration with focus-aware aesthetics.
  */
 export const Panel = (props: ZenComponentProps): any => {
-  const borderColor = () => props.focused ? "#3b82f6" : "#1e293b";
-  const titleBg = () => props.focused ? "#3b82f6" : "#1e293b";
-  const titleFg = () => props.focused ? "#f8fafc" : "#94a3b8";
+  const borderColor = () => props.focused ? "#3b82f6" : "#475569";
+  const titleBg = () => props.headerBg || (props.focused ? "#3b82f6" : "#334155");
+  const titleFg = () => props.focused ? "#ffffff" : "#94a3b8";
 
   return (
     <Box 
       {...props} 
       flexDirection="column"
+      flexGrow={1}
       border={true} 
       borderColor={borderColor()}
     >
@@ -101,7 +112,7 @@ export const Panel = (props: ZenComponentProps): any => {
           </Show>
         </Box>
       </Show>
-      <Box flexGrow={1} flexDirection="column">
+      <Box flexGrow={1} flexDirection="column" bg="#020617">
         {props.children}
       </Box>
     </Box>

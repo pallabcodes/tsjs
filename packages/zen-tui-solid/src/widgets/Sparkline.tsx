@@ -4,8 +4,8 @@ import { Box, Text, h } from "../index.js";
 /**
  * Sparkline: Lightweight micro-visualization for high-density metrics.
  * 
- * Performance: Utilizes simple character-based bars for sub-millisecond 
- * rasterization within the TUI engine.
+ * Provides both a RUC Component and a raw string utility for 
+ * absolute layout stability.
  */
 interface SparklineProps {
   data: number[];
@@ -13,20 +13,20 @@ interface SparklineProps {
   width?: number;
 }
 
-export function Sparkline(props: SparklineProps) {
+export function getSparklineString(data: number[], width: number): string {
   const bars = [" ", " ", "▂", "▃", "▄", "▅", "▆", "▇", "█"];
-  const max = Math.max(...props.data, 1);
-  const w = props.width || 10;
+  const max = Math.max(...data, 1);
+  const w = width || 10;
   
   // Resample data to fit width if necessary
-  const displayData = props.data.slice(-w);
+  const displayData = data.slice(-w);
+  return displayData.map((val) => {
+    const idx = Math.min(Math.floor((val / max) * (bars.length - 1)), bars.length - 1);
+    return bars[idx];
+  }).join('');
+}
 
-  return (
-    <Box flexDirection="row" gap={0}>
-      {displayData.map((val) => {
-        const idx = Math.min(Math.floor((val / max) * (bars.length - 1)), bars.length - 1);
-        return <Box><Text fg={props.color || "#ffffff"}>{bars[idx]}</Text></Box>;
-      })}
-    </Box>
-  );
+export function Sparkline(props: SparklineProps) {
+  const str = getSparklineString(props.data, props.width || 10);
+  return <Text fg={props.color || "#ffffff"} value={str} />;
 }

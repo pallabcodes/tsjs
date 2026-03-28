@@ -64,9 +64,11 @@ export function FileTree(props: FileTreeProps) {
               {`${indent}${dirIndicator}`}
             </Text>
             
-            <Text fg={isSelected ? "#60a5fa" : color} margin={{ right: 1 }}>
-              {icon}
-            </Text>
+            <Box width={6} flexDirection="row">
+               <Text fg={isSelected ? "#60a5fa" : color} bold={true}>
+                 {icon}
+               </Text>
+            </Box>
 
             <Text 
               fg={isSelected ? "#f1f5f9" : (file.isDir ? "#e2e8f0" : "#cbd5e1")}

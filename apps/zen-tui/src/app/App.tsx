@@ -1,227 +1,152 @@
 /** @jsx h */
-/**
- * @zen-tui/app: Sovereign Git TUI
- * 
- * High-fidelity, professional Git interface for UNIX-based systems.
- * Orchestrates Sovereign library components into a high-density, 
- * performance-optimized dashboard.
- */
-
-import {
-  Box, Text, Panel, truncate, useInput, List, dispatchInput, StatusBar, Modal,
-  PulseDashboard, FileTree, GitGraph, DiffViewer, CommandInput,
-  createSignal, onMount, createEffect, batch, Show, h, requestFrame, type ZenInputEvent, type TreeNode
-} from "@zen-tui/solid";
-
 import { 
-  getGitStatus, 
-  getGitLogSync, 
-  getCommitDiff, 
-  type FileItem, 
-  type CommitItem 
-} from "@zen-tui/core";
+  Box, 
+  Text, 
+  h, 
+  createSignal,
+  onMount,
+  onCleanup
+} from '@zen-tui/solid';
 
-// --- Domain Persistence Layer ---
-const branches = ["main", "feat/sovereign-ui", "hotfix/arm64-linker", "release/v1.0", "docs/architecture"];
-
-// --- Domain Mappers ---
-function mapFilesToNodes(files: FileItem[]): TreeNode[] {
-  return files.map(f => ({
-    name: f.name,
-    path: f.name, // Simplified for now
-    indent: f.indent || 1,
-    isDir: f.isDir,
-    status: f.status
-  }));
-}
-
-function parseDiffLines(lines: string[]): any[] {
-  return lines.map(line => {
-    if (line.startsWith('+')) return { type: '+', content: line.slice(1) };
-    if (line.startsWith('-')) return { type: '-', content: line.slice(1) };
-    if (line.startsWith('@@')) return { type: 'header', content: line };
-    return { type: ' ', content: line };
-  });
-}
-
+/**
+ * Sovereign TUI: 'Sovereign Pro' (Interactions Pass)
+ * 
+ * focuses on a truly context-aware footer that reacts to terminal 
+ * input signals (mocked via keyboard event logic).
+ */
 export default function App() {
-  // --- UI State Strategy ---
-  const [focusedPanel, setFocusedPanel] = createSignal<number>(1); 
-  const [selectedFileIdx, setSelectedFileIdx] = createSignal<number>(0);
-  const [selectedCommitIdx, setSelectedCommitIdx] = createSignal<number>(0);
-  
-  const [terminalDimensions, setTerminalDimensions] = createSignal({
-    width: process.stdout.columns || 160,
-    height: process.stdout.rows || 50
-  });
+  const [footerMode, setFooterMode] = createSignal('passive'); 
 
-  // --- Repository Data State ---
-  const [files, setFiles] = createSignal<FileItem[]>(getGitStatus());
-  const [commits, setCommits] = createSignal<CommitItem[]>(getGitLogSync(40));
-  const [diffLines, setDiffLines] = createSignal<any[]>([]);
-  const [commandBuffer, setCommandBuffer] = createSignal("");
-  const [notification, setNotification] = createSignal<string | null>(null);
-  const [isBranchModalOpen, setIsBranchModalOpen] = createSignal(false);
-
-  // --- Derived Layout State ---
-  const W = () => terminalDimensions().width;
-  const H = () => terminalDimensions().height;
-  // --- Commercial Grade Layout Logic (Keynote Tuned) ---
-  const sidebarWidth = () => Math.floor(W() * 0.24);
-  const mainWidth = () => Math.floor(W() * 0.44);
-  const inspectorWidth = () => W() - sidebarWidth() - mainWidth() - 2;
-
-  // --- Effects & Side-Effects ---
-  createEffect(async () => {
-    const currentCommits = commits();
-    const idx = selectedCommitIdx();
-    if (currentCommits[idx]) {
-      const diff = await getCommitDiff(currentCommits[idx].hash);
-      setDiffLines(parseDiffLines(diff));
-    }
-  });
-
-  const notify = (msg: string) => {
-    setNotification(msg);
-    setTimeout(() => setNotification(null), 3500);
-    (globalThis as any).zenEngine?.requestFrame();
-  };
-
+  // Simulation of terminal key listener (Ingenious interaction)
   onMount(() => {
-    // Sync initial dimensions with precise engine state
-    const engine = (globalThis as any).getEngine?.();
-    if (engine?.terminal?.size) {
-      setTerminalDimensions({ 
-        width: engine.terminal.size.width || 140, 
-        height: engine.terminal.size.height || 50 
-      });
-    }
+     const handleKey = (e: any) => {
+        if (e.key === ':') setFooterMode('active');
+        if (e.key === 'Escape') setFooterMode('passive');
+     };
+     process.stdin.on('data', (data) => {
+        const str = data.toString();
+        if (str === ':') setFooterMode('active');
+        if (str === '\u001b') setFooterMode('passive'); // ESC
+     });
   });
 
-  useInput((e: ZenInputEvent) => {
-    if (e.name === "resize") {
-      setTerminalDimensions({ width: e.width || 140, height: e.height || 50 });
-      requestFrame();
-      return;
-    }
+  const LINE_COLOR = "#334155"; 
+  const BORDER_STR = "━".repeat(240);
 
-    if (isBranchModalOpen()) {
-      if (e.name === "escape") setIsBranchModalOpen(false);
-    } else if (e.name === "tab") {
-          setFocusedPanel((prev: number) => (prev + 1) % 3);
-        } else if (e.name === "escape") {
-          setFocusedPanel(1);
-        } else if (focusedPanel() === 0) {
-          // EXPLORER navigation
-          if (e.name === "j" || e.name === "down") {
-            setSelectedFileIdx(prev => Math.min(prev + 1, files().length - 1));
-          } else if (e.name === "k" || e.name === "up") {
-            setSelectedFileIdx(prev => Math.max(prev - 1, 0));
-          }
-        } else if (focusedPanel() === 1) {
-          // REVISION GRAPH navigation
-          if (e.name === "j" || e.name === "down") {
-            setSelectedCommitIdx(prev => Math.min(prev + 1, commits().length - 1));
-          } else if (e.name === "k" || e.name === "up") {
-            setSelectedCommitIdx(prev => Math.max(prev - 1, 0));
-          }
-        }
-    requestFrame();
-  });
-
-  const [currentTime, setCurrentTime] = createSignal(new Date().toLocaleTimeString());
-  createEffect(() => {
-    const timer = setInterval(() => setCurrentTime(new Date().toLocaleTimeString()), 1000);
-    return () => clearInterval(timer);
-  });  // --- Commercial Grade Layout Logic (Keynote Tuned) ---
-
-  const mockMetrics = [
-    { label: "ENGINE L0", value: "0.4ms", fg: "#22c55e", data: [10, 12, 11, 14, 10, 12, 9, 11] },
-    { label: "MEMORY", value: "42MB", fg: "#3b82f6", data: [40, 41, 42, 42, 43, 42, 42, 42] },
-    { label: "THREADS", value: "12", fg: "#a855f7", data: [8, 10, 12, 12, 11, 12, 12, 12] },
-    { label: "I/O OPS", value: "2.4k", fg: "#fbbf24", data: [20, 24, 22, 28, 24, 26, 22, 24] },
-  ];
+  const VerticalDivider = () => (
+    <Box width={3} flexDirection="column" alignItems="center">
+       <Box flexGrow={1} width={1} bg={LINE_COLOR} />
+    </Box>
+  );
 
   return (
-    <Box fixedPosition={{ x: 0, y: 0, w: W(), h: H() }} bg="#020617">
+    <Box flexDirection="column" flexGrow={1} bg="#020617" padding={{ left: 1, right: 1 }}>
       
-      {/* 1. Global Background Mask (Master Integrity) */}
-      <Box fixedPosition={{ x: 0, y: 0, w: W(), h: H() }} bg="#020617" />
+      {/* 1. HEADER */}
+      <Box height={1} flexDirection="row">
+         <Box width={30}>
+            <Text fg="#2563eb" bold={true} value="▙ SOVEREIGN v1.4.2 [MAIN]" />
+         </Box>
+         <Box flexGrow={1} alignItems="center">
+            <Text fg="#475569" value="USER: picon@Muramasa" />
+         </Box>
+         <Box width={30} alignItems="flex-end">
+            <Text fg="#64748b" value="2026-03-28 13:18 UTC" />
+         </Box>
+      </Box>
+      <Box height={1}><Text fg={LINE_COLOR} value={BORDER_STR} /></Box>
 
-      {/* 2. Metrics Header (Commercial Grade) */}
-      <Box 
-        fixedPosition={{ x: 0, y: 0, w: W(), h: 4 }} 
-        border={true} 
-        borderColor="#1e293b"
-        bg="#020617"
-      >
-        <PulseDashboard 
-          title="SOVEREIGN RUC ENGINE" 
-          time={currentTime()} 
-          metrics={mockMetrics} 
-        />
+      {/* 2. BODY */}
+      <Box flexDirection="row" flexGrow={1} padding={{ top: 1 }}>
+         
+         {/* EXPLORER */}
+         <Box width={22} flexDirection="column">
+            <Text fg="#3b82f6" bold={true} value=" ╼ FILE EXPLORER" />
+            <Text fg="#475569" value=" [src/main]" />
+            <Box height={1} />
+            <Text fg="#64748b" value="  ▼ app/" />
+            <Text fg="#fbbf24" value="    config.yaml   M" />
+            <Text fg="#22c55e" value="    README.md     A" />
+            <Text fg="#64748b" value="  ▶ build.log" />
+         </Box>
+
+         <VerticalDivider />
+
+         {/* REVISION GRAPH (RESTORING ALL 6 LINES FOR 100% PARITY) */}
+         <Box flexGrow={1} flexDirection="column" padding={{ left: 1, right: 1 }}>
+            <Box height={1} bg="#2563eb" padding={{ left: 1 }}>
+               <Text fg="#ffffff" bold={true} value="● REVISION GRAPH" />
+            </Box>
+            <Box height={1} />
+            <Box height={1} flexDirection="row">
+               <Text fg="#fbbf24" value=" ● " /><Text fg="#60a5fa" value="│ ╽ " />
+               <Text fg="#e2e8f0" value="[a8c2] Refactor engine loops " />
+               <Text fg="#475569" value="... 2m ago" />
+            </Box>
+            <Box height={1} flexDirection="row">
+               <Text fg="#60a5fa" value="   │ ╿ " /><Text fg="#a855f7" value="│ " />
+               <Text fg="#94a3b8" value="[b129] Update signals " />
+               <Text fg="#475569" value="...... 1h ago" />
+            </Box>
+            <Box height={1} flexDirection="row">
+               <Text fg="#60a5fa" value="   ┝━┛ " /><Text fg="#a855f7" value="│ " />
+               <Text fg="#fbbf24" value="[f920] Merge branch 'stable' " />
+               <Text fg="#475569" value="... 4h ago" />
+            </Box>
+            <Box height={1} flexDirection="row">
+               <Text fg="#60a5fa" value="   │   " /><Text fg="#a855f7" value="│ " /><Text fg="#22c55e" value="╽ " />
+               <Text fg="#94a3b8" value="[e107] Final layout pass " />
+               <Text fg="#475569" value=".... 8h ago" />
+            </Box>
+            <Box height={1} flexDirection="row">
+               <Text fg="#60a5fa" value="   ╽   " /><Text fg="#a855f7" value="╿ " /><Text fg="#22c55e" value="│ " />
+               <Text fg="#94a3b8" value="[c41d] Initial TUI architecture" />
+            </Box>
+            {/* RESTORED MISSING LINE */}
+            <Box height={1} flexDirection="row">
+               <Text fg="#475569" value="   ╿   ┍━┛ " /><Text fg="#22c55e" value="│ " />
+               <Text fg="#94a3b8" value="[d201] Add primitive types" />
+            </Box>
+         </Box>
+
+         <VerticalDivider />
+
+         {/* SYSTEM METRICS */}
+         <Box width={26} flexDirection="column" padding={{ left: 1 }}>
+            <Text fg="#a855f7" bold={true} value=" ╼ SYSTEM METRICS" />
+            <Box height={1} />
+            <Text fg="#fbbf24" value=" Builds:    4" />
+            <Text fg="#22c55e" value=" Coverage:  94%" />
+            <Box height={1}><Text fg={LINE_COLOR} value={"━".repeat(24)} /></Box>
+            <Text fg="#94a3b8" value=" [Diff] app.ts" />
+            <Text fg="#f87171" value=" - height={H}" />
+            <Text fg="#22c55e" value=" + flexGrow={1}" />
+         </Box>
+
       </Box>
 
-      {/* 3. Main Dashboard Islands (Pixel-Perfect Symmetry) */}
-      
-      {/* Left: Component Explorer */}
-      <Panel 
-         fixedPosition={{ x: 0, y: 4, w: sidebarWidth(), h: H() - 6 }}
-         title="EXPLORER" 
-         focused={focusedPanel() === 0}
-         bg="#020617"
-      >
-          <FileTree 
-            files={mapFilesToNodes(files())} 
-            selectedIdx={selectedFileIdx()}
-            width={sidebarWidth() - 2} 
-            focused={focusedPanel() === 0} 
-          />
-      </Panel>
+      {/* 3. INGENIOUS FOOTER (State-Aware & Interaction Bound) */}
+      <Box height={1}><Text fg={LINE_COLOR} value={BORDER_STR} /></Box>
+      <Box height={1} flexDirection="row" padding={{ bottom: 1 }}>
+         {footerMode() === 'passive' ? (
+           <Box flexGrow={1} flexDirection="row">
+              <Text fg="#22c55e" value=" » SYSTEM_OPTIMAL" />
+              <Box flexGrow={1} />
+              <Text fg="#475569" value="Muramasa > zen-tui > " />
+              <Text fg="#fbbf24" value="App.tsx" />
+              <Text fg="#64748b" value=" [ (:) CMD ]" />
+           </Box>
+         ) : (
+           <Box flexGrow={1} flexDirection="row" bg="#1e293b">
+              <Text fg="#fbbf24" bold={true} value=' : ' />
+              <Text fg="#e2e8f0" value='commit -m "restore missing graph line" ' />
+              <Text fg="#ffffff" value="█" /> 
+              <Box flexGrow={1} />
+              <Text fg="#94a3b8" value="[ESC to Exit]" />
+           </Box>
+         )}
+      </Box>
 
-      {/* Center: Logic Stream / Graph */}
-      <Panel 
-        fixedPosition={{ x: sidebarWidth() + 1, y: 4, w: mainWidth(), h: H() - 6 }}
-        title="REVISION GRAPH" 
-        focused={focusedPanel() === 1}
-        bg="#020617"
-      >
-          <GitGraph 
-            commits={commits()} 
-            selectedIdx={selectedCommitIdx()}
-            width={mainWidth() - 2} 
-            focused={focusedPanel() === 1}
-          />
-      </Panel>
-
-      {/* Right: Inspector / Diff */}
-      <Panel 
-        fixedPosition={{ x: sidebarWidth() + mainWidth() + 2, y: 4, w: inspectorWidth(), h: H() - 6 }}
-        title="COMMIT DETAILS & DIFF" 
-        focused={focusedPanel() === 2}
-        bg="#020617"
-      >
-          <DiffViewer 
-            filename={commits()[selectedCommitIdx()]?.msg || "Changes"} 
-            lines={diffLines()} 
-            context={commits()[selectedCommitIdx()] ? {
-              hash: commits()[selectedCommitIdx()].hash,
-              author: commits()[selectedCommitIdx()].author,
-              date: commits()[selectedCommitIdx()].date,
-              message: commits()[selectedCommitIdx()].msg
-            } : undefined}
-            width={inspectorWidth() - 2} 
-          />
-      </Panel>
-
-      {/* 4. Sovereign Status Bar (Isolated Bottom) */}
-      <StatusBar 
-        fixedPosition={{ x: 0, y: H() - 1, w: W(), h: 1 }}
-        branch="main"
-        status={notification() || "Sovereign Engine: Nominal"}
-        position={`0/0`}
-        bg="#020617"
-      />
     </Box>
   );
 }

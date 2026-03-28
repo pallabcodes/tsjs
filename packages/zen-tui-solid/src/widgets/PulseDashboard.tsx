@@ -30,12 +30,12 @@ export function PulseDashboard(props: PulseDashboardProps) {
 
       {/* Dynamic Metrics */}
       {props.metrics.map((m) => (
-        <Box width={20} flexDirection="column">
+        <Box width={22} flexDirection="column" padding={{ left: 1, right: 1 }}>
           <Text fg="#94a3b8" dim={true}>{m.label}</Text>
-          <Box flexDirection="row">
+          <Box flexDirection="row" height={1}>
             <Text fg={m.fg} bold={true}>{m.value}</Text>
             <Box flexGrow={1} />
-            <Sparkline data={m.data} color={m.fg} width={8} />
+            <Sparkline data={m.data} color={m.fg} width={6} />
           </Box>
         </Box>
       ))}

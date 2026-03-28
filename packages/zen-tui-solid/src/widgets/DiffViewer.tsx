@@ -44,14 +44,32 @@ export function DiffViewer(props: DiffViewerProps) {
 
   return (
     <Box flexDirection="column" gap={0}>
-      {/* Commit Context Header (Matches Mockup) */}
+      {/* Commit Context Header (Metadata Card) */}
       {props.context && (
-        <Box flexDirection="column" padding={{ bottom: 1 }}>
-          <Text fg="#cbd5e1">{`Commit:  ${props.context.hash}`}</Text>
-          <Text fg="#cbd5e1">{`Author:  ${props.context.author}`}</Text>
-          <Text fg="#cbd5e1">{`Date:    ${props.context.date}`}</Text>
-          <Text fg="#cbd5e1">{`Message: ${truncate(props.context.message, w - 10)}`}</Text>
-          <Box height={1} />
+        <Box 
+          flexDirection="column" 
+          padding={{ top: 1, bottom: 1, left: 1, right: 1 }}
+          margin={{ bottom: 1 }}
+          bg="#0f172a"
+          border={true}
+          borderColor="#1e293b"
+        >
+          <Box flexDirection="row">
+            <Text fg="#22d3ee" bold={true} width={10}>COMMIT</Text>
+            <Text fg="#cbd5e1" value={props.context.hash} />
+          </Box>
+          <Box flexDirection="row">
+            <Text fg="#22d3ee" bold={true} width={10}>AUTHOR</Text>
+            <Text fg="#cbd5e1" value={props.context.author} />
+          </Box>
+          <Box flexDirection="row">
+            <Text fg="#22d3ee" bold={true} width={10}>DATE</Text>
+            <Text fg="#cbd5e1" value={props.context.date} />
+          </Box>
+          <Box flexDirection="row">
+             <Text fg="#22d3ee" bold={true} width={10}>MSG</Text>
+             <Text fg="#f8fafc" bold={true} value={truncate(props.context.message, w - 15, "...")} />
+          </Box>
         </Box>
       )}
 
