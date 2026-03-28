@@ -1,0 +1,18 @@
+{
+  "name": "@zen-tui/native",
+  "version": "0.1.0",
+  "description": "Sovereign Shared Native Bindings",
+  "type": "module",
+  "main": "./src/index.ts",
+  "scripts": {
+     "build:native": "npx @napi-rs/cli build --platform --release native",
+     "build:native:debug": "npx @napi-rs/cli build --platform native"
+  },
+  "dependencies": {
+    "node-cron": "^3.0.3" 
+  },
+  "napi": {
+    "name": "zen_core_native",
+    "packageJsonPath": ".."
+  }
+}

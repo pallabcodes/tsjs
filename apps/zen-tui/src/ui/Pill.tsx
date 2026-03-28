@@ -1,11 +1,20 @@
-import { Zen } from "@zen-tui/solid";
+/** @jsx h */
+import { Box, Text } from "@zen-tui/solid";
 
-export const ZenPill = (props: { text: string; bg?: string; fg?: string }) => {
-  return Zen.Box({
-    bg: props.bg || "#2a2a35",
-    paddingX: 1,
-    border: true,
-    borderColor: props.fg || "#a1a1aa",
-    children: Zen.Text({ fg: props.fg || "#e4e4e7", children: props.text })
-  });
+/**
+ * ZenPill: High-fidelity status indicator.
+ */
+export const ZenPill = (props: { label: string; fg?: string; bg?: string }) => {
+  return (
+    <Box
+      bg={props.bg || "#374151"}
+      padding={{ left: 1, right: 1 }}
+      border={true}
+      borderColor={props.fg || "#9ca3af"}
+    >
+      <Text fg={props.fg || "#ffffff"} bold={true}>
+        {props.label}
+      </Text>
+    </Box>
+  );
 };

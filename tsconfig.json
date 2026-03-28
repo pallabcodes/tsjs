@@ -1,18 +1,23 @@
 {
   "compilerOptions": {
     "target": "ESNext",
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "allowImportingTsExtensions": true,
+    "noEmit": true,
     "esModuleInterop": true,
     "strict": true,
     "skipLibCheck": true,
+    "jsx": "react-jsx",
+    "jsxImportSource": "solid-js",
     "forceConsistentCasingInFileNames": true,
     "baseUrl": ".",
     "paths": {
-      "@shared/*": ["src/shared/*"],
-      "@native/*": ["src/native/*"],
       "@zen-tui/core": ["packages/zen-tui-core/src/index.ts"],
-      "@zen-tui/solid": ["packages/zen-tui-solid/src/index.ts"]
+      "@zen-tui/layout": ["packages/zen-tui-layout/src/index.ts"],
+      "@zen-tui/painter": ["packages/zen-tui-painter/src/index.ts"],
+      "@zen-tui/solid": ["packages/zen-tui-solid/src/index.ts"],
+      "@/*": ["apps/zen-tui/src/*"]
     }
   },
   "exclude": ["node_modules", "dist"]

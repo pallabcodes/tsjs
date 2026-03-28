@@ -1,3 +1,4 @@
+/** @jsx h */
 /**
  * Zen-TUI: TUI-Typed Built-in Components
  * 

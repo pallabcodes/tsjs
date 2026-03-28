@@ -1,0 +1,10 @@
+{
+  "name": "@zen-tui/poll",
+  "version": "0.1.0",
+  "description": "Sovereign Multithreaded Native Polling",
+  "type": "module",
+  "main": "./src/index.ts",
+  "dependencies": {
+    "@zen-tui/native": "workspace:*"
+  }
+}

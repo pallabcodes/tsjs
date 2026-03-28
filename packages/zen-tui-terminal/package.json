@@ -1,0 +1,10 @@
+{
+  "name": "@zen-tui/terminal",
+  "version": "0.1.0",
+  "description": "Sovereign Native Terminal Control",
+  "type": "module",
+  "main": "./src/index.ts",
+  "dependencies": {
+    "@zen-tui/native": "workspace:*"
+  }
+}

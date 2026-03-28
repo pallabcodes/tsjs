@@ -1,3 +1,4 @@
+/** @jsx h */
 /**
  * Zen-TUI: Shell View (Zen-Renderer)
  * 

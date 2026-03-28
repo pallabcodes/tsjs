@@ -1,3 +1,4 @@
+/** @jsx h */
 /**
  * Zen-TUI: Palette View (Zen-Renderer)
  * 

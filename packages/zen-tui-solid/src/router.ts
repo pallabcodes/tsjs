@@ -1,5 +1,4 @@
-import { createComponent, memo } from "./reconciler.js";
-import { createSignal, createContext, useContext } from "solid-js";
+import { createSignal, createContext, useContext, createMemo as memo, createComponent } from "solid-js";
 
 // 1. Navigation Context
 const RouterContext = createContext<{ 

@@ -3,20 +3,30 @@
   "version": "1.0.0",
   "type": "module",
   "private": true,
+  "workspaces": [
+    "packages/*",
+    "apps/*",
+    "tooling/*"
+  ],
   "description": "Monorepo for deconstructing frameworks, building custom npm packages, and practical DSA.",
   "scripts": {
     "build": "turbo run build",
     "dev": "turbo run dev",
     "lint": "turbo run lint",
+    "zbt": "node ./tooling/zbt/src/index.js",
+    "build:native": "pnpm zbt build packages/zen-tui-native && pnpm zbt build packages/zen-tui-layout",
+    "postinstall": "pnpm build:native",
     "test": "turbo run test"
   },
   "devDependencies": {
+    "@babel/core": "^7.29.0",
+    "@babel/preset-typescript": "^7.28.5",
+    "babel-preset-solid": "^1.9.12",
+    "solid-js": "^1.8.15",
     "tsx": "^4.21.0",
     "turbo": "^2.4.4",
-    "xstate": "^5.19.2",
-    "solid-js": "^1.8.15",
     "typescript": "^5.7.2",
-    "@types/react": "^18.3.12"
+    "xstate": "^5.19.2"
   },
   "packageManager": "pnpm@10.30.3"
 }

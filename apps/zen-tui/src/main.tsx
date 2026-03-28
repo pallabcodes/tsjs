@@ -1,17 +1,50 @@
-/** @jsxImportSource solid-js */
-import { ZenApp } from '@zen-tui/core';
-import { render, createComponent, dispatchInput, setLayoutEngine } from '@zen-tui/solid';
-import App from './app/App.tsx';
+/** @jsx h */
+/**
+ * @zen-tui/app: Sovereign Git TUI Entry Point (RUC Edition)
+ */
 
-console.log("ZEN-TUI: Sovereign Reactivity Bootstrapping...");
+import { createZenEngine } from '@zen-tui/core';
+import type { ZenInputEvent } from '@zen-tui/core';
+
+import { 
+  render, 
+  createComponent, 
+  setLayoutEngine, 
+  dispatchInput, 
+  setEngine,
+  h,
+  registry
+} from '@zen-tui/solid';
+
+// ── Sovereign JSX Bootstrap ──────────────────────────────────────────
+(globalThis as any).h = h;
+(globalThis as any).Fragment = (props: any) => props.children;
+
+console.log("[Main] Importing App Component...");
+import App from './app/App.js';
 
 // 1. Initialize the High-Performance Zen Engine
-const zen = new ZenApp();
+console.log("[Main] Initializing Zen Engine...");
+const zen = createZenEngine();
+setEngine(zen);
 setLayoutEngine(zen.layout);
 
-// 💡 Forward Native Engine inputs to Hooks subscribers list
-zen.onInput = (e) => dispatchInput(e);
+// Forward Native Engine inputs
+zen.onInput = (e: ZenInputEvent) => dispatchInput(e);
 
-render(() => {
-  return createComponent(App, {});
-}, zen.root);
+console.log("[Main] Invoking Sovereign Render Pipeline...");
+
+// 2. Render the Component Tree
+try {
+  render(() => {
+    console.log("[Main] Executing reactive App root...");
+    return createComponent(App, {});
+  }, (zen as any).root);
+  console.log("[Main] Registry Root Children:", (registry as any).root.children.length);
+  console.log("[Main] Sovereign TUI is now LIVE. Press Ctrl+C to exit.");
+  
+  // Keep the process alive for the TUI
+  setInterval(() => {}, 1000);
+} catch (err) {
+  console.error("[Main] FATAL RENDER ERROR:", err);
+}

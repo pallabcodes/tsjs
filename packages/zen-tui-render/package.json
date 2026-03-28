@@ -1,0 +1,12 @@
+{
+  "name": "@zen-tui/render",
+  "version": "0.1.0",
+  "description": "Sovereign TUI Node Renderer",
+  "type": "module",
+  "main": "./src/index.ts",
+  "dependencies": {
+    "@zen-tui/painter": "workspace:*",
+    "@zen-tui/layout": "workspace:*",
+    "@zen-tui/node": "workspace:*"
+  }
+}
