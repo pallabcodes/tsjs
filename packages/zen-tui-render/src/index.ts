@@ -27,7 +27,6 @@ export function createZenRenderer(layout: IZenLayoutEngine, buffer: IZenBuffer) 
       const w = Math.floor(layout.width);
       const h = Math.floor(layout.height);
       
-      /* 
       if (bg) {
         for (let i = 0; i < h; i++) {
           for (let j = 0; j < w; j++) {
@@ -35,7 +34,6 @@ export function createZenRenderer(layout: IZenLayoutEngine, buffer: IZenBuffer) 
           }
         }
       }
-      */
       
       if (props.border) {
         const b = props.borderStyle === 'rounded' ? ['╭', '╮', '╯', '╰', '─', '│'] : ['┌', '┐', '┘', '└', '─', '│'];
@@ -112,6 +110,14 @@ export function createZenRenderer(layout: IZenLayoutEngine, buffer: IZenBuffer) 
       // 3. Paint
       buffer.clear();
       
+      // Hardware-Level Background Wipe (Zero-Bleed Integrity)
+      const rootBG = root.props?.bg || "#020617";
+      for (let y = 0; y < h; y++) {
+        for (let x = 0; x < w; x++) {
+          buffer.set_cell(x, y, ' ', "#ffffff", rootBG);
+        }
+      }
+      
       const originalSetCell = buffer.set_cell;
       buffer.set_cell = (x, y, char, fg, bg, bold) => {
          if (isNaN(x) || isNaN(y) || x < 0 || y < 0 || x > 1000 || y > 1000) return;
@@ -120,11 +126,6 @@ export function createZenRenderer(layout: IZenLayoutEngine, buffer: IZenBuffer) 
 
       try {
         renderNode(root, 0, 0);
-        
-        // Final sanity check: red border for root
-        for (let i = 0; i < w; i++) {
-           buffer.set_cell(i, 0, '#', '#ff0000', '#000000');
-        }
       } finally {
         buffer.flush();
         buffer.set_cell = originalSetCell;

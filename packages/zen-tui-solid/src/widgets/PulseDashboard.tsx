@@ -21,7 +21,7 @@ interface PulseDashboardProps {
 
 export function PulseDashboard(props: PulseDashboardProps) {
   return (
-    <Box flexDirection="row" height={4} padding={{ left: 2, right: 2 }}>
+    <Box flexDirection="row" height={4} padding={{ left: 2, right: 2 }} bg="#020617">
       
       {/* Title & Stats Cluster */}
       <Box width={30} flexDirection="column">
@@ -43,8 +43,8 @@ export function PulseDashboard(props: PulseDashboardProps) {
       <Box flexGrow={1} />
 
       {/* Clock Cluster */}
-      <Box width={15} flexDirection="row" padding={{ right: 2 }}>
-        <Text fg="#cbd5e1" bold={true}>🕒 {props.time}</Text>
+      <Box width={15} flexDirection="row" padding={{ right: 2 }} bg="#020617">
+        <Text fg="#cbd5e1" bold={true} value={`TIME: ${props.time}`} />
       </Box>
 
     </Box>

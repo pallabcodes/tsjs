@@ -10,7 +10,7 @@
 import {
   Box, Text, Panel, truncate, useInput, List, dispatchInput, StatusBar, Modal,
   PulseDashboard, FileTree, GitGraph, DiffViewer, CommandInput,
-  createSignal, onMount, createEffect, batch, Show, h, type ZenInputEvent, type TreeNode
+  createSignal, onMount, createEffect, batch, Show, h, requestFrame, type ZenInputEvent, type TreeNode
 } from "@zen-tui/solid";
 
 import { 
@@ -24,6 +24,26 @@ import {
 // --- Domain Persistence Layer ---
 const branches = ["main", "feat/sovereign-ui", "hotfix/arm64-linker", "release/v1.0", "docs/architecture"];
 
+// --- Domain Mappers ---
+function mapFilesToNodes(files: FileItem[]): TreeNode[] {
+  return files.map(f => ({
+    name: f.name,
+    path: f.name, // Simplified for now
+    indent: f.indent || 1,
+    isDir: f.isDir,
+    status: f.status
+  }));
+}
+
+function parseDiffLines(lines: string[]): any[] {
+  return lines.map(line => {
+    if (line.startsWith('+')) return { type: '+', content: line.slice(1) };
+    if (line.startsWith('-')) return { type: '-', content: line.slice(1) };
+    if (line.startsWith('@@')) return { type: 'header', content: line };
+    return { type: ' ', content: line };
+  });
+}
+
 export default function App() {
   // --- UI State Strategy ---
   const [focusedPanel, setFocusedPanel] = createSignal<number>(1); 
@@ -31,14 +51,14 @@ export default function App() {
   const [selectedCommitIdx, setSelectedCommitIdx] = createSignal<number>(0);
   
   const [terminalDimensions, setTerminalDimensions] = createSignal({
-    width: (globalThis as any).zenEngine?.terminal?.size?.width || 120,
-    height: (globalThis as any).zenEngine?.terminal?.size?.height || 40
+    width: process.stdout.columns || 160,
+    height: process.stdout.rows || 50
   });
 
   // --- Repository Data State ---
   const [files, setFiles] = createSignal<FileItem[]>(getGitStatus());
   const [commits, setCommits] = createSignal<CommitItem[]>(getGitLogSync(40));
-  const [diffLines, setDiffLines] = createSignal<string[]>([]);
+  const [diffLines, setDiffLines] = createSignal<any[]>([]);
   const [commandBuffer, setCommandBuffer] = createSignal("");
   const [notification, setNotification] = createSignal<string | null>(null);
   const [isBranchModalOpen, setIsBranchModalOpen] = createSignal(false);
@@ -46,17 +66,10 @@ export default function App() {
   // --- Derived Layout State ---
   const W = () => terminalDimensions().width;
   const H = () => terminalDimensions().height;
-  const sidebarWidth = () => Math.floor(W() * 0.22);
-  const mainWidth = () => Math.floor(W() * 0.38); // Adjusted for better balance
+  // --- Commercial Grade Layout Logic (Keynote Tuned) ---
+  const sidebarWidth = () => Math.floor(W() * 0.24);
+  const mainWidth = () => Math.floor(W() * 0.44);
   const inspectorWidth = () => W() - sidebarWidth() - mainWidth() - 2;
-
-  // --- Pulse Metrics (Mock Metadata matching Mockup) ---
-  const pulseMetrics = [
-    { label: "COMMITS", value: "425", fg: "#2dd4bf", data: [10, 20, 15, 30, 25, 45, 40, 60, 50, 80] },
-    { label: "CONTRIBUTORS", value: "8", fg: "#3b82f6", data: [1, 2, 1, 3, 2, 4, 3, 5] },
-    { label: "LINES +/-", value: "+1,234 / -850", fg: "#10b981", data: [100, 200, 150, 300, 250, 450] },
-    { label: "PRS", value: "5", fg: "#fbbf24", data: [1, 2, 1, 3, 2, 4] },
-  ];
 
   // --- Effects & Side-Effects ---
   createEffect(async () => {
@@ -64,7 +77,7 @@ export default function App() {
     const idx = selectedCommitIdx();
     if (currentCommits[idx]) {
       const diff = await getCommitDiff(currentCommits[idx].hash);
-      setDiffLines(diff);
+      setDiffLines(parseDiffLines(diff));
     }
   });
 
@@ -75,98 +88,139 @@ export default function App() {
   };
 
   onMount(() => {
-    notify("SOVEREIGN: High-fidelity TUI initialized.");
-
-    const engine = (globalThis as any).zenEngine;
-    if (engine) {
-      engine.onInput = (e: ZenInputEvent) => {
-        // Handle Terminal Resizing
-        if (e.name === "resize") {
-          setTerminalDimensions({ width: e.width || 120, height: e.height || 40 });
-          return;
-        }
-
-        // Global Orchestration Logic
-        if (isBranchModalOpen()) {
-          if (e.name === "escape") setIsBranchModalOpen(false);
-        } else if (e.name === "tab") {
-          setFocusedPanel((prev: number) => (prev + 1) % 4);
-        } else if (e.name === ":" && focusedPanel() !== 3) {
-          setFocusedPanel(3);
-          setCommandBuffer("");
-        } else if (e.name === "escape") {
-          setFocusedPanel(1);
-        } else if (focusedPanel() === 3) {
-          if (e.name === "backspace") {
-            setCommandBuffer((v: string) => v.slice(0, -1));
-          } else if (e.name === "return" || e.name === "enter") {
-            notify(`COMMAND: git ${commandBuffer()}`);
-            setFocusedPanel(1);
-          } else if (e.name.length === 1) {
-            setCommandBuffer((v: string) => v + e.name);
-          }
-        }
-
-        dispatchInput(e);
-        engine.requestFrame();
-      };
+    // Sync initial dimensions with precise engine state
+    const engine = (globalThis as any).getEngine?.();
+    if (engine?.terminal?.size) {
+      setTerminalDimensions({ 
+        width: engine.terminal.size.width || 140, 
+        height: engine.terminal.size.height || 50 
+      });
     }
   });
 
-  const getClock = () => {
-    const d = new Date();
-    return d.toLocaleTimeString([], { hour12: false });
-  };
+  useInput((e: ZenInputEvent) => {
+    if (e.name === "resize") {
+      setTerminalDimensions({ width: e.width || 140, height: e.height || 50 });
+      requestFrame();
+      return;
+    }
+
+    if (isBranchModalOpen()) {
+      if (e.name === "escape") setIsBranchModalOpen(false);
+    } else if (e.name === "tab") {
+          setFocusedPanel((prev: number) => (prev + 1) % 3);
+        } else if (e.name === "escape") {
+          setFocusedPanel(1);
+        } else if (focusedPanel() === 0) {
+          // EXPLORER navigation
+          if (e.name === "j" || e.name === "down") {
+            setSelectedFileIdx(prev => Math.min(prev + 1, files().length - 1));
+          } else if (e.name === "k" || e.name === "up") {
+            setSelectedFileIdx(prev => Math.max(prev - 1, 0));
+          }
+        } else if (focusedPanel() === 1) {
+          // REVISION GRAPH navigation
+          if (e.name === "j" || e.name === "down") {
+            setSelectedCommitIdx(prev => Math.min(prev + 1, commits().length - 1));
+          } else if (e.name === "k" || e.name === "up") {
+            setSelectedCommitIdx(prev => Math.max(prev - 1, 0));
+          }
+        }
+    requestFrame();
+  });
+
+  const [currentTime, setCurrentTime] = createSignal(new Date().toLocaleTimeString());
+  createEffect(() => {
+    const timer = setInterval(() => setCurrentTime(new Date().toLocaleTimeString()), 1000);
+    return () => clearInterval(timer);
+  });  // --- Commercial Grade Layout Logic (Keynote Tuned) ---
+
+  const mockMetrics = [
+    { label: "ENGINE L0", value: "0.4ms", fg: "#22c55e", data: [10, 12, 11, 14, 10, 12, 9, 11] },
+    { label: "MEMORY", value: "42MB", fg: "#3b82f6", data: [40, 41, 42, 42, 43, 42, 42, 42] },
+    { label: "THREADS", value: "12", fg: "#a855f7", data: [8, 10, 12, 12, 11, 12, 12, 12] },
+    { label: "I/O OPS", value: "2.4k", fg: "#fbbf24", data: [20, 24, 22, 28, 24, 26, 22, 24] },
+  ];
 
   return (
     <Box fixedPosition={{ x: 0, y: 0, w: W(), h: H() }} bg="#020617">
-       {/* Header */}
-       <Box height={3} border={true} borderStyle="rounded" bg="#0f172a" flexDirection="row">
-        <Text fg="#38bdf8" bold margin={{ x: 2, y: 0 }}>SOVEREIGN GIT TUI | branch:main</Text>
-        <Box flexGrow={1} />
-        <Text fg="#94a3b8" margin={{ x: 2, y: 0 }}>{getClock()}</Text>
+      
+      {/* 1. Global Background Mask (Master Integrity) */}
+      <Box fixedPosition={{ x: 0, y: 0, w: W(), h: H() }} bg="#020617" />
+
+      {/* 2. Metrics Header (Commercial Grade) */}
+      <Box 
+        fixedPosition={{ x: 0, y: 0, w: W(), h: 4 }} 
+        border={true} 
+        borderColor="#1e293b"
+        bg="#020617"
+      >
+        <PulseDashboard 
+          title="SOVEREIGN RUC ENGINE" 
+          time={currentTime()} 
+          metrics={mockMetrics} 
+        />
       </Box>
 
-      {/* Main Content Area */}
-      <Box flexDirection="row" height={H() - 5}>
-        <Panel width={sidebarWidth()} title="EXPLORER" focused={focusedPanel() === 0}>
-           <Box flexDirection="column" padding={{ left: 1, top: 1 }}>
-             <Text fg="#94a3b8">v apps/zen-tui/src</Text>
-             <Text fg="#60a5fa">  main.tsx</Text>
-             <Text fg="#94a3b8">v app/</Text>
-             <Text fg="#fde047" bold>    App.tsx</Text>
-             <Box height={1} />
-             <Text fg="#94a3b8">v packages/solid</Text>
-             <Text fg="#60a5fa">  index.ts</Text>
-           </Box>
-        </Panel>
+      {/* 3. Main Dashboard Islands (Pixel-Perfect Symmetry) */}
+      
+      {/* Left: Component Explorer */}
+      <Panel 
+         fixedPosition={{ x: 0, y: 4, w: sidebarWidth(), h: H() - 6 }}
+         title="EXPLORER" 
+         focused={focusedPanel() === 0}
+         bg="#020617"
+      >
+          <FileTree 
+            files={mapFilesToNodes(files())} 
+            selectedIdx={selectedFileIdx()}
+            width={sidebarWidth() - 2} 
+            focused={focusedPanel() === 0} 
+          />
+      </Panel>
 
-        <Panel width={mainWidth()} title="REVISION GRAPH" focused={focusedPanel() === 1}>
-           <Box flexDirection="column" padding={{ left: 1, top: 1 }}>
-             <Text fg="#22c55e">* 7f8a9c2 Refactor Sovereign RUC</Text>
-             <Text fg="#94a3b8">| * 4d2e1f0 Fix native-id linkage</Text>
-             <Text fg="#94a3b8">|/  </Text>
-             <Text fg="#94a3b8">* 1a2b3c4 Initial Sovereign Design</Text>
-           </Box>
-        </Panel>
+      {/* Center: Logic Stream / Graph */}
+      <Panel 
+        fixedPosition={{ x: sidebarWidth() + 1, y: 4, w: mainWidth(), h: H() - 6 }}
+        title="REVISION GRAPH" 
+        focused={focusedPanel() === 1}
+        bg="#020617"
+      >
+          <GitGraph 
+            commits={commits()} 
+            selectedIdx={selectedCommitIdx()}
+            width={mainWidth() - 2} 
+            focused={focusedPanel() === 1}
+          />
+      </Panel>
 
-        <Panel width={inspectorWidth()} title="DIFF: App.tsx" focused={focusedPanel() === 2}>
-           <Box flexDirection="column" padding={{ left: 1, top: 1 }}>
-             <Text fg="#22c55e">+ { '<Box fixedPosition={{ x: 0, y: 0 ... }} />' }</Text>
-             <Text fg="#ef4444">- { '<div className="fragile-legacy" />' }</Text>
-             <Box height={1} />
-             <Text fg="#94a3b8">@@ -120,5 +121,12 @@</Text>
-           </Box>
-        </Panel>
-      </Box>
+      {/* Right: Inspector / Diff */}
+      <Panel 
+        fixedPosition={{ x: sidebarWidth() + mainWidth() + 2, y: 4, w: inspectorWidth(), h: H() - 6 }}
+        title="COMMIT DETAILS & DIFF" 
+        focused={focusedPanel() === 2}
+        bg="#020617"
+      >
+          <DiffViewer 
+            filename={commits()[selectedCommitIdx()]?.msg || "Changes"} 
+            lines={diffLines()} 
+            context={commits()[selectedCommitIdx()] ? {
+              hash: commits()[selectedCommitIdx()].hash,
+              author: commits()[selectedCommitIdx()].author,
+              date: commits()[selectedCommitIdx()].date,
+              message: commits()[selectedCommitIdx()].msg
+            } : undefined}
+            width={inspectorWidth() - 2} 
+          />
+      </Panel>
 
-      {/* Status Bar */}
+      {/* 4. Sovereign Status Bar (Isolated Bottom) */}
       <StatusBar 
-        y={H() - 1} 
-        width={W()} 
+        fixedPosition={{ x: 0, y: H() - 1, w: W(), h: 1 }}
         branch="main"
         status={notification() || "Sovereign Engine: Nominal"}
-        position={`${selectedCommitIdx() + 1}/${commits().length}`}
+        position={`0/0`}
+        bg="#020617"
       />
     </Box>
   );

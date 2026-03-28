@@ -12,6 +12,7 @@ import {
   setLayoutEngine, 
   dispatchInput, 
   setEngine,
+  getEngine,
   h,
   registry
 } from '@zen-tui/solid';
@@ -20,28 +21,25 @@ import {
 (globalThis as any).h = h;
 (globalThis as any).Fragment = (props: any) => props.children;
 
-console.log("[Main] Importing App Component...");
+// 0. Precision Clean
+process.stdout.write('\x1B[2J\x1B[H\x1B[3J');
+
 import App from './app/App.js';
 
 // 1. Initialize the High-Performance Zen Engine
-console.log("[Main] Initializing Zen Engine...");
 const zen = createZenEngine();
 setEngine(zen);
+(globalThis as any).getEngine = getEngine;
 setLayoutEngine(zen.layout);
 
 // Forward Native Engine inputs
 zen.onInput = (e: ZenInputEvent) => dispatchInput(e);
 
-console.log("[Main] Invoking Sovereign Render Pipeline...");
-
 // 2. Render the Component Tree
 try {
   render(() => {
-    console.log("[Main] Executing reactive App root...");
     return createComponent(App, {});
   }, (zen as any).root);
-  console.log("[Main] Registry Root Children:", (registry as any).root.children.length);
-  console.log("[Main] Sovereign TUI is now LIVE. Press Ctrl+C to exit.");
   
   // Keep the process alive for the TUI
   setInterval(() => {}, 1000);

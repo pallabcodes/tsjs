@@ -141,10 +141,34 @@ export const List = <T,>(props: ListProps<T>): any => {
   });
 
   return (
-    <Box flexDirection="column">
+    <Box flexDirection="column" bg="#020617">
       <For each={items()}>
         {(item, index) => props.renderItem(item, index() === selected())}
       </For>
     </Box>
   );
 };
+
+export interface SparklineProps {
+  data: number[];
+  width?: number;
+  color?: string;
+}
+
+export function Sparkline(props: SparklineProps) {
+  const bars = [" ", " ", "▂", "▃", "▄", "▅", "▆", "▇", "█"];
+  const max = Math.max(...(props.data.length > 0 ? props.data : [1]), 1);
+  const w = props.width || 10;
+  
+  // Resample data to fit width if necessary
+  const displayData = props.data.slice(-w);
+
+  return (
+    <Box flexDirection="row" gap={0} bg="#020617">
+      {displayData.map((val) => {
+        const idx = Math.max(0, Math.min(Math.floor((val / max) * (bars.length - 1)), bars.length - 1));
+        return <Box><Text fg={props.color || "#ffffff"} value={bars[idx] || " "} /></Box>;
+      })}
+    </Box>
+  );
+}

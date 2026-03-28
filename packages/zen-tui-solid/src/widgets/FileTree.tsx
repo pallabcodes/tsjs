@@ -9,6 +9,7 @@ import { truncate, type TreeNode } from "../utils.js";
  */
 interface FileTreeProps {
   files: TreeNode[];
+  selectedIdx?: number;
   width?: number;
   focused?: boolean;
   onSelect?: (node: TreeNode, index: number) => void;
@@ -34,15 +35,24 @@ export function FileTree(props: FileTreeProps) {
     "??": "#94a3b8",
   };
 
+  const getFileIcon = (name: string, isDir: boolean) => {
+    if (isDir) return { icon: "DIR ", color: "#60a5fa" };
+    if (name.endsWith(".ts") || name.endsWith(".tsx")) return { icon: "TS  ", color: "#3b82f6" };
+    if (name.endsWith(".js") || name.endsWith(".jsx")) return { icon: "JS  ", color: "#fde047" };
+    if (name.endsWith(".md")) return { icon: "MD  ", color: "#a855f7" };
+    if (name.endsWith(".json")) return { icon: "JSON", color: "#fbbf24" };
+    return { icon: "FILE", color: "#94a3b8" };
+  };
+
   const w = props.width || 30;
 
   return (
     <Box flexDirection="column" gap={0}>
       {props.files.map((file, idx) => {
-        const isSelected = props.focused && idx === 0; 
+        const isSelected = props.focused && idx === (props.selectedIdx ?? 0); 
         const indent = "  ".repeat(file.indent || 0);
-        const icon = file.isDir ? (file.isOpen ? "▼ " : "▶ ") : "  ";
-        const fileIcon = file.isDir ? "📁" : (file.name.endsWith(".js") ? "🟨" : "📄");
+        const { icon, color } = getFileIcon(file.name, !!file.isDir);
+        const dirIndicator = file.isDir ? (file.isOpen ? "▼ " : "▶ ") : "  ";
         
         return (
           <Box 
@@ -50,15 +60,19 @@ export function FileTree(props: FileTreeProps) {
             bg={isSelected ? "#1e293b" : undefined}
             padding={{ left: 1, right: 1 }}
           >
-            <Text fg={isSelected ? "#60a5fa" : "#94a3b8"}>
-              {`${indent}${icon}${fileIcon} `}
+            <Text fg={isSelected ? "#60a5fa" : "#334155"}>
+              {`${indent}${dirIndicator}`}
             </Text>
             
+            <Text fg={isSelected ? "#60a5fa" : color} margin={{ right: 1 }}>
+              {icon}
+            </Text>
+
             <Text 
               fg={isSelected ? "#f1f5f9" : (file.isDir ? "#e2e8f0" : "#cbd5e1")}
-              bold={file.isDir}
+              bold={isSelected || file.isDir}
             >
-              {truncate(file.name, w - indent.length - 10)}
+              {truncate(file.name, w - indent.length - 8)}
             </Text>
 
             <Box flexGrow={1} />

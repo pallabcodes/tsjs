@@ -6,12 +6,15 @@
  */
 
 import { ZenProps } from '@zen-tui/node';
+export type { ZenProps };
 import { createRUCNode, registry } from './core/node.js';
 import { requestFrame } from './core/pipeline.js';
-import { createRenderEffect, children } from 'solid-js';
+import { createRenderEffect, children, Show } from 'solid-js';
 
 export interface ZenComponentProps extends ZenProps {
   children?: any;
+  title?: string;
+  focused?: boolean;
 }
 
 /**
@@ -69,8 +72,38 @@ export const Text = (props: ZenComponentProps): any => {
 };
 
 /**
- * Panel: Bordered container primitive.
+ * Panel: Bordered container primitive with integrated Title Bar.
+ * 'Commercial Grade' iteration with focus-aware aesthetics.
  */
 export const Panel = (props: ZenComponentProps): any => {
-  return Box({ ...props, border: true });
+  const borderColor = () => props.focused ? "#3b82f6" : "#1e293b";
+  const titleBg = () => props.focused ? "#3b82f6" : "#1e293b";
+  const titleFg = () => props.focused ? "#f8fafc" : "#94a3b8";
+
+  return (
+    <Box 
+      {...props} 
+      flexDirection="column"
+      border={true} 
+      borderColor={borderColor()}
+    >
+      <Show when={!!props.title}>
+        <Box 
+          height={1} 
+          bg={titleBg()} 
+          padding={{ left: 1, right: 1 }}
+          flexDirection="row"
+        >
+          <Text fg={titleFg()} bold={true}>{props.title}</Text>
+          <Box flexGrow={1} />
+          <Show when={props.focused}>
+             <Text fg="#fde047">●</Text>
+          </Show>
+        </Box>
+      </Show>
+      <Box flexGrow={1} flexDirection="column">
+        {props.children}
+      </Box>
+    </Box>
+  );
 };
