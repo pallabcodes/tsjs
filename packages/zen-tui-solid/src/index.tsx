@@ -27,7 +27,8 @@ export {
   onCleanup, 
   batch, 
   Show, 
-  For 
+  For,
+  createRoot
 };
 
 // --- Sovereign RUC Core ---

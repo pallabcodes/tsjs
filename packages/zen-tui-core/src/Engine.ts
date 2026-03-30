@@ -7,9 +7,10 @@ import type { IZenLayoutEngine } from '@zen-tui/layout';
 import type { IZenBuffer } from '@zen-tui/native';
 import { ZenLayoutEngine } from '@zen-tui/layout';
 import { ZenBuffer } from '@zen-tui/native';
+import * as fs from 'fs';
 
 /**
- * createZenEngine: The Sovereign Shell.
+ * createZenEngine: The Sovereign Shell (Sovereign V80)
  */
 export function createZenEngine() {
   const host = new BunHost();
@@ -19,7 +20,6 @@ export function createZenEngine() {
   const root = new ZenNode('root', { width: '-100%', height: '-100%' });
   root.nativeId = layout.create_node('column', -100, -100);
 
-  // Initialize Sovereign Systems
   const terminal = new ZenTerminal(buffer);
   const heartbeat = createZenHeartbeat();
   const poller = createZenPoller();
@@ -32,23 +32,24 @@ export function createZenEngine() {
     const { width, height } = terminal.size;
     const finalW = width || 100;
     const finalH = height || 30;
-    
     if (finalW !== lastW || finalH !== lastH) {
       buffer.resize(finalW, finalH);
       lastW = finalW;
       lastH = finalH;
     }
-    
-    // Layer B: Shell Integrity
-    if (heartbeat.ticks % 60 === 0) {
-       console.log(`[Layer B] Shell Update. Root children: ${root.children.length}`);
-    }
-
     renderer.update(root, finalW, finalH);
     buffer.flush();
   };
 
   let isDestroyed = false;
+  const destroy = () => {
+    if (isDestroyed) return;
+    isDestroyed = true;
+    poller.stop();
+    terminal.disableRawMode();
+    process.exit(0);
+  };
+
   const engine = {
     layout,
     buffer,
@@ -60,11 +61,19 @@ export function createZenEngine() {
       renderer.update(r, terminal.size.width || 100, terminal.size.height || 30);
       buffer.flush();
     },
-    destroy: () => {},
+    destroy,
   };
 
+  const RAW_LOG = '/tmp/zen-raw-input.log';
   const handleInput = (event: ZenInputEvent) => {
-    if (event.name === 'escape' || (event.name === 'c' && event.ctrl)) {
+    try {
+      if (fs.existsSync(RAW_LOG)) {
+        fs.appendFileSync(RAW_LOG, `[${new Date().toISOString()}] engine_raw=${event.name}, ctrl=${!!event.ctrl}\n`);
+      }
+    } catch (e) {}
+
+    // ╼ FIXED: Restore exit keys
+    if (event.name === 'escape' || event.name === 'q' || (event.name === 'c' && event.ctrl)) {
       destroy();
     }
     
@@ -76,20 +85,7 @@ export function createZenEngine() {
     if (engine.onInput) engine.onInput(event);
   };
 
-  const destroy = () => {
-    if (isDestroyed) return;
-    isDestroyed = true;
-    poller.stop();
-    terminal.disableRawMode();
-    process.exit(0);
-  };
-
-  engine.destroy = destroy;
-
-  // Wired Systems
   poller.onInput = handleInput;
-
-  // Bootstrap systems
   terminal.enableRawMode();
   poller.start();
   

@@ -42,6 +42,14 @@ function runFrame() {
   if (isSyncing) return;
   isSyncing = true;
 
+  // ╼ Microtask Sync (Google-grade consistency)
+  // Ensures Solid.js has finished 'Box' reconciliation before we flush.
+  queueMicrotask(() => {
+    internalRunFrame();
+  });
+}
+
+function internalRunFrame() {
   try {
     const engine = getEngine() as any;
     if (!engine || !engine.layout) return;
@@ -69,8 +77,6 @@ function runFrame() {
     engine.flush(registry.root);
     
     lastFrameTime = Date.now();
-  } catch (e) {
-    console.error("[Pipeline] Critical Render Error:", e);
   } finally {
     isSyncing = false;
   }

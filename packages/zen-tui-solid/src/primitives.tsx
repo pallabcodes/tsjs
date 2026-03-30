@@ -2,14 +2,14 @@
 /**
  * @zen-tui/solid: Sovereign RUC Primitives
  * 
- * Direct RUC proxies for the high-performance TUI compositor.
+ * focuses on Dynamic Canvas Sovereignty.
  */
 
 import { ZenProps } from '@zen-tui/node';
 export type { ZenProps };
 import { createRUCNode, registry } from './core/node.js';
 import { requestFrame } from './core/pipeline.js';
-import { createRenderEffect, children, Show, createSignal } from 'solid-js';
+import { createRenderEffect, children, Show, createSignal, onCleanup } from 'solid-js';
 
 export interface ZenComponentProps extends ZenProps {
   children?: any;
@@ -17,22 +17,23 @@ export interface ZenComponentProps extends ZenProps {
   focused?: boolean;
 }
 
-// Reactive Dimensions
-const [w, setw] = createSignal(150);
-const [h, seth] = createSignal(50);
+// Reactive Dimensions (V61: Sync with STDOUT)
+const [w, setw] = createSignal(process.stdout.columns || 150);
+const [h, seth] = createSignal(process.stdout.rows || 24);
+
+process.stdout.on('resize', () => {
+  setw(process.stdout.columns);
+  seth(process.stdout.rows);
+});
+
 export const W = w;
 export const H = h;
 export const setW = setw;
 export const setH = seth;
 
-/**
- * Box: High-performance flexbox container.
- */
 export const Box = (props: ZenComponentProps): any => {
   const node = createRUCNode('box', props);
   registry.nodes.set(node.id, node);
-
-  // Link Children (Immediate + Reactive Resolution)
   const resolved = children(() => props.children);
   const sync = () => {
     const flattened = Array.isArray(resolved()) ? (resolved() as any[]).flat() : [resolved()];
@@ -47,21 +48,14 @@ export const Box = (props: ZenComponentProps): any => {
     node.dirty = true;
     requestFrame();
   };
-
   createRenderEffect(sync);
-  sync(); // Force immediate first-pass sync
-
+  sync();
   return node;
 };
 
-/**
- * Text: Precision typography node.
- */
 export const Text = (props: ZenComponentProps): any => {
   const node = createRUCNode('text', props);
   registry.nodes.set(node.id, node);
-
-  // Link Children (Immediate + Reactive Resolution)
   const resolved = children(() => props.children);
   const sync = () => {
     Object.assign(node.props, props);
@@ -69,22 +63,15 @@ export const Text = (props: ZenComponentProps): any => {
     const finalValue = (Array.isArray(content) 
       ? content.map(c => String(c)).join('') 
       : String(content || ''));
-    
     node.props.value = finalValue || String(props.value || '');
     node.dirty = true;
     requestFrame();
   };
-
   createRenderEffect(sync);
-  sync(); // Force immediate first-pass sync
-
+  sync();
   return node;
 };
 
-/**
- * Panel: Bordered container primitive with integrated Title Bar.
- * 'Commercial Grade' iteration with focus-aware aesthetics.
- */
 export const Panel = (props: ZenComponentProps): any => {
   const borderColor = () => props.focused ? "#3b82f6" : "#475569";
   const titleBg = () => props.headerBg || (props.focused ? "#3b82f6" : "#334155");
@@ -99,17 +86,9 @@ export const Panel = (props: ZenComponentProps): any => {
       borderColor={borderColor()}
     >
       <Show when={!!props.title}>
-        <Box 
-          height={1} 
-          bg={titleBg()} 
-          padding={{ left: 1, right: 1 }}
-          flexDirection="row"
-        >
+        <Box height={1} bg={titleBg()} padding={{ left: 1, right: 1 }} flexDirection="row">
           <Text fg={titleFg()} bold={true}>{props.title}</Text>
           <Box flexGrow={1} />
-          <Show when={props.focused}>
-             <Text fg="#fde047">●</Text>
-          </Show>
         </Box>
       </Show>
       <Box flexGrow={1} flexDirection="column" bg="#020617">

@@ -1,0 +1,14 @@
+{
+  "name": "@sovereign/core",
+  "version": "1.0.0",
+  "description": "Sovereign TUI: Global State Manager & Action Controller",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": "./src/index.js"
+  },
+  "dependencies": {
+    "@zen-tui/solid": "workspace:*",
+    "@zen-tui/core": "workspace:*"
+  }
+}
