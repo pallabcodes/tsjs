@@ -5,8 +5,8 @@
   "description": "A high-performance Git TUI client powered by custom ZenEngine and SolidJS",
   "type": "module",
   "scripts": {
-    "dev": "npx tsx src/main.tsx",
-    "start": "npx tsx src/main.tsx",
+    "dev": "node ../../tooling/zbt/src/index.js build apps/zen-tui && node dist/main.js",
+    "start": "node dist/main.js",
     "build": "tsc",
     "test": "bun test",
     "build:native": "napi build --platform --release --target aarch64-apple-darwin ./native",

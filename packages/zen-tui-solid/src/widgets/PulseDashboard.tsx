@@ -1,5 +1,4 @@
-/** @jsx h */
-import { Box, Text, h } from "../index.js";
+import { Box, Text } from "../index.js";
 import { Sparkline } from "./Sparkline.js";
 
 /**

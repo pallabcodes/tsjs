@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "description": "Sovereign High-Precision Heartbeat",
   "type": "module",
-  "main": "./src/index.ts",
+  "main": "./dist/index.js",
   "dependencies": {
     "node-cron": "^3.0.3" 
   }

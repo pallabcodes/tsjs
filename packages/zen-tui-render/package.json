@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "description": "Sovereign TUI Node Renderer",
   "type": "module",
-  "main": "./src/index.ts",
+  "main": "./dist/index.js",
   "dependencies": {
     "@zen-tui/painter": "workspace:*",
     "@zen-tui/layout": "workspace:*",

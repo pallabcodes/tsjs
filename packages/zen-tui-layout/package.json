@@ -2,7 +2,7 @@
   "name": "@zen-tui/layout",
   "version": "0.1.0",
   "type": "module",
-  "main": "./src/index.js",
+  "main": "./dist/index.js",
   "types": "./src/index.d.ts",
   "scripts": {
     "build:native": "node build.js",

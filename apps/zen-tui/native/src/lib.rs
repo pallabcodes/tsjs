@@ -6,8 +6,8 @@ pub fn zen_test() -> String {
     "ZEN_OK".to_string()
 }
 
-pub(crate) mod runtime;
-
-pub use runtime::layout::ZenLayoutEngine;
-pub use runtime::input::ZenInput;
-pub use runtime::renderer::ZenBuffer;
+// Deprecated monolithic exports -- moving to @zen-tui/core
+// pub(crate) mod runtime;
+// pub use runtime::layout::ZenLayoutEngine;
+// pub use runtime::input::ZenInput;
+// pub use runtime::renderer::ZenBuffer;

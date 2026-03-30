@@ -6,7 +6,7 @@
  * navigable keyboard interaction (h/l or left/right).
  */
 
-import { createSignal, For, createMemo } from 'solid-js';
+import { createSignal, For, createMemo, Show } from 'solid-js';
 import { Box, Text, useInput } from '../index.js';
 
 export interface TabItem {
@@ -83,4 +83,3 @@ export function Tabs(props: TabsProps) {
     </Box>
   );
 }
-import { Show } from "solid-js";

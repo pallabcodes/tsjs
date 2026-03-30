@@ -1,4 +1,3 @@
-/** @jsx h */
 /**
  * Zen.Panel — Sovereign Layout Panel
  *
@@ -8,7 +7,8 @@
  *   - Built-in border + bg support
  *   - Column-direction flex by default
  */
-import { Box, Text, h } from '../index.js';
+
+import { Box, Text } from '../index.js';
 
 export interface PanelProps {
   x: number;

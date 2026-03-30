@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "description": "Sovereign Shared Native Bindings",
   "type": "module",
-  "main": "./src/index.ts",
+  "main": "./dist/index.js",
   "scripts": {
      "build:native": "npx @napi-rs/cli build --platform --release native",
      "build:native:debug": "npx @napi-rs/cli build --platform native"

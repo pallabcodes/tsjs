@@ -7,7 +7,7 @@
  */
 
 import { createMemo } from "solid-js";
-import { Box, Text, h } from '../index.js';
+import { Box, Text } from '../index.js';
 
 export interface ProgressBarProps {
   value: number; // 0.0 - 1.0

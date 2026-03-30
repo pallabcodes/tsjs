@@ -21,7 +21,9 @@
   "devDependencies": {
     "@babel/core": "^7.29.0",
     "@babel/preset-typescript": "^7.28.5",
+    "@swc/core": "^1.15.21",
     "babel-preset-solid": "^1.9.12",
+    "chokidar": "^5.0.0",
     "solid-js": "^1.8.15",
     "tsx": "^4.21.0",
     "turbo": "^2.4.4",

@@ -1,55 +1,67 @@
 /** @jsx h */
-import { Box, Text, h } from '@zen-tui/solid';
+import { Box, Text } from '@zen-tui/solid';
+import { Theme } from '../theme.js';
 
-const LINE_COLOR = "#334155"; 
-
-/**
- * Header: Sovereign Dashboard (V130 MASTERPIECE)
- */
 export function Header() {
   return (
-    <Box flexDirection="column">
-      <Box height={1} flexDirection="row">
-         <Box width={45}><Text fg="#3b82f6" bold={true} value="▙ ZEN-TUI v1.14.0 [GOOGLE_KEYNOTE_V140]" /></Box>
-         <Box flexGrow={1} alignItems="center"><Text fg="#64748b" value="Sovereign Architecture: GOOGLE_L5_MASTERPIECE" /></Box>
-         <Box width={30} alignItems="flex-end"><Text fg="#475569" value="2026-03-28 17:15 UTC" /></Box>
+    <Box flexDirection="column" bg={Theme.Colors.Background}>
+      {/* Purposeful Context Bar - Premium Seamless Background */}
+      <Box height={1} flexDirection="row" padding={{ left: Theme.Spacing.Small, right: Theme.Spacing.Small }}>
+         <Box width={30}><Text fg={Theme.Colors.Primary} bold={true} value="▙ ZEN-TUI PRO" /></Box>
+         <Box flexGrow={1} alignItems="center">
+             <Text fg={Theme.Colors.TextMain} bold={true} value="REPOSITORY: " />
+             <Text fg="#60a5fa" value="github.com/pallabcodes/tsjs" />
+         </Box>
+         <Box width={30} alignItems="flex-end">
+            <Text fg={Theme.Colors.TextDim} value="Active Branch: " />
+            <Text fg={Theme.Colors.Success} bold={true} value="main" />
+         </Box>
       </Box>
+      <Box height={1} padding={{ left: Theme.Spacing.Small, right: Theme.Spacing.Small }}><Text fg={Theme.Colors.Border} value={"━".repeat(240)} /></Box>
       
-      <Box height={2} flexDirection="row" padding={{ top: 1 }}>
-          <Stat label="SOVEREIGN RUC ENGINE" />
-          <Box flexGrow={1} />
-          <StatGraph label="ENGINE L0" value="0.2ms" color="#22c55e" spark="▂▃▄▂" />
-          <StatGraph label="DELTA SYNC" value="1.1ms" color="#eab308" spark="▄▅▆▅" />
-          <StatGraph label="MEMORY" value="48MB" color="#3b82f6" spark="▆▇█▇" />
-          <StatGraph label="KERNEL PULSE" value="STABLE" color="#6366f1" spark="▃▄▃▂" />
-          <StatGraph label="I/O OPS" value="4.2k" color="#f43f5e" spark="▄▅▆▅" />
+      {/* Smart Fit System Metrics & Engine Stats */}
+      <Box height={2} flexDirection="row" padding={{ top: Theme.Spacing.Small, left: Theme.Spacing.Small, right: Theme.Spacing.Small }}>
+          <Box width={40} flexDirection="row">
+              <Text fg={Theme.Colors.TextStrong} bold={true} value="SOVEREIGN ENGINE  " />
+              <Text fg={Theme.Colors.Border} value="│ " />
+              <Text fg={Theme.Colors.TextMuted} value="Tick: " />
+              <Text fg={Theme.Colors.Success} bold={true} value="0.2ms ▂▃▄▂" />
+          </Box>
+          
+          <Box flexGrow={1} flexDirection="row">
+              <Text fg={Theme.Colors.TextMuted} value="CPU: " />
+              <Text fg={Theme.Colors.Success} value="███░░░░░ " />
+              <Text fg={Theme.Colors.TextMain} value="12%  " />
+              <Text fg={Theme.Colors.Border} value="│  " />
+              
+              <Text fg={Theme.Colors.TextMuted} value="RAM: " />
+              <Text fg={Theme.Colors.Primary} value="██████░░ " />
+              <Text fg={Theme.Colors.TextMain} value="48MB  " />
+              <Text fg={Theme.Colors.Border} value="│  " />
+
+              <Text fg={Theme.Colors.TextMuted} value="NET: " />
+              <Text fg={Theme.Colors.Highlight} value="2.4MB/s" />
+          </Box>
+
+          <Box width={34} flexDirection="row" alignItems="flex-end">
+              <Text fg={Theme.Colors.TextMuted} value="Bundle  " />
+              <Text fg={Theme.Colors.Success} value="Core: 42kb " />
+              <Text fg={Theme.Colors.Border} value="│ " />
+              <Text fg={Theme.Colors.Warning} value="CSS: 14kb" />
+          </Box>
       </Box>
     </Box>
   );
 }
 
-const Stat = (props: any) => (
-  <Box width={25}><Text fg="#cbd5e1" bold={true} value={props.label} /></Box>
-);
-
-const StatGraph = (props: any) => (
-  <Box width={20} flexDirection="row" padding={{ left: 2 }}>
-     <Box flexDirection="column" width={12}>
-        <Text fg="#94a3b8" value={props.label} />
-        <Text fg={props.color} bold={true} value={props.value} />
-     </Box>
-     <Box width={6} padding={{ top: 1 }}><Text fg={props.color} value={props.spark} /></Box>
-  </Box>
-);
-
-export const HorizontalLine = () => <Box height={1}><Text fg={LINE_COLOR} value={"━".repeat(300)} /></Box>;
+export const HorizontalLine = () => <Box height={1}><Text fg={Theme.Colors.Border} value={"━".repeat(300)} /></Box>;
 
 /**
  * VerticalDivider: RIGID PRECISION (V130)
- * ╼ Restored to dynamic flex layout for full height spanning!
+ * ╼ Slimmed down to width=3 for better horizontal density correctly.
  */
 export const VerticalDivider = () => (
-  <Box width={5} flexDirection="column" alignItems="center">
-    <Box width={1} flexGrow={1} bg={LINE_COLOR} />
+  <Box width={3} flexDirection="column" alignItems="center">
+    <Box width={1} flexGrow={1} bg={Theme.Colors.Border} />
   </Box>
 );

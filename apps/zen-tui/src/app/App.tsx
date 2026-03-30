@@ -1,20 +1,17 @@
-/** @jsx h */
-import { Box, h, useInput } from '@zen-tui/solid';
-import { ActionController } from './actions.js';
+import { Box, useInput } from '@zen-tui/solid';
+import { useZenDispatch } from './store/ZenStore.js';
 import { Header, HorizontalLine } from './view/Header.js';
+import { Theme } from './theme.js';
 import { Body } from './view/Body.js';
 import { Footer } from './view/Footer.js';
 
-/**
- * App: Sovereign Dashboard Final Sign-off (V120)
- * 
- * Absolute Purple: No Footer, 100% Dashboard Density correctly.
- */
 export default function App() {
-  useInput((e) => ActionController.dispatch(e));
+  useInput((e) => {
+    useZenDispatch({ type: 'KEY_PRESS', key: e.name || 'UNK' });
+  });
 
   return (
-    <Box flexDirection="column" flexGrow={1} bg="#020617">
+    <Box flexDirection="column" flexGrow={1} bg={Theme.Colors.Background}>
       <Header />
       <Box height={1} />
       <HorizontalLine />

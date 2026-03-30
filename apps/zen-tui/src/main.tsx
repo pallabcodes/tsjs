@@ -13,13 +13,8 @@ import {
   dispatchInput, 
   setEngine,
   getEngine,
-  h,
   registry
 } from '@zen-tui/solid';
-
-// ── Sovereign JSX Bootstrap ──────────────────────────────────────────
-(globalThis as any).h = h;
-(globalThis as any).Fragment = (props: any) => props.children;
 
 // 0. Precision Clean
 process.stdout.write('\x1B[2J\x1B[H\x1B[3J');

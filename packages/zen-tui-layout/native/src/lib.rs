@@ -186,4 +186,11 @@ impl ZenLayoutEngine {
         self.nodes.clear();
         self.next_id = 1;
     }
+
+    #[napi(js_name = "free_node")]
+    pub fn free_node(&mut self, node_id: u32) {
+        if let Some(node) = self.nodes.remove(&node_id) {
+            self.taffy.remove(node).expect("Failed to free node in Taffy");
+        }
+    }
 }

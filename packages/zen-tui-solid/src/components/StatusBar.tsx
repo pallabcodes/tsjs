@@ -1,7 +1,6 @@
-/** @jsx h */
 import type { ZenInputEvent } from '@zen-tui/core';
 export type { ZenInputEvent };
-import { Box, Text, h, type ZenProps } from "../index.js";
+import { Box, Text, type ZenProps } from "../index.js";
 
 /**
  * StatusBar: Premium, multi-segment status reporting tool.

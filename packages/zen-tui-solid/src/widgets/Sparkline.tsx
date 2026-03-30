@@ -1,5 +1,4 @@
-/** @jsx h */
-import { Box, Text, h } from "../index.js";
+import { Box, Text } from "../index.js";
 
 /**
  * Sparkline: Lightweight micro-visualization for high-density metrics.

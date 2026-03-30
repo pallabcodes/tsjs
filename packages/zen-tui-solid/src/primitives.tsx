@@ -32,44 +32,11 @@ export const setW = setw;
 export const setH = seth;
 
 export const Box = (props: ZenComponentProps): any => {
-  const node = createRUCNode('box', props);
-  registry.nodes.set(node.id, node);
-  const resolved = children(() => props.children);
-  const sync = () => {
-    const flattened = Array.isArray(resolved()) ? (resolved() as any[]).flat() : [resolved()];
-    node.children = []; 
-    for (const child of flattened) {
-      if (child && typeof child === 'object' && 'type' in child) {
-        child.parent = node;
-        node.children.push(child);
-      }
-    }
-    Object.assign(node.props, props);
-    node.dirty = true;
-    requestFrame();
-  };
-  createRenderEffect(sync);
-  sync();
-  return node;
+  return <box {...props}>{props.children}</box>;
 };
 
 export const Text = (props: ZenComponentProps): any => {
-  const node = createRUCNode('text', props);
-  registry.nodes.set(node.id, node);
-  const resolved = children(() => props.children);
-  const sync = () => {
-    Object.assign(node.props, props);
-    const content = resolved();
-    const finalValue = (Array.isArray(content) 
-      ? content.map(c => String(c)).join('') 
-      : String(content || ''));
-    node.props.value = finalValue || String(props.value || '');
-    node.dirty = true;
-    requestFrame();
-  };
-  createRenderEffect(sync);
-  sync();
-  return node;
+  return <text {...props}>{props.children}</text>;
 };
 
 export const Panel = (props: ZenComponentProps): any => {

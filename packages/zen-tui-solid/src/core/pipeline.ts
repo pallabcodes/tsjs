@@ -8,6 +8,7 @@
 import { registry } from './node.js';
 import { syncNativeNode } from './compositor.js';
 import { getEngine } from '../index.js';
+import { flushTombstones } from './universal.js';
 
 let frameId: any = null;
 let lastFrameTime = 0;
@@ -55,10 +56,14 @@ function internalRunFrame() {
     if (!engine || !engine.layout) return;
 
     const layout = engine.layout;
-    const w = engine.terminal?.size?.width || 120;
-    const h = engine.terminal?.size?.height || 40;
 
-    // 1. Reset Native Layout Engine State
+    // 1. Flush GC Tombstones (Deterministic Memory Cleanup)
+    const deadNodes = flushTombstones();
+    for (const id of deadNodes) {
+      layout.free_node(id);
+    }
+    
+    // 2. Clear engine build state (v2 setup for stability)
     layout.clear();
     
     const resetNodes = (node: any) => {

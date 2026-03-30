@@ -1,4 +1,3 @@
-/** @jsx h */
 /**
  * @zen-tui/solid: Sovereign TUI Framework (RUC Architecture)
  * 
@@ -16,7 +15,8 @@ import {
   Show, 
   For,
   JSX,
-  createComponent
+  createComponent,
+  createRoot
 } from 'solid-js';
 
 export { 
@@ -32,21 +32,18 @@ export {
 };
 
 // --- Sovereign RUC Core ---
-import { h, syncNativeNode } from './core/compositor.js';
+export * from './core/universal.js';
 import { registry, type RUCNode } from './core/node.js';
 import { requestFrame, startPipeline } from './core/pipeline.js';
 import { setLayoutEngine, dispatchInput, useInput } from './core/context.js';
 
 export { 
-  h, 
-  syncNativeNode, 
   registry, 
   requestFrame, 
   startPipeline,
   setLayoutEngine, 
   dispatchInput, 
-  useInput,
-  createComponent
+  useInput
 };
 
 export type { RUCNode };
@@ -55,27 +52,19 @@ export type { RUCNode };
  * render: RUC Bootstrap.
  * Connects the Solid.js reactive Root to the Sovereign RUC pipeline.
  */
-import { createRoot } from 'solid-js';
+import { render as universalRender, getEngine } from './core/universal.js';
 
-let currentEngine: any = null;
-export function setEngine(engine: any) { currentEngine = engine; }
-export function getEngine() { return currentEngine; }
+export { getEngine };
 
 export function render(code: () => any, container: any) {
-  return createRoot((dispose) => {
-    // 1. Establish the Root Link
-    registry.root.nativeId = container.nativeId;
-    const app = code();
-    if (app && typeof app === 'object') {
-       registry.root.children = [app];
-       app.parent = registry.root;
-    }
+  // 1. Establish the Root Link
+  registry.root.nativeId = container.nativeId;
+  const dispose = universalRender(code, registry.root);
 
-    // 2. Start the Throttled Pipeline
-    startPipeline();
+  // 2. Start the Throttled Pipeline
+  startPipeline();
 
-    return dispose;
-  });
+  return dispose;
 }
 
 // Domain Types

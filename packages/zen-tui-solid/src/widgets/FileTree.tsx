@@ -1,6 +1,5 @@
-/** @jsx h */
 import { Show } from "solid-js";
-import { Box, Text, h } from "../index.js";
+import { Box, Text } from "../index.js";
 import { truncate, type TreeNode } from "../utils.js";
 
 /**

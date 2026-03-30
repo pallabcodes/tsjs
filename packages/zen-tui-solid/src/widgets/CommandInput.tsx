@@ -1,4 +1,3 @@
-/** @jsx h */
 /**
  * @zen-tui/solid: Sovereign CommandInput
  * 
