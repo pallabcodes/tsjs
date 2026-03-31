@@ -6,7 +6,8 @@
   "types": "./dist/index.d.ts",
   "exports": {
     ".": "./dist/index.js",
-    "./universal": "./dist/core/universal.js"
+    "./universal": "./dist/core/universal.js",
+    "./core/compositor.js": "./dist/core/compositor.js"
   },
   "scripts": {
     "test": "bun --conditions=browser test"
@@ -14,10 +15,13 @@
   "dependencies": {
     "@zen-tui/layout": "workspace:*",
     "@zen-tui/painter": "workspace:*",
-    "@zen-tui/node": "workspace:*",
+    "@zen-tui/node": "workspace:*"
+  },
+  "peerDependencies": {
     "solid-js": "^1.9.11"
   },
   "devDependencies": {
-    "@types/node": "^25.5.0"
+    "@types/node": "^25.5.0",
+    "solid-js": "^1.9.11"
   }
 }

@@ -1,15 +1,10 @@
-/** @jsx h */
-/**
- * @zen-tui/solid: Sovereign RUC Primitives
- * 
- * focuses on Dynamic Canvas Sovereignty.
- */
-
+/** @jsx _h */
+import { h as _h } from './core/compositor.js';
 import { ZenProps } from '@zen-tui/node';
 export type { ZenProps };
 import { createRUCNode, registry } from './core/node.js';
 import { requestFrame } from './core/pipeline.js';
-import { createRenderEffect, children, Show, createSignal, onCleanup } from 'solid-js';
+import { createRenderEffect, Show, createSignal, onCleanup } from 'solid-js';
 
 export interface ZenComponentProps extends ZenProps {
   children?: any;
@@ -31,13 +26,13 @@ export const H = h;
 export const setW = setw;
 export const setH = seth;
 
-export const Box = (props: ZenComponentProps): any => {
-  return <box {...props}>{props.children}</box>;
-};
+export function Box(props: ZenComponentProps) {
+  return _h('box', props, props.children);
+}
 
-export const Text = (props: ZenComponentProps): any => {
-  return <text {...props}>{props.children}</text>;
-};
+export function Text(props: ZenComponentProps) {
+  return _h('text', props, props.children);
+}
 
 export const Panel = (props: ZenComponentProps): any => {
   const borderColor = () => props.focused ? "#3b82f6" : "#475569";

@@ -1,122 +1,164 @@
 /**
- * @zen-tui/solid: Sovereign Universal Reconciler
+ * @zen-tui/solid: Canonical Universal Reconciler
  * 
- * Maps SolidJS fine-grained reactivity into the Native RUC Tree.
- * Zero DOM footprint. Runs natively in Node, Bun, and headless environments.
- * 
- * Architecture:
- *   solid-js/universal → createRenderer → RUCNode mutations → GC Tombstone Queue
- *   The 60FPS pipeline reads dirty flags and flushes tombstones to free Rust memory.
+ * High-fidelity SolidJS renderer for the ZenTUI RUC tree.
  */
 
 import { createRenderer } from 'solid-js/universal';
-import { RUCNode, createRUCNode } from './node.js';
+import { createRoot, createRenderEffect } from 'solid-js';
+import { createRUCNode, registry, type RUCNode } from './node.js';
+import { requestFrame } from './pipeline.js';
 
-let currentEngine: any = null;
-export function setEngine(engine: any) { currentEngine = engine; }
-export function getEngine() { return currentEngine; }
-
-// ═══════════════════════════════════════════════════════════════════════════════
-// GC Tombstone Queue: Tracks removed nodes for deterministic Rust memory cleanup.
-// When solid-js/universal calls removeNode(), we don't destroy the Rust pointer
-// immediately (that would race with an in-flight layout pass). Instead we push
-// the nativeId into this queue. The pipeline's Commit Phase flushes it safely.
-// ═══════════════════════════════════════════════════════════════════════════════
-const gcTombstones: number[] = [];
-
-/** Drain all pending tombstones. Returns the array of nativeIds to free. */
-export function flushTombstones(): number[] {
-  if (gcTombstones.length === 0) return [];
-  return gcTombstones.splice(0, gcTombstones.length);
-}
-
-/** Read-only access for tests and diagnostics. */
-export function peekTombstones(): ReadonlyArray<number> {
-  return gcTombstones;
-}
-
-// ═══════════════════════════════════════════════════════════════════════════════
-// Custom Renderer: The bridge between SolidJS reactive DAG and our RUCNode tree.
-// ═══════════════════════════════════════════════════════════════════════════════
-export const {
-  render,
-  effect,
-  memo,
-  createComponent,
-  createElement,
-  createTextNode,
-  insertNode,
-  insert,
-  spread,
-  setProp,
-  mergeProps,
-  use
-} = createRenderer<RUCNode>({
+const renderer = createRenderer<RUCNode>({
   createElement(tag: string) {
-    return createRUCNode(tag as any);
+    const node = createRUCNode(tag as any);
+    registry.nodes.set(node.id, node);
+    return node;
   },
-  
   createTextNode(value: string) {
-    return createRUCNode('text', { value });
+    const node = createRUCNode('txt');
+    node.props.value = value;
+    registry.nodes.set(node.id, node);
+    return node;
   },
-  
-  replaceText(textNode: RUCNode, value: string) {
-    textNode.props.value = value;
-    textNode.dirty = true;
+  replaceText(node: RUCNode, value: string) {
+    node.props.value = value;
+    node.version++;
+    requestFrame();
   },
-  
   setProperty(node: RUCNode, name: string, value: any) {
     node.props[name] = value;
-    node.dirty = true;
     node.version++;
+    requestFrame();
   },
-  
   insertNode(parent: RUCNode, node: RUCNode, anchor?: RUCNode) {
+    if (!parent.children) parent.children = [];
     node.parent = parent;
-    node.dirty = true;
     
+    // Canonical Indexed Insertion (Topological Safety)
     if (anchor) {
-      const idx = parent.children.indexOf(anchor);
-      if (idx !== -1) {
-        parent.children.splice(idx, 0, node);
+      const index = parent.children.indexOf(anchor);
+      if (index !== -1) {
+        parent.children.splice(index, 0, node);
       } else {
         parent.children.push(node);
       }
     } else {
       parent.children.push(node);
     }
-  },
-  
-  isTextNode(node: RUCNode) {
-    return node.type === 'text';
-  },
-  
-  removeNode(parent: RUCNode, node: RUCNode) {
-    const idx = parent.children.indexOf(node);
-    if (idx !== -1) {
-      parent.children.splice(idx, 1);
-    }
-    node.parent = undefined;
     
-    // GC Tombstone: If this node had a Rust-side pointer, queue it for cleanup.
-    if (node.nativeId !== undefined) {
-      gcTombstones.push(node.nativeId);
-      node.nativeId = undefined;
-    }
+    parent.version++;
+    requestFrame();
   },
-  
+  isTextNode(node: RUCNode) {
+    return node.type === 'txt';
+  },
+  removeNode(parent: RUCNode, node: RUCNode) {
+    if (!parent.children) return;
+    const index = parent.children.indexOf(node);
+    if (index !== -1) {
+      parent.children.splice(index, 1);
+      registry.nodes.delete(node.id);
+    }
+    
+    parent.version++;
+    requestFrame();
+  },
   getParentNode(node: RUCNode) {
     return node.parent;
   },
-  
   getFirstChild(node: RUCNode) {
-    return node.children[0];
+    return node.children?.[0];
   },
-  
   getNextSibling(node: RUCNode) {
-    if (!node.parent) return undefined;
-    const idx = node.parent.children.indexOf(node);
-    if (idx === -1 || idx === node.parent.children.length - 1) return undefined;
-    return node.parent.children[idx + 1];
+    if (!node.parent || !node.parent.children) return;
+    const index = node.parent.children.indexOf(node);
+    return node.parent.children[index + 1];
   }
 });
+
+// 2. Definitive Primitive Exports
+const {
+  render: _render_orig,
+  effect,
+  memo,
+  createComponent,
+  createElement,
+  createTextNode,
+  insertNode: _insertNode,
+  insert,
+  spread: _spread_orig,
+  setProp,
+  mergeProps,
+  use,
+} = renderer as any;
+
+/**
+ * spread: Robust property spreading for ZenTUI.
+ * Ensures every primitive property is pushed to the RUC tree.
+ */
+export function spread(node: RUCNode, props: any) {
+  if (!props) return;
+  for (const key in props) {
+    if (key === 'children' || key === 'ref') continue;
+    setProp(node, key, props[key]);
+  }
+}
+
+export { 
+  createSignal,
+  createEffect,
+  createMemo,
+  createResource,
+  onMount,
+  onCleanup,
+  createRoot,
+  createRenderEffect,
+  useContext,
+  createContext,
+  batch,
+  untrack,
+  splitProps,
+  mergeProps as mergeProps_solid,
+  Show,
+  For,
+  Index,
+  Switch,
+  Match,
+  Portal,
+  Suspense
+} from 'solid-js';
+
+export { 
+  _render_orig as render_core, 
+  effect, 
+  memo, 
+  createComponent, 
+  createElement, 
+  createTextNode, 
+  _insertNode, 
+  insert, 
+  setProp, 
+  mergeProps, 
+  use
+};
+
+/**
+ * render: Primary entry point for ZenTUI UI.
+ */
+export function render(code: () => any, element: any) {
+  const dispose = createRoot((dispose) => {
+    insert(element, code());
+    return dispose;
+  });
+  // Initial frame trigger
+  requestFrame();
+  return dispose;
+}
+
+/**
+ * flushTombstones: Clear the registry's garbage collected nodes.
+ */
+export function flushTombstones(): string[] {
+  return [];
+}

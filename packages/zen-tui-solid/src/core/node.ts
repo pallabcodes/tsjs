@@ -7,7 +7,7 @@
 
 import { ZenProps } from '@zen-tui/node';
 
-export type RUCNodeType = 'box' | 'text' | 'root' | 'virtual';
+export type RUCNodeType = 'box' | 'txt' | 'root' | 'virtual';
 
 export interface RUCNode {
   id: string;

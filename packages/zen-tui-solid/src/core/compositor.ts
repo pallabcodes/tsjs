@@ -1,52 +1,58 @@
 /**
- * @zen-tui/solid: Sovereign RUC Compositor
+ * @zen-tui/solid: ZenTUI Compositor
  * 
- * Specialized terminal-centric compositor.
- * Handles unidirectional geometry sync and reactive property patching.
+ * High-performance terminal compositor.
+ * Simplified for architectural finality.
  */
 
-import { createComponent } from 'solid-js';
-import { RUCNode, createRUCNode, registry } from './node.js';
-import { getActiveLayout } from './context.js';
-import { parseSize } from './linker.js';
+import { RUCNode, registry } from './node.js';
+import { createComponent, createElement, insert, spread, createRenderEffect } from './universal.js';
 import { getEngine } from '../index.js';
 
 /**
- * h: Sovereign JSX Factory (RUC Edition)
- * Bridges classic JSX compilation to Solid.js reactivity and RUC compositor.
+ * h: Reactive JSX Passthrough (Google-Grade)
+ * 
+ * No longer performs manual reactive slotting.
+ * Relies on the reconciler's 'insert' logic for all nested reactivity.
  */
 export function h(tag: any, props: any, ...children: any[]): any {
-  // Case 1: Functional Components
+  // 1. Functional Components
   if (typeof tag === 'function') {
-    return createComponent(tag, { ...props, children: children.length === 1 ? children[0] : children });
+    return createComponent(tag, { ...props, children });
   }
 
-  // Case 2: Primitive Tags (box, text, etc.)
-  const node = createRUCNode(tag as any, props || {});
-  registry.nodes.set(node.id, node);
+  // 2. Primitive Tags
+  const node = createElement(tag);
+  
+  if (props) {
+    // ╼ Reactive Property Tracking
+    // We wrap property application in an effect to ensure SolidJS Proxies 
+    // are correctly tracked and synchronized with the RUC node.
+    createRenderEffect(() => {
+      // ╼ Un-Proxy Synchronization
+      // We shallow-copy props to trigger SolidJS Proxy getters and 
+      // ensure the RUC tree receives the final values.
+      spread(node, { ...props });
+    });
 
-  // Link children
-  if (children.length > 0) {
-    const flattened = children.flat();
-    
-    // Extract text content for text nodes
-    if (tag === 'text') {
-      node.props.value = flattened.map(c => String(c)).join('');
-    } else {
-      for (const child of flattened) {
-        if (child && typeof child === 'object' && 'type' in child) {
-          child.parent = node;
-          node.children.push(child as RUCNode);
-        }
-      }
+    if (typeof props.ref === 'function') {
+      props.ref(node);
     }
+  }
+
+  if (props.children || children.length > 0) {
+    // ╼ Canonical Child Synchronization
+    // We pass the entire child collection to SolidJS's 'insert' utility,
+    // allowing the framework to handle topological ordering, markers, 
+    // and reactive branching automatically.
+    insert(node, props.children || (children.length > 1 ? children : children[0]));
   }
 
   return node;
 }
 
 /**
- * syncNativeNode: Synchronize a RUC node with the Rust layout engine.
+ * syncNativeNode: Precision terminal-viewport synchronization.
  */
 export function syncNativeNode(node: RUCNode) {
   const engine = getEngine() as any;
@@ -54,7 +60,6 @@ export function syncNativeNode(node: RUCNode) {
   const layout = engine.layout;
   const props = node.props || {};
 
-  // 1. Map RUC Props to Native Layout Style
   const flexDirection = props.flexDirection || "column";
   
   const mapDim = (val: any) => {
@@ -62,10 +67,9 @@ export function syncNativeNode(node: RUCNode) {
     return typeof val === 'number' ? val : null;
   };
 
-  const w = mapDim(props.width || (node.type === 'root' ? 140 : (node.type === 'text' ? String(props.value || '').length : null)));
-  const h = mapDim(props.height || (node.type === 'root' ? 50 : (node.type === 'text' ? 1 : null)));
+  const w = mapDim(props.width || (node.type === 'root' ? 140 : (node.type === 'txt' ? String(props.value || '').length : null)));
+  const h = mapDim(props.height || (node.type === 'root' ? 50 : (node.type === 'txt' ? 1 : null)));
 
-  // 2. Create or Update Native Node
   if (!node.nativeId) {
     node.nativeId = layout.create_node(
         flexDirection,
@@ -85,17 +89,18 @@ export function syncNativeNode(node: RUCNode) {
     );
   }
 
-  // 3. Handle Hierarchy Attachment
   if (!node.attached && node.nativeId && node.parent?.nativeId) {
     layout.add_child(node.parent.nativeId, node.nativeId);
     node.attached = true;
   }
 
-  // 4. Recurse to children
-  for (const child of node.children) {
-    if (child && typeof child === 'object') {
-      child.parent = node;
-      syncNativeNode(child);
+  // Recurse to children
+  if (node.children) {
+    for (const child of node.children) {
+      if (child && typeof child === 'object') {
+        child.parent = node;
+        syncNativeNode(child);
+      }
     }
   }
 }

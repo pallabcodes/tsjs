@@ -13,7 +13,8 @@ import {
   dispatchInput, 
   setEngine,
   getEngine,
-  registry
+  registry,
+  startPipeline
 } from '@zen-tui/solid';
 
 // 0. Precision Clean
@@ -36,6 +37,9 @@ try {
     return createComponent(App, {});
   }, (zen as any).root);
   
+  // 3. Start the High-Fidelity Rendering Pipeline
+  startPipeline();
+
   // Keep the process alive for the TUI
   setInterval(() => {}, 1000);
 } catch (err) {

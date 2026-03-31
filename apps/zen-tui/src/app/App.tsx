@@ -1,13 +1,17 @@
 import { Box, useInput } from '@zen-tui/solid';
 import { useZenDispatch } from './store/ZenStore.js';
+import { normalizeKeyEvent } from './store/input-utils.js';
 import { Header, HorizontalLine } from './view/Header.js';
 import { Theme } from './theme.js';
 import { Body } from './view/Body.js';
 import { Footer } from './view/Footer.js';
 
 export default function App() {
+  const dispatch = useZenDispatch;
+
   useInput((e) => {
-    useZenDispatch({ type: 'KEY_PRESS', key: e.name || 'UNK' });
+    const keyString = normalizeKeyEvent(e);
+    dispatch({ type: 'KEY_PRESS', key: keyString });
   });
 
   return (

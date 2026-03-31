@@ -45,9 +45,23 @@ export function dispatchInput(e: ZenInputEvent) {
 }
 
 /**
+ * setEngine: Bind the full native engine to the global context.
+ */
+export function setEngine(engine: any) {
+  (globalThis as any).__ZEN_ENGINE__ = engine;
+  context.engine = engine;
+}
+
+/**
+ * getEngine: Safely retrieve the current native engine.
+ */
+export function getEngine() {
+  return context.engine || (globalThis as any).__ZEN_ENGINE__;
+}
+
+/**
  * setLayoutEngine: Bind the native layout engine to the global context.
  */
 export function setLayoutEngine(engine: any) {
-  (globalThis as any).zenEngine = engine;
-  context.engine = engine;
+  context.engine = { layout: engine };
 }

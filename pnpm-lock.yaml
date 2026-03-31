@@ -310,13 +310,13 @@ importers:
       '@zen-tui/painter':
         specifier: workspace:*
         version: link:../zen-tui-painter
-      solid-js:
-        specifier: ^1.9.11
-        version: 1.9.11
     devDependencies:
       '@types/node':
         specifier: ^25.5.0
         version: 25.5.0
+      solid-js:
+        specifier: ^1.9.11
+        version: 1.9.11
 
   packages/zen-tui-state:
     dependencies:

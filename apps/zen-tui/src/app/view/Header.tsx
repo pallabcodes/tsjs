@@ -1,20 +1,27 @@
 /** @jsx h */
-import { Box, Text } from '@zen-tui/solid';
+import { Box, Text, Sparkline } from '@zen-tui/solid';
 import { Theme } from '../theme.js';
+import { useZenState } from '../store/ZenStore.js';
 
 export function Header() {
+  const state = useZenState;
+  
   return (
     <Box flexDirection="column" bg={Theme.Colors.Background}>
       {/* Purposeful Context Bar - Premium Seamless Background */}
       <Box height={1} flexDirection="row" padding={{ left: Theme.Spacing.Small, right: Theme.Spacing.Small }}>
          <Box width={30}><Text fg={Theme.Colors.Primary} bold={true} value="▙ ZEN-TUI PRO" /></Box>
-         <Box flexGrow={1} alignItems="center">
+         <Box flexGrow={1} alignItems="center" flexDirection="row">
              <Text fg={Theme.Colors.TextMain} bold={true} value="REPOSITORY: " />
              <Text fg="#60a5fa" value="github.com/pallabcodes/tsjs" />
+             <Box width={4} />
+             <Text fg={Theme.Colors.TextMuted} value="Active Branch: " />
+             <Text fg={Theme.Colors.Success} bold={true} value="main" />
          </Box>
-         <Box width={30} alignItems="flex-end">
-            <Text fg={Theme.Colors.TextDim} value="Active Branch: " />
-            <Text fg={Theme.Colors.Success} bold={true} value="main" />
+         <Box width={40} alignItems="flex-end" flexDirection="row">
+            <Text fg={Theme.Colors.TextDim} value={`Tick: ${state.tick()}ms `} />
+            <Text fg={Theme.Colors.Primary} bold={true} value={` [LAST: ${state.lastKey()}] `} />
+            <Sparkline data={[4, 7, 2, 8, 5, 9, 3]} color={Theme.Colors.Success} />
          </Box>
       </Box>
       <Box height={1} padding={{ left: Theme.Spacing.Small, right: Theme.Spacing.Small }}><Text fg={Theme.Colors.Border} value={"━".repeat(240)} /></Box>
@@ -56,10 +63,6 @@ export function Header() {
 
 export const HorizontalLine = () => <Box height={1}><Text fg={Theme.Colors.Border} value={"━".repeat(300)} /></Box>;
 
-/**
- * VerticalDivider: RIGID PRECISION (V130)
- * ╼ Slimmed down to width=3 for better horizontal density correctly.
- */
 export const VerticalDivider = () => (
   <Box width={3} flexDirection="column" alignItems="center">
     <Box width={1} flexGrow={1} bg={Theme.Colors.Border} />
