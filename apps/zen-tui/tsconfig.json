@@ -3,8 +3,8 @@
     "target": "ESNext",
     "module": "ESNext",
     "moduleResolution": "bundler",
-    "jsx": "preserve",
-    "jsxImportSource": "solid-js",
+    "jsx": "react-jsx",
+    "jsxImportSource": "@zen-tui/core",
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
     "strict": true,
@@ -16,12 +16,12 @@
     "strictNullChecks": true,
     "outDir": "dist",
     "skipLibCheck": true,
-    "types": ["bun-types"],
+    "types": ["bun-types", "node"],
     "baseUrl": ".",
     "paths": {
-      "zen-reconciler": ["./src/engine/reconciler.ts"],
+      "@zentui/core": ["../../packages/zen-tui-core/src/index.tsx"],
       "@zen-tui/*": ["../../packages/zen-tui-*/src/index.ts"],
-      "@zen-tui/solid": ["../../packages/zen-tui-solid/src/index.tsx"],
+      "@zen-tui/core": ["../../packages/zen-tui-core/src/index.tsx"],
       "@/*": ["./src/*"]
     }
   },

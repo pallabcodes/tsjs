@@ -1,8 +1,13 @@
 {
   "name": "@zen-tui/node",
   "version": "0.1.0",
-  "description": "Sovereign TUI Node Definitions",
+  "description": "ZenTUI Core Node Definitions",
   "type": "module",
-  "main": "./dist/index.js",
-  "dependencies": {}
+  "main": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@zen-tui/native": "workspace:*"
+  }
 }

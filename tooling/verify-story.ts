@@ -4,7 +4,7 @@ import { ZenLayoutEngine } from '../packages/zen-tui-layout/src/index.js';
 import { ZenInspector } from '../packages/zen-tui-core/src/Inspector.js';
 
 /**
- * Sovereign Render Story: A 5-Step Verification
+ * ZenTUI Render Story: A 5-Step Verification
  * 
  * Step 1: Initialize Unified State
  * Step 2: Construct Virtual Tree (Reconciliation)
@@ -28,7 +28,7 @@ async function runStory() {
   root.children.push(container);
   layout.add_child(root.nativeId, container.nativeId);
 
-  const textNode = new ZenTextNode("Hello Sovereign TUI", undefined, getNextId('text'));
+  const textNode = new ZenTextNode("Hello ZenTUI TUI", undefined, getNextId('text'));
   textNode.nativeId = layout.create_node("row", 19, 1);
   container.children.push(textNode);
   layout.add_child(container.nativeId, textNode.nativeId);
@@ -78,7 +78,7 @@ async function runStory() {
   const cleanVis = stripAnsi(visualization);
 
   const assertions = [
-    { name: "Core Text", pattern: "Hello Sovereign TUI" },
+    { name: "Core Text", pattern: "Hello ZenTUI TUI" },
     { name: "Tab Component", pattern: "Tab 1" }
   ];
 
@@ -93,7 +93,7 @@ async function runStory() {
   }
 
   if (allPassed) {
-    console.log("\nSUCCESS: Sovereign Render Story Fully Verified!");
+    console.log("\nSUCCESS: ZenTUI Render Story Fully Verified!");
   } else {
     console.log("\nFAILURE: Verification assertions failed.");
     process.exit(1);

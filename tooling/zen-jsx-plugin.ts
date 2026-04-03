@@ -2,7 +2,7 @@ import { plugin } from "bun";
 import { transformSync } from "@babel/core";
 
 /**
- * Zen-TUI: Sovereign JSX Plugin for Bun
+ * Zen-TUI: ZenTUI JSX Plugin for Bun
  * 
  * This plugin intercepts all .tsx files and transforms them using
  * SolidJS's official Universal Generator. This ensures that:

@@ -5,13 +5,9 @@
   "description": "A high-performance Git TUI client powered by custom ZenEngine and SolidJS",
   "type": "module",
   "scripts": {
-    "dev": "node ../../tooling/zbt/src/index.js build apps/zen-tui && node dist/main.js",
-    "start": "node dist/main.js",
-    "build": "tsc",
-    "test": "bun test",
-    "build:native": "napi build --platform --release --target aarch64-apple-darwin ./native",
-    "build:native:windows": "napi build --platform --release --target x86_64-pc-windows-msvc ./native",
-    "artifacts": "napi artifacts"
+    "dev": "pnpm -w zbt build apps/zen-tui && ../../apps/zentui-host/target/release/zentui-host dist/host.js",
+    "start": "../../apps/zentui-host/target/release/zentui-host dist/host.js",
+    "build": "pnpm -w zbt build apps/zen-tui"
   },
   "napi": {
     "name": "zen_tui_native",
@@ -20,12 +16,12 @@
   },
   "dependencies": {
     "@zen-tui/core": "workspace:*",
-    "@zen-tui/solid": "workspace:*",
     "solid-js": "^1.9.11"
   },
   "devDependencies": {
     "@napi-rs/cli": "^3.5.1",
     "@napi-rs/wasm-runtime": "^1.1.1",
+    "@types/node": "^25.5.0",
     "bun-types": "^1.3.11",
     "tsx": "^4.21.0",
     "typescript": "^5.7.2"

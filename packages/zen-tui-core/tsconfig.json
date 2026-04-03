@@ -1,17 +1,15 @@
 {
   "compilerOptions": {
     "target": "ESNext",
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
     "jsx": "react-jsx",
-    "jsxImportSource": "solid-js",
+    "jsxImportSource": "@zen-tui/core",
     "strict": true,
     "skipLibCheck": true,
     "baseUrl": ".",
-    "types": ["node"],
     "paths": {
-      "@zen/layout": ["../../zen-layout/src/index.ts"],
-      "@zen/painter": ["../../zen-painter/src/index.ts"]
+      "@zen-tui/*": ["../zen-tui-*/src/index.ts"]
     }
   },
   "include": ["src/**/*"]

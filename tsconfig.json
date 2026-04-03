@@ -9,14 +9,13 @@
     "strict": true,
     "skipLibCheck": true,
     "jsx": "react-jsx",
-    "jsxImportSource": "solid-js",
+    "jsxImportSource": "@zen-tui/core",
     "forceConsistentCasingInFileNames": true,
     "baseUrl": ".",
     "paths": {
-      "@zen-tui/core": ["packages/zen-tui-core/src/index.ts"],
-      "@zen-tui/layout": ["packages/zen-tui-layout/src/index.ts"],
-      "@zen-tui/painter": ["packages/zen-tui-painter/src/index.ts"],
-      "@zen-tui/solid": ["packages/zen-tui-solid/src/index.ts"],
+      "@zen-tui/core": ["packages/zen-tui-core/src/index.tsx"],
+      "@zen-tui/node": ["packages/zen-tui-node/src/index.ts"],
+      "@zen-tui/native": ["packages/zen-tui-native/src/index.ts"],
       "@/*": ["apps/zen-tui/src/*"]
     }
   },

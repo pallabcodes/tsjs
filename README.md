@@ -1,10 +1,10 @@
-# Sovereign Zen-TUI (Git TUI) ◉
+# ZenTUI Zen-TUI (Git TUI) ◉
 
 A high-performance, topologically-accurate Git terminal user interface built with **SolidJS** and a **Native C++ / Rust Layout Engine**.
 
 ## ⧉ Windows Installation Guide
 
-To build and run Sovereign Zen-TUI on a Windows machine, you need to set up the native build environment.
+To build and run ZenTUI Zen-TUI on a Windows machine, you need to set up the native build environment.
 
 ### 1. Requisite Toolchain
 
@@ -35,7 +35,7 @@ pnpm install
 Once the installation is complete, you can start the TUI in development mode:
 
 ```powershell
-# Start the Sovereign TUI
+# Start the ZenTUI TUI
 pnpm dev
 ```
 
