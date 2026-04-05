@@ -15,7 +15,21 @@ cd tsjs
 pnpm install
 
 # 3. Hardened Ignition (Build & Start)
-./zen    # or ./zen dev
+./zen dev      # Full build + start sequence (Default)
+./zen build    # Hardens the binary context (Fast-Path enabled)
+./zen start    # Seizes the TTY and projects the TUI
+```
+
+## ⌨️ Shell Integration (Optional)
+
+For rapid dashboard access, you can add an alias to your `.zshrc` or `.bashrc`:
+
+```bash
+# Industrial Shorthand
+alias zen='./zen'
+
+# Or use the absolute path for global access:
+# alias zen='/path/to/zen'
 ```
 
 ## 🛠️ The zen Toolchain
