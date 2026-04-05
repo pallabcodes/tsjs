@@ -42,7 +42,7 @@ export interface ZenPainter {
   flush: () => void;
   getWidth: () => number;
   getHeight: () => number;
-  drawText: (x: number, y: number, text: string, fg?: string, bg?: string, bold?: boolean) => void;
+  drawText: (x: number, y: number, text: string, fg?: string, bg?: string, bold?: boolean, width?: number) => void;
   drawBorder: (x: number, y: number, w: number, h: number, fg?: string, style?: string) => void;
   fillRect: (x: number, y: number, w: number, h: number, bg: string) => void;
 }

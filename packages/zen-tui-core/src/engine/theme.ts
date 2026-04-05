@@ -1,35 +1,35 @@
 /**
  * ZenTUI: Design System & Visual Tokens
- *
- * Google-grade palette optimized for terminal rendering.
- * Blue primary, high-contrast slate surface, clear semantic colors.
+ * 
+ * Normalized ANSI Palette optimized for high-performance terminal rendering.
+ * All tokens map to the Sovereign 8-Color Bridge.
  */
 
-export const Theme = {
+const StaticTheme = {
   Colors: {
-    // Surface
-    Background: '#020617',      // Slate-950
-    Panel: '#0f172a',           // Slate-900
-    PanelActive: '#1e293b',     // Slate-800
-    Border: '#475569',          // Slate-600
-    BorderActive: '#3b82f6',    // Blue-500
+    // Surface (Mapping to ANSI-8)
+    Background: 'black',        
+    Panel: 'black',             
+    PanelActive: 'blue',      
+    Border: 'grey',          
+    BorderActive: 'cyan',    
 
     // Brand & Actions
-    Primary: '#3b82f6',         // Blue-500
-    PrimaryMuted: '#1d4ed8',    // Blue-700
-    Highlight: '#3b82f6',       // Blue-500
+    Primary: 'blue',         
+    PrimaryMuted: 'blue',    
+    Highlight: 'cyan',       
 
     // Semantic
-    Success: '#22c55e',         // Green-500
-    Warning: '#fbbf24',         // Amber-400
-    Danger: '#ef4444',          // Red-500
-    Info: '#06b6d4',            // Cyan-500
+    Success: 'green',        
+    Warning: 'yellow',       
+    Danger: 'red',          
+    Info: 'cyan',           
 
     // Typography
-    TextStrong: '#f8fafc',      // Slate-50
-    TextMain: '#e2e8f0',        // Slate-200
-    TextMuted: '#94a3b8',       // Slate-400
-    TextDim: '#64748b',         // Slate-500
+    TextStrong: 'white',      
+    TextMain: 'white',        
+    TextMuted: 'grey',       
+    TextDim: 'grey',         
   },
 
   Spacing: {
@@ -49,6 +49,24 @@ export const Theme = {
     Dots: ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'],
     Line: ['|', '/', '-', '\\'],
   },
-} as const;
+};
+
+/**
+ * 🧱 Sovereign Design System
+ */
+export const Theme = {
+  ...StaticTheme,
+  Colors: { ...StaticTheme.Colors },
+  
+  // Pivot the Design live
+  setZenMode(mode: 'industrial' | 'emerald' | 'cobalt') {
+    const templates = {
+      industrial: { Background: 'black', Highlight: 'cyan', PanelActive: 'blue' },
+      emerald: { Background: 'black', Highlight: 'green', PanelActive: 'green' },
+      cobalt: { Background: 'black', Highlight: 'blue', PanelActive: 'blue' }
+    };
+    Object.assign(this.Colors, (templates as any)[mode]);
+  }
+};
 
 export type ThemeColors = typeof Theme.Colors;

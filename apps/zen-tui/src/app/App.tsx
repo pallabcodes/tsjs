@@ -21,7 +21,14 @@ export const AppContent = (props: { store: ZenStore }) => {
   const store = props.store;
 
   return (
-    <Box id="app-root" flexDirection="column" width="100%" height="100%" bg={Theme.Colors.Background}>
+    <Box 
+      id="app-root" 
+      flexDirection="column" 
+      width="100%" 
+      height="100%" 
+      bg={Theme.Colors.Background}
+      padding={{ top: 0, bottom: 0, left: 0, right: 0 }}
+    >
       {/* 1. Header (Black on Purple) */}
       <Box height={1} bg={Theme.Colors.PanelActive} padding={{ left: 1, right: 1 }} flexDirection="row">
         <Text fg={Theme.Colors.Highlight} value="ZEN-TUI" bold={true} />

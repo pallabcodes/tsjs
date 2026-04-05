@@ -154,6 +154,6 @@ describe("ZenTUI: Core Engine", () => {
         console.log(mockHost.dump());
 
         // 7. Final Assert: Verify bit-perfect state transition
-        expect(store.state.mode()).toBe('command');
+        expect(store.state.mode()).toBe('review');
     });
 });

@@ -60,7 +60,6 @@ export function createZenStore() {
   const [selectedStatusIndex, setSelectedStatusIndex] = createSignal<number>(0);
 
   // --- Industrial Lifecycle Bridge ---
-
   const sync = () => {
     const log = GitProvider.getCommitLog(50);
     const repoStatus = GitProvider.getStatus();
@@ -71,20 +70,20 @@ export function createZenStore() {
     setUnstagedFiles([]); 
     setBranches(repoBranches);
 
-    if (log.length > 0) {
+    if (log.length > 0 && !selectedCommitId()) {
       setSelectedCommitId(log[0].hash);
       setSelectedIndex(0);
     }
   };
 
-  // Immediate Sync for Industrial Bootstapping
+  // Immediate Sync for bit-perfect Frame 1
   sync();
 
   Zen.onMount(() => {
     sync();
   });
 
-  Zen.effect(() => {
+  createEffect(() => {
     const id = selectedCommitId();
     if (id) {
       const diffText = GitProvider.getCommitDiff(id);
@@ -163,23 +162,33 @@ export function createZenStore() {
   // ╼ Industrial Keyboard Bridge
   const input = Zen.createZenInput();
   
+  let themeIdx = 0;
+  const themeModes = ['industrial', 'emerald', 'cobalt'] as const;
+
   const stopInput = input.startPolling((key: string) => {
     const k = key.toLowerCase();
     const curMode = mode();
 
     if (curMode === 'navigation') {
-      if (k === 'tab') dispatch({ type: 'SET_MODE', mode: 'command' });
+      if (k === 'tab') dispatch({ type: 'SET_MODE', mode: 'review' });
       if (k === 'j' || k === '\u001b[b') dispatch({ type: 'MOVE_SELECTION', direction: 'down' });
       if (k === 'k' || k === '\u001b[a') dispatch({ type: 'MOVE_SELECTION', direction: 'up' });
-      if (k === 's') { /* TODO: Stage current file */ }
+      
+      // 🧱 Live Theme Switching
+      if (k === 't') {
+          themeIdx = (themeIdx + 1) % themeModes.length;
+          Zen.Theme.setZenMode(themeModes[themeIdx]);
+          Zen.pulse(true); 
+      }
+
       if (k === 'c') dispatch({ type: 'SET_MODE', mode: 'command' });
-      if (k === 'q') process.exit(0);
+      if (k === 'q') GitProvider.exit();
     } else if (curMode === 'review') {
         if (k === 'tab') dispatch({ type: 'SET_MODE', mode: 'navigation' });
-        if (k === 'j') dispatch({ type: 'MOVE_STATUS_SELECTION', direction: 'down' });
-        if (k === 'k') dispatch({ type: 'MOVE_STATUS_SELECTION', direction: 'up' });
+        if (k === 'j' || k === '\u001b[b') dispatch({ type: 'MOVE_STATUS_SELECTION', direction: 'down' });
+        if (k === 'k' || k === '\u001b[a') dispatch({ type: 'MOVE_STATUS_SELECTION', direction: 'up' });
+        if (k === 'v') dispatch({ type: 'SET_MODE', mode: 'navigation' }); 
     } else if (curMode === 'command') {
-        // Modal handles its own escape/commit usually, but we keep a fallback
         if (k === 'escape') dispatch({ type: 'SET_MODE', mode: 'navigation' });
     }
   });

@@ -1,0 +1,64 @@
+#!/bin/bash
+set -e
+
+ROOT_DIR=$(pwd)
+APP_DIR="$ROOT_DIR/apps/zen-tui"
+NATIVE_DIR="$ROOT_DIR/apps/zentui-host"
+HOST_BIN="$NATIVE_DIR/target/release/zentui-host"
+JS_BUNDLE="$APP_DIR/dist/host.js"
+LOG_FILE="$ROOT_DIR/zentui.log"
+
+case "$1" in
+    build)
+        echo "Building ZenTUI Native host..."
+        cargo build --release --manifest-path "$NATIVE_DIR/Cargo.toml"
+        
+        # 🧱 macOS Hardening: Ad-hoc signing for arm64 execution
+        if [[ "$OSTYPE" == "darwin"* ]]; then
+            echo "Signing binary for local execution..."
+            codesign -s - --force "$HOST_BIN"
+        fi
+
+        echo "Building ZenTUI JS bundle..."
+        npx esbuild "$APP_DIR/src/main.tsx" \
+            --bundle \
+            --outfile="$JS_BUNDLE" \
+            --platform=neutral \
+            --format=iife \
+            --target=esnext \
+            --minify=false \
+            --jsx=automatic \
+            --jsx-import-source=solid-js
+
+        echo "Done."
+        ;;
+    start)
+        if [ ! -f "$HOST_BIN" ]; then
+            echo "Error: Host binary not found. Run './zen build' first."
+            exit 1
+        fi
+        
+        # Clear log before ignition
+        rm -f "$LOG_FILE"
+        touch "$LOG_FILE"
+        
+        # Ignition
+        "$HOST_BIN" "$JS_BUNDLE" || {
+            CODE=$?
+            echo "ZenTUI exited with code: $CODE"
+            if [ -f "$LOG_FILE" ]; then
+                echo "╼ Diagnostic Summary (zentui.log):"
+                tail -n 10 "$LOG_FILE"
+            fi
+            exit $CODE
+        }
+        ;;
+    dev)
+        ./zen build
+        ./zen start
+        ;;
+    *)
+        echo "Usage: ./zen {build|start|dev}"
+        exit 1
+        ;;
+esac

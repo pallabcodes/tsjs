@@ -3,17 +3,19 @@ use crate::buffer::Buffer;
 use crossterm::style::Color;
 use std::io;
 
-pub struct Renderer<B: TerminalBackend> {
-    backend: B,
+/**
+ * Renderer: Zero-copy diffing engine with Industrial Row Purge.
+ */
+pub struct Renderer {
     previous_buffer: Option<Buffer>,
+    force_redraw_count: u8,
 }
 
-#[allow(non_snake_case)]
-impl<B: TerminalBackend> Renderer<B> {
-    pub fn new(backend: B) -> Self {
+impl Renderer {
+    pub fn new() -> Self {
         Self {
-            backend,
             previous_buffer: None,
+            force_redraw_count: 10,
         }
     }
 
@@ -24,23 +26,32 @@ impl<B: TerminalBackend> Renderer<B> {
      * 2. Atomic Bit-Diffing: O(1) cell comparison using packed u64.
      * 3. Contiguous RLE Painting: Eliminates redundant ANSI cursor moves.
      */
-    pub fn render(&mut self, buffer: &Buffer) -> io::Result<()> {
-        // 1. Geometry Check
+    pub fn render<B: TerminalBackend>(&mut self, backend: &mut B, buffer: &Buffer) -> io::Result<()> {
+        // 1. Industrial Hardware Clear & Geometry Sync
+        let mut force_full_render = false;
+        
+        if self.force_redraw_count > 0 {
+            force_full_render = true;
+            self.force_redraw_count -= 1;
+        }
+
         if let Some(prev) = &self.previous_buffer {
             if prev.width != buffer.width || prev.height != buffer.height {
-                self.backend.clear()?;
+                backend.clear()?;
+                force_full_render = true;
             }
+        } else {
+            // ╼ First Pass: Hardcore Hardware Purge
+            backend.clear()?;
+            force_full_render = true;
         }
 
         // 2. Industrial Diffing Pass
         for y in 0..buffer.height {
-            // 🔥 SKIP-ROW OPTIMIZATION: Zero-overhead bypass for static regions
-            if !buffer.dirty_rows[y as usize] {
-                if let Some(prev) = &self.previous_buffer {
-                    if prev.width == buffer.width && prev.height == buffer.height {
-                        continue; 
-                    }
-                }
+            // 🔥 Pass 1: Industrial Row Purge (First-Frame Override)
+            let is_first_frame = self.previous_buffer.is_none();
+            if !buffer.dirty_rows[y as usize] && !is_first_frame && !force_full_render {
+                continue;
             }
 
             let mut current_run_start: Option<u16> = None;
@@ -63,12 +74,12 @@ impl<B: TerminalBackend> Renderer<B> {
                 if needs_update {
                     // ╼ RLE Management: Only move cursor if this is a new run
                     if current_run_start.is_none() {
-                        self.backend.moveTo(x, y)?;
+                        backend.moveTo(x, y)?;
                         current_run_start = Some(x);
                     }
 
                     // Mapping packed bits back to crossterm types for the backend
-                    self.backend.printStyled(
+                    backend.printStyled(
                         cell.content(),
                         Self::map_color(cell.fg()),
                         Self::map_color(cell.bg()),
@@ -82,7 +93,7 @@ impl<B: TerminalBackend> Renderer<B> {
         }
 
         // 3. Frame Flush: Performs a single write syscall for the entire instruction set.
-        self.backend.flush()?;
+        backend.flush()?;
         
         // 4. Update Tombstone Tracking
         self.update_previous(buffer);
@@ -112,8 +123,8 @@ impl<B: TerminalBackend> Renderer<B> {
         Some(Color::AnsiValue(idx))
     }
 
-    pub fn clear(&mut self) -> io::Result<()> {
-        self.backend.clear()?;
+    pub fn clear<B: TerminalBackend>(&mut self, backend: &mut B) -> io::Result<()> {
+        backend.clear()?;
         self.previous_buffer = None;
         Ok(())
     }

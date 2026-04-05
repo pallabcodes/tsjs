@@ -1,0 +1,9 @@
+#!/bin/bash
+# ╼ ZenTUI: Sovereign Alias Protocol (Zenbox)
+
+# 1. Industrial Alias Discovery
+export ZEN_ROOT="/Users/picon/Downloads/tui/zen"
+alias zen="$ZEN_ROOT/zen"
+
+echo "⚡ ZenTUI: Industrial 'zen' command is now active."
+echo "   Usage: zen build | zen dev | zen start"

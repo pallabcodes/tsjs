@@ -24,6 +24,10 @@ export class ZenTUIMock {
         this.cells.set(`${x},${y}`, { char, fg, bg, bold });
     }
 
+    pollInput(): string | null {
+        return null;
+    }
+
     flush() {
         this.flushes++;
     }
