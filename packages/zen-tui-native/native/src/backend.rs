@@ -26,6 +26,7 @@ pub trait TerminalBackend {
     fn enterAlternateScreen(&mut self) -> io::Result<()>;
     fn leaveAlternateScreen(&mut self) -> io::Result<()>;
     fn clearScrollback(&mut self) -> io::Result<()>;
+    fn clearWith(&mut self, color: Color) -> io::Result<()>;
 }
 
 pub struct CrosstermBackend {
@@ -60,6 +61,15 @@ impl TerminalBackend for CrosstermBackend {
 
     fn flush(&mut self) -> io::Result<()> { self.stdout.flush() }
     fn clear(&mut self) -> io::Result<()> { write!(self.stdout, "\x1b[2J\x1b[H") }
+
+    fn clearWith(&mut self, color: Color) -> io::Result<()> {
+        let (r, g, b) = match color {
+            Color::Rgb { r, g, b } => (r, g, b),
+            _ => (0, 0, 0),
+        };
+        // 🧱 Set background color and clear screen to home
+        write!(self.stdout, "\x1b[48;2;{};{};{}m\x1b[2J\x1b[H", r, g, b)
+    }
 
     fn showCursor(&mut self) -> io::Result<()> {
         write!(self.stdout, "\x1b[?25h")?;

@@ -29,7 +29,7 @@ For rapid dashboard access, you can add an alias to your `.zshrc` or `.bashrc`:
 alias zen='./zen'
 
 # Or use the absolute path for global access:
-# alias zen='/path/to/zen'
+# alias zen='/path/to/zen' e.g. alias zen="/path/path/Downloads/tui/zen/"
 ```
 
 ## 🛠️ The zen Toolchain

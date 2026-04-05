@@ -29,11 +29,23 @@ export const AppContent = (props: { store: ZenStore }) => {
       bg={Theme.Colors.Background}
       padding={{ top: 0, bottom: 0, left: 0, right: 0 }}
     >
-      {/* 1. Header (Black on Purple) */}
-      <Box height={1} bg={Theme.Colors.PanelActive} padding={{ left: 1, right: 1 }} flexDirection="row">
-        <Text fg={Theme.Colors.Highlight} value="ZEN-TUI" bold={true} />
-        <Box flexGrow={1} />
-        <Text fg={Theme.Colors.Highlight} value={`BRANCH: ${store.state.currentBranch()}`} />
+      {/* 1. Header (Floating Sovereign Metadata) */}
+      <Box height={1} bg={Theme.Colors.Background} padding={{ left: 1, right: 1 }} flexDirection="row">
+        {/* Left: Engine Status */}
+        <Box width="33%" flexDirection="row">
+          <Text fg={Theme.Colors.Success} value="● " />
+          <Text fg={Theme.Colors.Highlight} value="ZenTUI" bold={true} />
+        </Box>
+        
+        {/* Center: Repository Context (Absolute Centering) */}
+        <Box width="34%" justifyContent="center" flexDirection="row">
+          <Text fg={Theme.Colors.Highlight} value="tsjs" bold={true} />
+        </Box>
+        
+        {/* Right: Branch State */}
+        <Box width="33%" justifyContent="flex-end" flexDirection="row">
+          <Text fg={Theme.Colors.Highlight} value={`⊐ ${store.state.currentBranch()}`} />
+        </Box>
       </Box>
 
       {/* 2. Workspace (Industrial Row) */}
@@ -137,10 +149,10 @@ export const AppContent = (props: { store: ZenStore }) => {
         </Box>
       </Box>
 
-      {/* 3. Status Bar (Fixed at Bottom) */}
+      {/* 3. Status Bar (Professional Shorthand) */}
       <Box height={1} bg={Theme.Colors.Background} flexDirection="row" padding={{ left: 1, right: 1 }}>
-        <Text fg={Theme.Colors.Highlight} bold={true} value="⚡ HARDCORE ENGINE " />
-        <Text fg={Theme.Colors.Highlight} value={`MODE: ${store.state.mode().toUpperCase()} `} />
+        <Text fg={Theme.Colors.Highlight} bold={true} value="❖ " />
+        <Text fg={Theme.Colors.Highlight} value={`${store.state.mode().toUpperCase()} `} />
         <Box flexGrow={1} />
         <Text fg={Theme.Colors.TextDim} value="Tab: Switch | j/k: Nav | s/u: Stage | c: Commit | q: Quit" />
       </Box>

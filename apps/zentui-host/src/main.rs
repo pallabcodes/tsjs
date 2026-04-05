@@ -24,36 +24,25 @@ fn log_diagnostic(msg: &str) {
     }
 }
 
+/**
+ * 🧱 Triple-Buffer TrueColor Expansion
+ */
 struct PackProtocol;
 impl PackProtocol {
-    fn unpack(packed: u32) -> (char, Option<Color>, Option<Color>, bool, bool, bool) {
-        let unicode = packed & 0x1FFFFF;
-        let fg_idx = ((packed >> 21) & 0xF) as u8;
-        let bg_idx = ((packed >> 25) & 0xF) as u8;
-        let attr = (packed >> 29) & 0x7;
-        let c = std::char::from_u32(unicode).unwrap_or(' ');
-        let fg = Self::get_color(fg_idx);
-        let bg = Self::get_color(bg_idx);
-        let bold = (attr & 1) != 0;
-        let dim = (attr & 2) != 0;
-        let underline = (attr & 4) != 0;
-        (c, fg, bg, bold, dim, underline)
-    }
-
-    fn get_color(idx: u8) -> Option<Color> {
-        match idx {
-            0 => Some(Color::Black), 1 => Some(Color::Red), 2 => Some(Color::Green), 3 => Some(Color::Yellow),
-            4 => Some(Color::Blue), 5 => Some(Color::Magenta), 6 => Some(Color::Cyan), 7 => Some(Color::White),
-            8 => Some(Color::Grey), 9 => Some(Color::DarkGrey), 10 => Some(Color::DarkRed), 11 => Some(Color::DarkGreen),
-            12 => Some(Color::DarkYellow), 13 => Some(Color::DarkBlue), 14 => Some(Color::DarkMagenta), 15 => Some(Color::DarkCyan),
-            _ => None,
-        }
+    fn get_color(rgb: u32) -> Option<Color> {
+        if rgb == 0xFF000000 { return None; }
+        let r = ((rgb >> 16) & 0xFF) as u8;
+        let g = ((rgb >> 8) & 0xFF) as u8;
+        let b = (rgb & 0xFF) as u8;
+        Some(Color::Rgb { r, g, b })
     }
 }
 
 struct HostState {
     width: u16, height: u16,
-    back_buffer: Vec<u32>,
+    back_content: Vec<u32>,
+    back_fg: Vec<u32>,
+    back_bg: Vec<u32>,
     backend: CrosstermBackend,
     git: NativeGit,
 }
@@ -62,40 +51,60 @@ impl HostState {
     fn init() -> Self {
         log_diagnostic("Seizing Hardware TTY...");
         let mut backend = CrosstermBackend::new();
-        if let Err(e) = backend.enableRawMode() { log_diagnostic(&format!("ERR: EnableRawMode: {}", e)); }
-        if let Err(e) = backend.enterAlternateScreen() { log_diagnostic(&format!("ERR: EnterAlternateScreen: {}", e)); }
-        if let Err(e) = backend.clearScrollback() { log_diagnostic(&format!("ERR: ClearScrollback: {}", e)); }
-        if let Err(e) = backend.hideCursor() { log_diagnostic(&format!("ERR: HideCursor: {}", e)); }
-        if let Err(e) = backend.flush() { log_diagnostic(&format!("ERR: Flush: {}", e)); }
+        let _ = backend.enableRawMode();
+        let _ = backend.enterAlternateScreen();
+        let _ = backend.clearScrollback();
+        let _ = backend.hideCursor();
+        
+        // 🧱 IGNITION FLOOD: Eliminate the white flash by seating Slate Blue (#0F172A) immediately
+        let slate = Color::Rgb { r: 15, g: 23, b: 42 };
+        let _ = backend.clearWith(slate);
+        let _ = backend.flush();
+
         let mut size = backend.getSize();
         while size.0 == 0 || size.1 == 0 { std::thread::sleep(Duration::from_millis(10)); size = backend.getSize(); }
         
-        log_diagnostic(&format!("TTY Geometry: {}x{}", size.0, size.1));
+        let area = (size.0 as usize) * (size.1 as usize);
         Self {
             width: size.0, height: size.1,
-            back_buffer: vec![0; (size.0 as usize) * (size.1 as usize)],
+            back_content: vec![0; area],
+            back_fg: vec![0; area],
+            back_bg: vec![0; area],
             backend,
             git: NativeGit::new(".").expect("Git project not detected"),
         }
     }
 
-    fn render_frame(&mut self, new_buffer: &[u32]) {
+    fn render_frame(&mut self, content: &[u32], fg: &[u32], bg: &[u32]) {
         let expected_len = (self.width as usize) * (self.height as usize);
-        if new_buffer.len() != expected_len { return; }
-        if new_buffer.len() != self.back_buffer.len() {
-            let _ = self.backend.clear();
-            self.back_buffer = vec![0; expected_len];
-        }
+        if content.len() != expected_len || fg.len() != expected_len || bg.len() != expected_len { return; }
 
-        for (i, &cell) in new_buffer.iter().enumerate() {
-            if cell != self.back_buffer[i] {
+        for i in 0..expected_len {
+            let nc = content[i];
+            let nfg = fg[i];
+            let nbg = bg[i];
+            
+            if nc != self.back_content[i] || nfg != self.back_fg[i] || nbg != self.back_bg[i] {
                 let x = (i % self.width as usize) as u16;
                 let y = (i / self.width as usize) as u16;
-                if x == self.width - 1 && y == self.height - 1 { continue; }
-                let (c, fg, bg, bold, _, _) = PackProtocol::unpack(cell);
+                
+                let c = std::char::from_u32(nc & 0x1FFFFF).unwrap_or(' ');
+                let bold = (nc >> 31) & 1 == 1;
+                let fg_color = PackProtocol::get_color(nfg);
+                let bg_color = PackProtocol::get_color(nbg);
+
                 let _ = self.backend.moveTo(x, y);
-                let _ = self.backend.printStyled(c, fg, bg, bold);
-                self.back_buffer[i] = cell;
+                let _ = self.backend.printStyled(c, fg_color, bg_color, bold);
+                
+                // 🧱 MANUAL CURSOR RESET: If this is the last cell, immediately move the cursor back
+                // to prevent terminal auto-scrolling while ensuring full visual paint.
+                if x == self.width - 1 && y == self.height - 1 {
+                    let _ = self.backend.moveTo(x, y);
+                }
+
+                self.back_content[i] = nc;
+                self.back_fg[i] = nfg;
+                self.back_bg[i] = nbg;
             }
         }
         let _ = self.backend.flush();
@@ -112,11 +121,17 @@ fn commit_frame(_ctx: Ctx<'_>, buf: ArrayBuffer<'_>) {
     let mut guard = lock_host();
     if let Some(h) = guard.as_mut() {
         if let Some(bytes) = buf.as_bytes() {
-            if bytes.as_ptr() as usize % 4 != 0 { return; }
-            let u32_ptr = bytes.as_ptr() as *const u32;
-            let u32_len = bytes.len() / 4;
-            let new_frame = unsafe { std::slice::from_raw_parts(u32_ptr, u32_len) };
-            h.render_frame(new_frame);
+            let total_cells = bytes.len() / 12;
+            let expected_cells = (h.width as usize) * (h.height as usize);
+            if total_cells != expected_cells { return; }
+
+            let ptr = bytes.as_ptr() as *const u32;
+            unsafe {
+                let content = std::slice::from_raw_parts(ptr, total_cells);
+                let fg = std::slice::from_raw_parts(ptr.add(total_cells), total_cells);
+                let bg = std::slice::from_raw_parts(ptr.add(total_cells * 2), total_cells);
+                h.render_frame(content, fg, bg);
+            }
         }
     }
 }
@@ -129,7 +144,13 @@ fn poll_input() -> Option<String> {
             match ev {
                 Event::Resize(w, h) => {
                     let mut guard = lock_host();
-                    if let Some(h_state) = guard.as_mut() { h_state.width = w; h_state.height = h; }
+                    if let Some(h_state) = guard.as_mut() { 
+                        h_state.width = w; h_state.height = h; 
+                        let area = (w as usize) * (h as usize);
+                        h_state.back_content = vec![0; area];
+                        h_state.back_fg = vec![0; area];
+                        h_state.back_bg = vec![0; area];
+                    }
                     return Some(format!("{{\"name\": \"resize\", \"width\": {}, \"height\": {}}}", w, h));
                 },
                 Event::Key(key) => {
@@ -151,9 +172,7 @@ fn get_log(limit: u32) -> String {
     let guard = lock_host(); 
     if let Some(h) = guard.as_ref() { 
         let commits = h.git.get_log(limit as usize).unwrap_or_default(); 
-        let json = serde_json::to_string(&commits).unwrap_or_default();
-        log_diagnostic(&format!("JSON LOG: {}", json));
-        return json;
+        return serde_json::to_string(&commits).unwrap_or_default();
     } 
     String::new() 
 }
@@ -161,9 +180,7 @@ fn get_log(limit: u32) -> String {
 fn get_diff(hash: String) -> String { 
     let guard = lock_host(); 
     if let Some(h) = guard.as_ref() { 
-        let diff = h.git.get_diff(&hash).unwrap_or_default();
-        log_diagnostic(&format!("DIFF TRACE [{}]: {} chars", hash, diff.len()));
-        return diff;
+        return h.git.get_diff(&hash).unwrap_or_default();
     } 
     String::new() 
 }
@@ -172,9 +189,7 @@ fn get_status() -> String {
     let guard = lock_host(); 
     if let Some(h) = guard.as_ref() { 
         let files = h.git.get_status().unwrap_or_default(); 
-        let json = serde_json::to_string(&files).unwrap_or_default();
-        log_diagnostic(&format!("JSON STATUS: {}", json));
-        return json;
+        return serde_json::to_string(&files).unwrap_or_default();
     } 
     String::new() 
 }
@@ -184,23 +199,16 @@ fn exit_safely() { if let Ok(mut guard) = HOST.lock() { if let Some(h) = guard.a
 fn exit() { exit_safely(); std::process::exit(0); }
 
 fn main() {
-    // 🧱 IGNITION PULSE: Definitively prove existence before hardware seizure
-    log_diagnostic("ZenTUI Engine Pulse: Ignition Start.");
-    
-    std::panic::set_hook(Box::new(|info| {
-        log_diagnostic(&format!("NATIVE PANIC: {:?}", info));
-        exit_safely();
-    }));
+    std::panic::set_hook(Box::new(|info| { log_diagnostic(&format!("NATIVE PANIC: {:?}", info)); exit_safely(); }));
 
     let rt = Runtime::new().unwrap(); 
-    rt.set_max_stack_size(256 * 1024); // 🧱 macOS SIGKILL Guard: Reduced stack footprint
+    rt.set_max_stack_size(256 * 1024);
     rt.set_memory_limit(256 * 1024 * 1024); 
     
     let ctx = Context::full(&rt).unwrap();
     let bundle_path = std::env::args().nth(1).expect("Missing bundle path.");
     let source = fs::read_to_string(&bundle_path).expect("Failed to read bundle.");
 
-    log_diagnostic("Runtime Stabilized. Initializing Host State...");
     let host_state = HostState::init();
     {
         let mut guard = HOST.lock().unwrap();
@@ -220,23 +228,9 @@ fn main() {
         host_obj.set("exit", rquickjs::Function::new(ctx.clone(), exit)).unwrap();
         globals.set("__ZEN_HOST__", host_obj).unwrap();
         
-        log_diagnostic("Evaluating Bundle...");
         let _res: Result<(), rquickjs::Error> = ctx.eval(source);
-        if let Err(e) = _res {
-            let mut msg = e.to_string();
-            if let rquickjs::Error::Exception = e {
-                let exc = ctx.catch();
-                if let Some(obj) = exc.into_exception() {
-                    msg = format!("JS Exception: {}\nStack: {}", obj.message().unwrap_or_default(), obj.stack().unwrap_or_default());
-                }
-            }
-            log_diagnostic(&format!("CRITICAL JS ERROR: {}", msg));
-            exit_safely();
-            std::process::exit(1);
-        }
     });
 
-    log_diagnostic("Ignition Success. Entering Render Loop.");
     let mut first_tick = true;
     loop {
         ctx.with(|ctx| {
@@ -250,9 +244,7 @@ fn main() {
                 first_tick = false;
             }
             if let Ok(tick) = globals.get::<_, rquickjs::Function>("__ZENTUI_TICK") {
-                if let Err(e) = tick.call::<_, ()>(()) {
-                    log_diagnostic(&format!("RUNTIME TICK ERROR: {:?}", e));
-                }
+                let _ = tick.call::<_, ()>(());
             }
             if let Some(json) = poll_input() { if let Ok(cb) = globals.get::<_, rquickjs::Function>("__ZENTUI_INPUT_CALLBACK") { let _ = cb.call::<_, ()>((json,)); } }
             std::thread::sleep(Duration::from_millis(16));

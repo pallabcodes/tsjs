@@ -1,5 +1,5 @@
 /**
- * @zen-tui/core: ZenTUI Core Foundation
+ * @zen-tui/core: ZenTUI Core Foundation (Hardened Edition)
  */
 /// <reference path="./jsx.d.ts" />
 
@@ -10,7 +10,7 @@ import {
     type ZenEngine
 } from '@zen-tui/node';
 
-import { Zen as ZenReactivity, createRoot } from './engine/reactivity';
+import { Zen as ZenReactivity, createRoot, createSignal, batch } from './engine/reactivity';
 import { render, createComponent } from './engine/universal';
 import { setEngine, startPipeline, requestFrame } from './engine/pipeline';
 import { Theme } from './engine/theme';
@@ -30,6 +30,7 @@ export interface ZenHost {
 const timers: { cb: () => void, ms: number, last: number }[] = [];
 const timeouts: { cb: () => void, ms: number, start: number }[] = [];
 
+// [INDUSTRIAL] Polfilling the browser-like environment for Solid.js reactivity
 (globalThis as any).window = globalThis;
 (globalThis as any).setInterval = (cb: () => void, ms: number) => {
     const id = timers.length;
@@ -56,10 +57,19 @@ const timeouts: { cb: () => void, ms: number, start: number }[] = [];
 let _currentHost: ZenHost | null = null;
 let _inputListener: ((key: string) => void) | null = null;
 let _disposer: (() => void) | null = null;
+let _internalPainter: ZenPainter | null = null;
 
-let _frameBuffer: Uint32Array | null = null;
-let _currentW = 0;
-let _currentH = 0;
+// [REACTIVE] Viewport Dimensions
+const [_width, _setWidth] = createSignal(0);
+const [_height, _setHeight] = createSignal(0);
+
+// [MEMORY] Triple-Buffer Alignment (12-byte per cell)
+let _contentBuffer: Uint32Array | null = null;
+let _fgBuffer: Uint32Array | null = null;
+let _bgBuffer: Uint32Array | null = null;
+let _rawBuffer: ArrayBuffer | null = null;
+let _lockedW = 0;
+let _lockedH = 0;
 
 export interface ZenFramework {
     ignite(AppRoot: () => JSX.Element, host: ZenHost, headless?: boolean): void;
@@ -85,23 +95,25 @@ export const Zen: ZenFramework = {
     StoreContext: (() => {
         const key = Symbol.for("__ZENTUI_STORE_CONTEXT__");
         const globalStore = (globalThis as any);
-        if (!globalStore[key]) {
-            globalStore[key] = ZenReactivity.createContext<any>(null);
-        }
+        if (!globalStore[key]) globalStore[key] = ZenReactivity.createContext<any>(null);
         return globalStore[key];
     })(),
 
     ignite(AppRoot: () => JSX.Element, host?: ZenHost, headless: boolean = false) {
+        // [INDUSTRIAL] The Native Host binary exposes itself as __ZEN_HOST__ in the JS environment
         _currentHost = host || (globalThis as any).__ZEN_HOST__;
         if (!_currentHost) throw new Error("[ZenTUI] Ignite Failure: No host bridge detected.");
 
         const [w, h] = _currentHost.getSize();
-        _currentW = w; _currentH = h;
-        _frameBuffer = new Uint32Array(w * h);
+        
+        batch(() => {
+            _setWidth(w); _setHeight(h);
+            registry.root.props.width = w;
+            registry.root.props.height = h;
+            allocate(w, h);
+        });
 
-        registry.root.props.width = w;
-        registry.root.props.height = h;
-
+        // [BRIDGE] Assigning high-performance callbacks that the Native Host will invoke per frame/input
         (globalThis as any).__ZENTUI_TICK = () => Zen.pulse(true);
         (globalThis as any).__ZENTUI_INPUT_CALLBACK = (evStr: string) => Zen.dispatchInput(evStr);
 
@@ -109,70 +121,73 @@ export const Zen: ZenFramework = {
             const now = Date.now();
             for (let i = 0; i < timers.length; i++) {
                 const t = timers[i];
-                if (t && (force || now - t.last >= t.ms)) {
-                    t.cb(); t.last = now;
-                }
+                if (t && (force || now - t.last >= t.ms)) { t.cb(); t.last = now; }
             }
             for (let i = 0; i < timeouts.length; i++) {
                 const t = timeouts[i];
-                if (t && (force || now - t.start >= t.ms)) {
-                    t.cb(); timeouts[i] = null as any;
-                }
+                if (t && (force || now - t.start >= t.ms)) { t.cb(); timeouts[i] = null as any; }
             }
         };
 
         const painter: ZenPainter = {
-            clear: () => { if (_frameBuffer) _frameBuffer.fill(0); },
-            flush: () => { if (_frameBuffer && _currentHost) _currentHost.commitFrame(_frameBuffer.buffer); },
-            getWidth: () => _currentW,
-            getHeight: () => _currentH,
+            clear: () => { 
+                if (!_contentBuffer || !_fgBuffer || !_bgBuffer) return;
+                const bgRGB = getRGB(Theme.Colors.Background);
+                _contentBuffer.fill(32); _fgBuffer.fill(bgRGB); _bgBuffer.fill(bgRGB);
+            },
+            flush: () => { if (_rawBuffer && _currentHost) _currentHost.commitFrame(_rawBuffer); },
+            getWidth: () => _width(),
+            getHeight: () => _height(),
             drawText: (x, y, text, fg, bg, bold, width) => {
+                if (!_contentBuffer) return;
                 const limit = width !== undefined ? Math.min(text.length, width) : text.length;
-                const palette = getPalette(fg, bg, bold);
+                const fgRGB = getRGB(fg || Theme.Colors.TextMain);
                 for (let i = 0; i < limit; i++) {
-                    const idx = (y * _currentW) + (x + i);
-                    if (_frameBuffer && idx < _frameBuffer.length) {
-                        _frameBuffer[idx] = (text.charCodeAt(i) & 0x1FFFFF) | palette;
+                    const idx = (y * _lockedW) + (x + i);
+                    if (idx < _contentBuffer.length) {
+                        _contentBuffer[idx] = (text.charCodeAt(i) & 0x1FFFFF) | (bold ? 0x80000000 : 0);
+                        if (_fgBuffer) _fgBuffer[idx] = fgRGB;
+                        if (bg && _bgBuffer) _bgBuffer[idx] = getRGB(bg);
                     }
                 }
             },
             fillRect: (x, y, width, height, bg) => {
-                const palette = getPalette(undefined, bg, false);
-                const spaceCode = (' '.charCodeAt(0) & 0x1FFFFF);
+                if (!_contentBuffer) return;
+                const bgRGB = getRGB(bg);
                 for (let cy = y; cy < y + height; cy++) {
                     for (let cx = x; cx < x + width; cx++) {
-                        const idx = (cy * _currentW) + cx;
-                        if (_frameBuffer && idx < _frameBuffer.length) {
-                            _frameBuffer[idx] = spaceCode | palette;
+                        const idx = (cy * _lockedW) + cx;
+                        if (idx < _contentBuffer.length) {
+                            _contentBuffer[idx] = 32;
+                            // [INDUSTRIAL] Only update background if not transparent
+                            if (bgRGB !== 0xFF000000 && _bgBuffer) _bgBuffer[idx] = bgRGB;
                         }
                     }
                 }
             },
             drawBorder: (x, y, width, height, fg, style) => {
-                if (width <= 1 || height <= 1) return;
+                if (width <= 1 || height <= 1 || !_contentBuffer) return;
                 const chars = style === 'rounded' ? '─│╭╮╰╯' : '─│┌┐└┘';
-                const palette = getPalette(fg, undefined, false);
-                if (!_frameBuffer) return;
+                const fgRGB = getRGB(fg || Theme.Colors.Border);
                 const rx = Math.max(0, x + width - 1);
                 const by = Math.max(0, y + height - 1);
-                const pack = (c: string) => (c.charCodeAt(0) & 0x1FFFFF) | palette;
-                for (let cx = x + 1; cx < rx; cx++) {
-                    _frameBuffer[y * _currentW + cx] = pack(chars[0]);
-                    _frameBuffer[by * _currentW + cx] = pack(chars[0]);
-                }
-                for (let cy = y + 1; cy < by; cy++) {
-                    _frameBuffer[cy * _currentW + x] = pack(chars[1]);
-                    _frameBuffer[cy * _currentW + rx] = pack(chars[1]);
-                }
-                _frameBuffer[y * _currentW + x] = pack(chars[2]);
-                _frameBuffer[y * _currentW + rx] = pack(chars[3]);
-                _frameBuffer[by * _currentW + x] = pack(chars[4]);
-                _frameBuffer[by * _currentW + rx] = pack(chars[5]);
+                const write = (cx: number, cy: number, c: string) => {
+                    const idx = cy * _lockedW + cx;
+                    if (idx < _contentBuffer!.length) {
+                         _contentBuffer![idx] = c.charCodeAt(0) & 0x1FFFFF;
+                         if (_fgBuffer) _fgBuffer[idx] = fgRGB;
+                    }
+                };
+                for (let cx = x + 1; cx < rx; cx++) { write(cx, y, chars[0]); write(cx, by, chars[0]); }
+                for (let cy = y + 1; cy < by; cy++) { write(x, cy, chars[1]); write(rx, cy, chars[1]); }
+                write(x, y, chars[2]); write(rx, y, chars[3]); write(x, by, chars[4]); write(rx, by, chars[5]);
             }
         };
 
+        _internalPainter = painter;
         const engine = { root: registry.root, painter };
         setEngine(engine);
+        painter.clear();
 
         createRoot((dispose) => {
             _disposer = dispose;
@@ -182,19 +197,15 @@ export const Zen: ZenFramework = {
         requestFrame();
         
         Zen.pulse = (force: boolean = false) => { 
-            // 🧱 SOVEREIGN SYNC: Clear -> Tick -> Flush
-            painter.clear();
-            tickLoop(force); 
-            painter.flush();
+            tickLoop(force); painter.flush();
             return Promise.resolve(); 
         };
-        
         if (headless) Zen.pulse(true);
     },
 
     terminate() {
         if (_disposer) _disposer();
-        _disposer = null; _currentHost = null; _inputListener = null;
+        _disposer = null; _currentHost = null; _inputListener = null; _internalPainter = null;
         registry.clear();
     },
 
@@ -203,9 +214,12 @@ export const Zen: ZenFramework = {
         if (ev.name === 'resize') {
             const w = ev.width || 0;
             const h = ev.height || 0;
-            if (w > 0 && h > 0) {
-                _currentW = w; _currentH = h;
-                _frameBuffer = new Uint32Array(w * h);
+            if (w > 0 && h > 0 && (w !== _lockedW || h !== _lockedH)) {
+                batch(() => {
+                    _setWidth(w); _setHeight(h);
+                    allocate(w, h);
+                });
+                if (_internalPainter) _internalPainter.clear();
                 requestFrame();
             }
         }
@@ -216,18 +230,30 @@ export const Zen: ZenFramework = {
     pulse: () => Promise.resolve(),
 };
 
-function getPalette(fg?: string, bg?: string, bold?: boolean): number {
-    const parse = (c: string | undefined) => {
-        if (!c) return 0;
-        const colors: Record<string, number> = { 
-            black: 0, red: 1, green: 2, yellow: 3, blue: 4, magenta: 5, cyan: 6, white: 7, 
-            grey: 8, gray: 8, darkgray: 9, darkgrey: 9, 
-            darkred: 10, darkgreen: 11, darkyellow: 12, darkblue: 13, darkmagenta: 14, darkcyan: 15 
-        };
-        const normalized = c.toLowerCase().replace(/[^a-z]/g, '');
-        return colors[normalized] || 0;
+/**
+ * 🧱 Buffer Locked Allocation
+ * Ensures memory-bound dimensions are used for indexing
+ */
+function allocate(w: number, h: number) {
+    const size = w * h;
+    _rawBuffer = new ArrayBuffer(size * 12);
+    _contentBuffer = new Uint32Array(_rawBuffer, 0, size);
+    _fgBuffer = new Uint32Array(_rawBuffer, size * 4, size);
+    _bgBuffer = new Uint32Array(_rawBuffer, size * 8, size);
+    _lockedW = w; _lockedH = h;
+}
+
+function getRGB(c: string | undefined): number {
+    // [INDUSTRIAL] Return Transparency Token (0xFF000000) for null, undefined, or 'transparent'
+    if (!c || c === 'transparent') return 0xFF000000;
+    if (c.startsWith('#')) return parseInt(c.slice(1), 16);
+    const colors: Record<string, number> = {
+        black: 0x000000, red: 0xFF0000, green: 0x00FF00, yellow: 0xFFFF00,
+        blue: 0x0000FF, magenta: 0xFF00FF, cyan: 0x00FFFF, white: 0xFFFFFF,
+        grey: 0x808080, gray: 0x808080, transparent: 0xFF000000
     };
-    return (parse(fg) << 21) | (parse(bg) << 25) | ((bold ? 1 : 0) << 29);
+    const color = colors[c.toLowerCase()];
+    return color !== undefined ? color : 0xFF000000;
 }
 
 export const GitProvider = {
@@ -242,4 +268,5 @@ export type { ZenNode, ZenProps, ZenNodeType, CommitData, ZenPainter, ZenEngine 
 export * from './engine/layout';
 export * from './engine/index';
 export * from './ui/index';
+export * from './components/index';
 export * from './components/index';
