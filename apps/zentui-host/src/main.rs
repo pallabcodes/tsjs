@@ -195,6 +195,19 @@ fn get_status() -> String {
 }
 fn get_branches() -> String { let guard = lock_host(); if let Some(h) = guard.as_ref() { let branches = h.git.get_branches().unwrap_or_default(); return serde_json::to_string(&branches).unwrap_or_default(); } String::new() }
 
+fn get_memory_usage() -> u32 {
+    let pid = std::process::id();
+    let output = std::process::Command::new("ps")
+        .args(&["-o", "rss=", "-p", &pid.to_string()])
+        .output();
+    
+    if let Ok(out) = output {
+        let s = String::from_utf8_lossy(&out.stdout);
+        return s.trim().parse::<u32>().unwrap_or(0);
+    }
+    0
+}
+
 fn exit_safely() { if let Ok(mut guard) = HOST.lock() { if let Some(h) = guard.as_mut() { let _ = h.backend.showCursor(); let _ = h.backend.leaveAlternateScreen(); let _ = h.backend.disableRawMode(); } } }
 fn exit() { exit_safely(); std::process::exit(0); }
 
@@ -225,6 +238,10 @@ fn main() {
         host_obj.set("getDiff", rquickjs::Function::new(ctx.clone(), get_diff)).unwrap();
         host_obj.set("getStatus", rquickjs::Function::new(ctx.clone(), get_status)).unwrap();
         host_obj.set("getBranches", rquickjs::Function::new(ctx.clone(), get_branches)).unwrap();
+        host_obj.set("getMemoryUsage", rquickjs::Function::new(ctx.clone(), get_memory_usage)).unwrap();
+        host_obj.set("fetchOrigin", rquickjs::Function::new(ctx.clone(), || { let guard = lock_host(); if let Some(h) = guard.as_ref() { let _ = h.git.fetch_origin(); } })).unwrap();
+        host_obj.set("getUpstreamDelta", rquickjs::Function::new(ctx.clone(), || { let guard = lock_host(); if let Some(h) = guard.as_ref() { if let Ok(d) = h.git.get_upstream_delta() { return serde_json::to_string(&d).unwrap_or_default(); } } String::new() })).unwrap();
+        host_obj.set("getConfigUser", rquickjs::Function::new(ctx.clone(), || { let guard = lock_host(); if let Some(h) = guard.as_ref() { return h.git.get_config_user(); } String::new() })).unwrap();
         host_obj.set("exit", rquickjs::Function::new(ctx.clone(), exit)).unwrap();
         globals.set("__ZEN_HOST__", host_obj).unwrap();
         

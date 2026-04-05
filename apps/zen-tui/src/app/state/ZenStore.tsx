@@ -26,6 +26,14 @@ export interface ZenState {
   // Viewport
   modalVisible: () => boolean;
   selectedStatusIndex: () => number;
+
+  // 🧱 Operational Hub: Industrial Metadata
+  memoryUsage: () => number;
+  currentTime: () => string;
+
+  // 🧱 Sync Engine: Delta Tracking
+  upstreamDelta: () => { ahead: number, behind: number } | null;
+  currentUser: () => string;
 }
 
 export type ZenAction =
@@ -42,51 +50,88 @@ export type ZenAction =
   | { type: 'COMMIT', message: string };
 
 /**
- * createZenStore: Deterministic State Factory
+ * createZenStore: Deterministic State Factory (Industrial Sync Enabled)
  */
 export function createZenStore() {
+  // --- UI Signals ---
   const [mode, setMode] = createSignal<'navigation' | 'review' | 'command'>('navigation');
   const [selectedCommitId, setSelectedCommitId] = createSignal<string | null>(null);
   const [selectedIndex, setSelectedIndex] = createSignal<number>(0);
   const [selectedBranchIdx, setSelectedBranchIdx] = createSignal<number>(0);
   const [currentBranch, setCurrentBranch] = createSignal<string>('main');
   const [statusMessage, setStatusMessage] = createSignal<string>('Ready');
+  const [modalVisible, setModalVisible] = createSignal<boolean>(false);
+  const [selectedStatusIndex, setSelectedStatusIndex] = createSignal<number>(0);
+
+  // --- Data Signals ---
   const [commits, setCommits] = createSignal<CommitData[]>([]);
   const [stagedFiles, setStagedFiles] = createSignal<string[]>([]);
   const [unstagedFiles, setUnstagedFiles] = createSignal<string[]>([]);
   const [branches, setBranches] = createSignal<string[]>([]);
-  const [diffContent, setDiffContent] = createSignal<string>('');
-  const [modalVisible, setModalVisible] = createSignal<boolean>(false);
-  const [selectedStatusIndex, setSelectedStatusIndex] = createSignal<number>(0);
+  const [diffContent, setDiffContent] = createSignal<string>("");
 
-  // --- Industrial Lifecycle Bridge ---
+  // --- Operational Signals ---
+  const [memoryUsage, setMemoryUsage] = createSignal<number>(0);
+  const [currentTime, setCurrentTime] = createSignal<string>("");
+
+  // --- Sync Engine Signals ---
+  const [upstreamDelta, setUpstreamDelta] = createSignal<{ ahead: number, behind: number } | null>(null);
+  const [currentUser, setCurrentUser] = createSignal<string>("unknown");
+
+  /**
+   * sync: Industrial Lifecycle Bridge
+   * Synchronizes native Git state, host telemetry, and branch divergence.
+   */
   const sync = () => {
-    const log = GitProvider.getCommitLog(50);
-    // 🧱 Type Hardening: Cast to structured status
-    const repoStatus = GitProvider.getStatus() as { path: string, state: string }[];
-    const repoBranches = GitProvider.getBranches();
+    try {
+      const log = GitProvider.getCommitLog(50);
+      const repoStatus = GitProvider.getStatus() as { path: string, state: string }[];
+      const repoBranches = GitProvider.getBranches();
 
-    setCommits(log);
-    
-    // 🧱 Explorer Synchronization: Distinguish between staged and unstaged/untracked
-    const staged = (repoStatus as any[]).filter(s => s.state === 'staged').map(s => s.path);
-    const unstaged = (repoStatus as any[]).filter(s => s.state !== 'staged').map(s => s.path);
-    
-    setStagedFiles(staged);
-    setUnstagedFiles(unstaged);
-    setBranches(repoBranches);
+      setCommits(log);
+      
+      const staged = repoStatus.filter((s: any) => s.state === 'staged').map((s: any) => s.path);
+      const unstaged = repoStatus.filter((s: any) => s.state !== 'staged').map((s: any) => s.path);
+      
+      setStagedFiles(staged);
+      setUnstagedFiles(unstaged);
+      setBranches(repoBranches);
 
-    if (log.length > 0 && !selectedCommitId()) {
-      setSelectedCommitId(log[0].hash);
-      setSelectedIndex(0);
+      // ╼ Update Operational Telemetry
+      setMemoryUsage(GitProvider.getMemoryUsage());
+      setCurrentTime(GitProvider.getTime());
+
+      // ╼ Update Sync Divergence & Identity
+      setUpstreamDelta(GitProvider.getSyncDelta());
+      setCurrentUser(GitProvider.getCurrentUser());
+
+      if (log.length > 0 && !selectedCommitId()) {
+        setSelectedCommitId(log[0].hash);
+        setSelectedIndex(0);
+      }
+    } catch (e) {
+      console.error("[ZenStore] Sync Failure:", e);
     }
   };
 
-  // Immediate Sync for bit-perfect Frame 1
+  // Immediate Sync for Bit-Perfect Frame 1
   sync();
 
   Zen.onMount(() => {
-    sync();
+    // 🧱 SYNC HEARTBEAT: Standard lifecycle synchronization (Fast)
+    const interval = setInterval(sync, 1000);
+    
+    // 🧱 BACKGROUND FETCH: Periodic upstream synchronization (Slow - 30s)
+    // This allows the TUI to detect when other engineers push to base branches.
+    const fetchInterval = setInterval(() => {
+        GitProvider.fetchOrigin();
+        sync();
+    }, 30000);
+
+    return () => {
+        clearInterval(interval);
+        clearInterval(fetchInterval);
+    };
   });
 
   createEffect(() => {
@@ -110,7 +155,11 @@ export function createZenStore() {
     branches,
     diffContent,
     modalVisible,
-    selectedStatusIndex
+    selectedStatusIndex,
+    memoryUsage,
+    currentTime,
+    upstreamDelta,
+    currentUser
   };
 
   const dispatch = (action: ZenAction) => {
@@ -125,19 +174,13 @@ export function createZenStore() {
       case 'TOGGLE_MODAL':
         setModalVisible(action.visible);
         break;
-      case 'UPDATE_COMMITS':
-        setCommits(action.commits);
-        break;
       case 'STAGE_FILE':
-        (GitProvider as any).stageFile(action.path);
-        setStagedFiles((GitProvider.getStatus() as any[]).filter(s => s.state === 'staged').map(s => s.path));
+        GitProvider.stageFile(action.path);
+        sync();
         break;
       case 'UNSTAGE_FILE':
-        (GitProvider as any).unstageFile(action.path);
-        setStagedFiles((GitProvider.getStatus() as any[]).filter(s => s.state === 'staged').map(s => s.path));
-        break;
-      case 'UPDATE_DIFF':
-        setDiffContent(action.content);
+        GitProvider.unstageFile(action.path);
+        sync();
         break;
       case 'SET_BRANCH':
         setCurrentBranch(action.branch);
@@ -153,12 +196,13 @@ export function createZenStore() {
       }
       case 'MOVE_STATUS_SELECTION': {
         const idx = selectedStatusIndex();
-        const next = action.direction === 'up' ? Math.max(0, idx - 1) : Math.min(stagedFiles().length - 1, idx + 1);
+        const files = mode() === 'review' ? stagedFiles() : unstagedFiles();
+        const next = action.direction === 'up' ? Math.max(0, idx - 1) : Math.min(files.length - 1, idx + 1);
         setSelectedStatusIndex(next);
         break;
       }
       case 'COMMIT':
-        (GitProvider as any).commit(action.message);
+        GitProvider.commit(action.message);
         setMode('navigation');
         sync();
         break;
@@ -171,7 +215,7 @@ export function createZenStore() {
   let themeIdx = 0;
   const themeModes = ['industrial', 'emerald', 'cobalt'] as const;
 
-  const stopInput = input.startPolling((key: string) => {
+  input.startPolling((key: string) => {
     const k = key.toLowerCase();
     const curMode = mode();
 
@@ -193,7 +237,6 @@ export function createZenStore() {
         if (k === 'tab') dispatch({ type: 'SET_MODE', mode: 'navigation' });
         if (k === 'j' || k === '\u001b[b') dispatch({ type: 'MOVE_STATUS_SELECTION', direction: 'down' });
         if (k === 'k' || k === '\u001b[a') dispatch({ type: 'MOVE_STATUS_SELECTION', direction: 'up' });
-        if (k === 'v') dispatch({ type: 'SET_MODE', mode: 'navigation' }); 
     } else if (curMode === 'command') {
         if (k === 'escape') dispatch({ type: 'SET_MODE', mode: 'navigation' });
     }
@@ -204,6 +247,7 @@ export function createZenStore() {
 
 /**
  * useStore: Direct Component Bridge
+ * Hardened access to the Sovereign Store Context.
  */
 export function useStore(): { state: ZenState, dispatch: (action: ZenAction) => void } {
   const context = useContext(Zen.StoreContext) as any;

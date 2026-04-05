@@ -23,6 +23,13 @@ export interface ZenHost {
     getStatus(): string;
     getBranches(): string;
     getDiff(hash: string): string;
+    stageFile(path: string): void;
+    unstageFile(path: string): void;
+    commit(message: string): void;
+    getMemoryUsage(): number;
+    fetchOrigin(): void;
+    getUpstreamDelta(): string;
+    getConfigUser(): string;
     exit(): void;
 }
 
@@ -258,9 +265,17 @@ function getRGB(c: string | undefined): number {
 
 export const GitProvider = {
     getCommitLog: (limit = 50) => { if (!_currentHost) return []; try { return JSON.parse(_currentHost.getLog(limit)); } catch(e) { return []; } },
-    getStatus: () => { if (!_currentHost) return []; try { return JSON.parse(_currentHost.getStatus()); } catch(e) { return []; } },
+    getStatus: (): { path: string, state: string }[] => { if (!_currentHost) return []; try { return JSON.parse(_currentHost.getStatus()); } catch(e) { return []; } },
     getBranches: () => { if (!_currentHost) return []; try { return JSON.parse(_currentHost.getBranches()); } catch(e) { return []; } },
     getCommitDiff: (hash: string) => { if (!_currentHost) return ""; try { return _currentHost.getDiff(hash); } catch(e) { return ""; } },
+    stageFile: (path: string) => { if (_currentHost) _currentHost.stageFile(path); },
+    unstageFile: (path: string) => { if (_currentHost) _currentHost.unstageFile(path); },
+    commit: (message: string) => { if (_currentHost) _currentHost.commit(message); },
+    getMemoryUsage: () => _currentHost ? _currentHost.getMemoryUsage() : 0,
+    getTime: () => new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false }),
+    fetchOrigin: () => { if (_currentHost) _currentHost.fetchOrigin(); },
+    getSyncDelta: (): { ahead: number, behind: number } | null => { if (!_currentHost) return null; try { return JSON.parse(_currentHost.getUpstreamDelta()); } catch(e) { return null; } },
+    getCurrentUser: () => _currentHost ? _currentHost.getConfigUser() : "unknown",
     exit: () => { if (_currentHost) _currentHost.exit(); }
 };
 

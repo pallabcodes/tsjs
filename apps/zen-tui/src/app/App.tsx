@@ -23,6 +23,14 @@ const truncate = (str: string, len: number) => {
 };
 
 /**
+ * formatMem: Convert KiB to MiB for Industrial Precision
+ */
+const formatMem = (kib: number) => {
+  const mib = kib / 1024;
+  return `${mib.toFixed(1)} MiB`;
+};
+
+/**
  * AppContent: The Sovereign Viewport
  */
 export const AppContent = (props: { store: ZenStore }) => {
@@ -36,9 +44,9 @@ export const AppContent = (props: { store: ZenStore }) => {
       width="100%" 
       height="100%" 
       bg={Theme.Colors.Background}
-      padding={{ top: 0, bottom: 0, left: 0, right: 0 }}
+      padding={{ top: 1, bottom: 1, left: 1, right: 1 }}
     >
-      {/* 1. Google-Grade Header (Premium Command Bar) */}
+      {/* 1. Google-Grade Header (Premium Operational Command Bar / Hardened Spacing) */}
       <Box 
         height={1} 
         bg={Theme.Colors.Background} 
@@ -48,30 +56,53 @@ export const AppContent = (props: { store: ZenStore }) => {
         border="solid"
         borderColor={Theme.Colors.Border}
       >
-        {/* Left: Branding Badge */}
-        <Box flexDirection="row" alignItems="center">
-          <Box bg={Theme.Colors.PanelActive} padding={{ left: 1, right: 1 }} borderRadius={2} flexDirection="row">
+        {/* Left: Branding & Identity Hub (Expanded Width to prevent cramping) */}
+        <Box width={30} flexShrink={0} flexDirection="row" alignItems="center">
             <Text fg={Theme.Colors.Success} value="⌬ " />
             <Text fg={Theme.Colors.Highlight} value="ZenTUI" bold={true} />
-          </Box>
+            <Box width={2} />
+            {/* Identity Emblem: Ω {user} */}
+            <Text fg={Theme.Colors.TextDim} value="Ω " />
+            <Text fg={Theme.Colors.Primary} value={store.state.currentUser()} />
+            {/* 🧱 Quadrant Gutter: Prevents overlap with central breadcrumbs */}
+            <Box width={2} />
         </Box>
         
-        {/* Center: Sovereign Breadcrumb Context */}
+        {/* Center: Sovereign Breadcrumb & Sync Control (Centered Pivot) */}
         <Box flexGrow={1} justifyContent="center" flexDirection="row" alignItems="center">
           <Text fg={Theme.Colors.TextDim} value="Repo: " />
           <Text fg={Theme.Colors.Highlight} value="tsjs" bold={true} />
           <Box width={3} justifyContent="center" flexDirection="row">
-            <Text fg={Theme.Colors.TextDim} value=" ⧫ " />
+            <Text fg={Theme.Colors.TextDim} value=" ‖ " />
           </Box>
           <Text fg={Theme.Colors.TextDim} value="Branch: " />
           <Text fg={Theme.Colors.Highlight} value={store.state.currentBranch()} bold={true} />
+          
+          {/* 🧱 Multi-Branch Sync Indicator: Projects Divergence Data */}
+          {/* Note: Accessing signal value explicitly to resolve TS inference conflict */}
+          <Show when={store.state.upstreamDelta()}>
+            <Box padding={{ left: 1 }} flexDirection="row">
+                <Show when={store.state.upstreamDelta()!.ahead > 0}>
+                    <Text fg={Theme.Colors.Success} value={` ↑${store.state.upstreamDelta()!.ahead}`} />
+                </Show>
+                <Show when={store.state.upstreamDelta()!.behind > 0}>
+                    <Text fg={Theme.Colors.Warning} value={` ↓${store.state.upstreamDelta()!.behind}`} />
+                </Show>
+                <Show when={store.state.upstreamDelta()!.ahead === 0 && store.state.upstreamDelta()!.behind === 0}>
+                    <Text fg={Theme.Colors.Success} value=" ·" />
+                </Show>
+            </Box>
+          </Show>
         </Box>
         
-        {/* Right: Environment Status */}
-        <Box flexDirection="row" alignItems="center" justifyContent="flex-end">
-          <Box padding={{ right: 1 }} flexDirection="row">
-              <Text fg={Theme.Colors.Success} value="● " />
-              <Text fg={Theme.Colors.TextDim} value="IDLE" />
+        {/* Right: Operational Telemetry (Iconographic) */}
+        <Box width={25} flexShrink={0} flexDirection="row" alignItems="center" justifyContent="flex-end">
+          <Box padding={{ left: 1, right: 1 }} flexDirection="row" alignItems="center">
+              <Text fg={Theme.Colors.Success} value="⧊ " />
+              <Text fg={Theme.Colors.Highlight} value={formatMem(store.state.memoryUsage())} />
+              <Box width={2} />
+              <Text fg={Theme.Colors.Success} value="⧗ " />
+              <Text fg={Theme.Colors.TextDim} value={store.state.currentTime()} />
           </Box>
         </Box>
       </Box>
@@ -185,8 +216,14 @@ export const AppContent = (props: { store: ZenStore }) => {
         </Box>
       </Box>
 
-      {/* 3. Navigation Bar (Premium Shorthand) */}
-      <Box height={1} bg={Theme.Colors.Background} flexDirection="row" padding={{ left: 1, right: 1 }}>
+      {/* 3. Navigation Bar (Synchronized Padding) */}
+      <Box 
+        height={1} 
+        bg={Theme.Colors.Background} 
+        flexDirection="row" 
+        alignItems="center"
+        padding={{ left: 1, right: 1 }}
+      >
         <Text fg={Theme.Colors.Highlight} bold={true} value="⌘ DASHBOARD " />
         <Text fg={Theme.Colors.TextDim} value={`[${store.state.mode().toUpperCase()}] `} />
         <Box flexGrow={1} />

@@ -16,6 +16,12 @@ pub struct FileStatus {
     pub state: String,
 }
 
+#[derive(Serialize, Deserialize)]
+pub struct SyncDelta {
+    pub ahead: usize,
+    pub behind: usize,
+}
+
 pub struct NativeGit {
     repo: Repository,
 }
@@ -24,6 +30,35 @@ impl NativeGit {
     pub fn new(path: &str) -> Result<Self, git2::Error> {
         let repo = Repository::discover(path)?;
         Ok(Self { repo })
+    }
+
+    pub fn get_config_user(&self) -> String {
+        self.repo.config()
+            .and_then(|cfg| cfg.get_string("user.name"))
+            .unwrap_or_else(|_| "unknown".to_string())
+    }
+
+    pub fn fetch_origin(&self) -> Result<(), git2::Error> {
+        let mut remote = self.repo.find_remote("origin")?;
+        let _ = remote.fetch(&["main", "master", "dev"], None, None);
+        Ok(())
+    }
+
+    pub fn get_upstream_delta(&self) -> Result<SyncDelta, git2::Error> {
+        let head = self.repo.head()?;
+        let local_oid = head.target().ok_or_else(|| git2::Error::from_str("No HEAD OID"))?;
+        
+        // 🧱 Upstream Resolution: Defaulting to 'origin/main' or 'origin/dev' if not explicitly tracked
+        let upstream_names = ["origin/main", "origin/master", "origin/dev", "upstream/main"];
+        for name in upstream_names.iter() {
+            if let Ok(upstream) = self.repo.revparse_single(name) {
+                let upstream_oid = upstream.id();
+                let (ahead, behind) = self.repo.graph_ahead_behind(local_oid, upstream_oid)?;
+                return Ok(SyncDelta { ahead, behind });
+            }
+        }
+        
+        Ok(SyncDelta { ahead: 0, behind: 0 })
     }
 
     pub fn get_log(&self, limit: usize) -> Result<Vec<CommitRecord>, git2::Error> {
