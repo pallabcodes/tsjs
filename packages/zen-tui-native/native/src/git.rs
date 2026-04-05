@@ -10,6 +10,12 @@ pub struct CommitRecord {
     pub date: String,
 }
 
+#[derive(Serialize, Deserialize)]
+pub struct FileStatus {
+    pub path: String,
+    pub state: String,
+}
+
 pub struct NativeGit {
     repo: Repository,
 }
@@ -91,15 +97,24 @@ impl NativeGit {
         Ok(())
     }
 
-    pub fn get_status(&self) -> Result<Vec<String>, git2::Error> {
+    pub fn get_status(&self) -> Result<Vec<FileStatus>, git2::Error> {
         let mut status_opts = git2::StatusOptions::new();
         status_opts.include_untracked(true);
         let statuses = self.repo.statuses(Some(&mut status_opts))?;
         
-        let files: Vec<String> = statuses
-            .iter()
-            .filter_map(|s| s.path().map(|p| p.to_string()))
-            .collect();
+        let mut files = Vec::new();
+        for entry in statuses.iter() {
+            let path = entry.path().unwrap_or("unknown").to_string();
+            let status = entry.status();
+            
+            let state = if status.is_index_new() || status.is_index_modified() || status.is_index_deleted() || status.is_index_typechange() {
+                "staged"
+            } else {
+                "modified"
+            };
+            
+            files.push(FileStatus { path, state: state.to_string() });
+        }
             
         Ok(files)
     }

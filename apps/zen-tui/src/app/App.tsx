@@ -15,10 +15,19 @@ import { CommitModal } from './components/CommitModal';
 type ZenStore = ReturnType<typeof createZenStore>;
 
 /**
+ * truncate: Industrial String Truncation
+ */
+const truncate = (str: string, len: number) => {
+  if (str.length <= len) return str;
+  return str.substring(0, len - 3) + '...';
+};
+
+/**
  * AppContent: The Sovereign Viewport
  */
 export const AppContent = (props: { store: ZenStore }) => {
   const store = props.store;
+  const EXPLORER_WIDTH = 30;
 
   return (
     <Box 
@@ -29,53 +38,87 @@ export const AppContent = (props: { store: ZenStore }) => {
       bg={Theme.Colors.Background}
       padding={{ top: 0, bottom: 0, left: 0, right: 0 }}
     >
-      {/* 1. Header (Floating Sovereign Metadata) */}
-      <Box height={1} bg={Theme.Colors.Background} padding={{ left: 1, right: 1 }} flexDirection="row">
-        {/* Left: Engine Status */}
-        <Box width="33%" flexDirection="row">
-          <Text fg={Theme.Colors.Success} value="● " />
-          <Text fg={Theme.Colors.Highlight} value="ZenTUI" bold={true} />
+      {/* 1. Google-Grade Header (Premium Command Bar) */}
+      <Box 
+        height={1} 
+        bg={Theme.Colors.Background} 
+        padding={{ left: 1, right: 1 }} 
+        flexDirection="row" 
+        alignItems="center"
+        border="solid"
+        borderColor={Theme.Colors.Border}
+      >
+        {/* Left: Branding Badge */}
+        <Box flexDirection="row" alignItems="center">
+          <Box bg={Theme.Colors.PanelActive} padding={{ left: 1, right: 1 }} borderRadius={2} flexDirection="row">
+            <Text fg={Theme.Colors.Success} value="⌬ " />
+            <Text fg={Theme.Colors.Highlight} value="ZenTUI" bold={true} />
+          </Box>
         </Box>
         
-        {/* Center: Repository Context (Absolute Centering) */}
-        <Box width="34%" justifyContent="center" flexDirection="row">
+        {/* Center: Sovereign Breadcrumb Context */}
+        <Box flexGrow={1} justifyContent="center" flexDirection="row" alignItems="center">
+          <Text fg={Theme.Colors.TextDim} value="Repo: " />
           <Text fg={Theme.Colors.Highlight} value="tsjs" bold={true} />
+          <Box width={3} justifyContent="center" flexDirection="row">
+            <Text fg={Theme.Colors.TextDim} value=" ⧫ " />
+          </Box>
+          <Text fg={Theme.Colors.TextDim} value="Branch: " />
+          <Text fg={Theme.Colors.Highlight} value={store.state.currentBranch()} bold={true} />
         </Box>
         
-        {/* Right: Branch State */}
-        <Box width="33%" justifyContent="flex-end" flexDirection="row">
-          <Text fg={Theme.Colors.Highlight} value={`⊐ ${store.state.currentBranch()}`} />
+        {/* Right: Environment Status */}
+        <Box flexDirection="row" alignItems="center" justifyContent="flex-end">
+          <Box padding={{ right: 1 }} flexDirection="row">
+              <Text fg={Theme.Colors.Success} value="● " />
+              <Text fg={Theme.Colors.TextDim} value="IDLE" />
+          </Box>
         </Box>
       </Box>
 
       {/* 2. Workspace (Industrial Row) */}
       <Box flexGrow={1} flexDirection="row">
-        {/* 2a. Left: Branch Explorer (20% width) */}
+        {/* 2a. Left: Industrial Explorer (30 cells width) */}
         <Box 
-          width={20} 
+          width={EXPLORER_WIDTH} 
           border="solid" 
           borderColor={Theme.Colors.Border} 
           padding={{ top: 1, bottom: 1, left: 1, right: 1 }} 
           flexDirection="column"
         >
-          <Text fg={Theme.Colors.Highlight} value="BRANCHES" bold={true} />
+          <Box flexDirection="row">
+            <Text fg={Theme.Colors.Highlight} value="⬢ EXPLORER" bold={true} />
+            <Box flexGrow={1} />
+            <Text fg={Theme.Colors.TextDim} value={`${store.state.stagedFiles().length + store.state.unstagedFiles().length}`} />
+          </Box>
           <Box height={1} />
-          <For each={store.state.branches()}>
-            {(branch, i) => (
-              <Box 
-                bg={store.state.selectedBranchIdx() === i() ? Theme.Colors.PanelActive : 'transparent'}
-                padding={{ left: 1 }}
-              >
-                <Text 
-                  fg={store.state.selectedBranchIdx() === i() ? Theme.Colors.Highlight : Theme.Colors.TextDim} 
-                  value={`${store.state.currentBranch() === branch ? '*' : ' '} ${branch}`} 
-                />
+          
+          {/* Staged Section */}
+          <For each={store.state.stagedFiles()}>
+            {(file) => (
+              <Box padding={{ left: 1 }} flexDirection="row">
+                <Text fg={Theme.Colors.Success} value={truncate(`[+] ${file}`, EXPLORER_WIDTH - 4)} />
               </Box>
             )}
           </For>
+
+          {/* Unstaged Section */}
+          <For each={store.state.unstagedFiles()}>
+            {(file) => (
+              <Box padding={{ left: 1 }} flexDirection="row">
+                <Text fg={Theme.Colors.Warning} value={truncate(`[M] ${file}`, EXPLORER_WIDTH - 4)} />
+              </Box>
+            )}
+          </For>
+
+          <Show when={store.state.stagedFiles().length === 0 && store.state.unstagedFiles().length === 0}>
+            <Box flexGrow={1} justifyContent="center" alignItems="center">
+                <Text fg={Theme.Colors.TextDim} value="No active changes." />
+            </Box>
+          </Show>
         </Box>
 
-        {/* 2b. Right: Main Hub (80% width) */}
+        {/* 2b. Right: Main Hub (Flex-Grow) */}
         <Box flexGrow={1} flexDirection="column">
           {/* Top: Commit History (60% height) */}
           <Box 
@@ -85,7 +128,9 @@ export const AppContent = (props: { store: ZenStore }) => {
             padding={{ top: 1, bottom: 1, left: 1, right: 1 }} 
             flexDirection="column"
           >
-            <Text fg={Theme.Colors.Highlight} value="COMMIT HISTORY" bold={true} />
+            <Box flexDirection="row">
+                <Text fg={Theme.Colors.Highlight} value="⧉ COMMIT HISTORY" bold={true} />
+            </Box>
             <Box height={1} />
             <For each={store.state.commits()}>
               {(commit, i) => (
@@ -98,19 +143,19 @@ export const AppContent = (props: { store: ZenStore }) => {
                   <Box width={2} />
                   <Text 
                     fg={store.state.selectedIndex() === i() ? Theme.Colors.Highlight : Theme.Colors.Primary} 
-                    value={commit.message} 
+                    value={truncate(commit.message, 60)} 
                   />
                 </Box>
               )}
             </For>
             <Show when={store.state.commits().length === 0}>
                 <Box flexGrow={1} justifyContent="center" alignItems="center">
-                    <Text fg={Theme.Colors.TextDim} value="No commits found in current branch." />
+                    <Text fg={Theme.Colors.TextDim} value="No commits detected." />
                 </Box>
             </Show>
           </Box>
 
-          {/* Bottom: Staging Area (40% height) */}
+          {/* Bottom: Staging Review Area (40% height) */}
           <Box 
             flexGrow={4} 
             border="solid" 
@@ -119,42 +164,33 @@ export const AppContent = (props: { store: ZenStore }) => {
             flexDirection="column"
           >
              <Box flexDirection="row">
-                <Text fg={Theme.Colors.Highlight} value="STAGED FILES" bold={true} />
+                <Text fg={Theme.Colors.Highlight} value="⬥ STAGING REVIEW" bold={true} />
                 <Box flexGrow={1} />
                 <Text fg={Theme.Colors.TextDim} value={`${store.state.stagedFiles().length} items`} />
              </Box>
              <Box height={1} />
              <For each={store.state.stagedFiles()}>
                 {(file) => (
-                    <Box padding={{ left: 1 }}>
-                        <Text fg={Theme.Colors.Primary} value={`+ ${file}`} />
+                    <Box padding={{ left: 1 }} flexDirection="row">
+                        <Text fg={Theme.Colors.Primary} value={truncate(`+ ${file}`, 80)} />
                     </Box>
                 )}
              </For>
-             <Box height={1} />
-             <Text fg={Theme.Colors.Highlight} value="UNSTAGED CHANGES" bold={true} />
-             <For each={store.state.unstagedFiles()}>
-                {(file) => (
-                    <Box padding={{ left: 1 }}>
-                        <Text fg={Theme.Colors.Warning} value={`M ${file}`} />
-                    </Box>
-                )}
-             </For>
-             <Show when={store.state.stagedFiles().length === 0 && store.state.unstagedFiles().length === 0}>
-                <Box padding={{ left: 1 }}>
-                    <Text fg={Theme.Colors.TextDim} value="No modifications detected." />
+             <Show when={store.state.stagedFiles().length === 0}>
+                <Box flexGrow={1} justifyContent="center" alignItems="center">
+                    <Text fg={Theme.Colors.TextDim} value="Ready for staging." />
                 </Box>
              </Show>
           </Box>
         </Box>
       </Box>
 
-      {/* 3. Status Bar (Professional Shorthand) */}
+      {/* 3. Navigation Bar (Premium Shorthand) */}
       <Box height={1} bg={Theme.Colors.Background} flexDirection="row" padding={{ left: 1, right: 1 }}>
-        <Text fg={Theme.Colors.Highlight} bold={true} value="❖ " />
-        <Text fg={Theme.Colors.Highlight} value={`${store.state.mode().toUpperCase()} `} />
+        <Text fg={Theme.Colors.Highlight} bold={true} value="⌘ DASHBOARD " />
+        <Text fg={Theme.Colors.TextDim} value={`[${store.state.mode().toUpperCase()}] `} />
         <Box flexGrow={1} />
-        <Text fg={Theme.Colors.TextDim} value="Tab: Switch | j/k: Nav | s/u: Stage | c: Commit | q: Quit" />
+        <Text fg={Theme.Colors.TextDim} value="Tab: Switch | j/k: Nav | s: Stage | u: Unstage | c: Commit | q: Quit" />
       </Box>
 
       {/* 4. Overlays (Absolute Sovereign) */}

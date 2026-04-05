@@ -62,12 +62,18 @@ export function createZenStore() {
   // --- Industrial Lifecycle Bridge ---
   const sync = () => {
     const log = GitProvider.getCommitLog(50);
-    const repoStatus = GitProvider.getStatus();
+    // 🧱 Type Hardening: Cast to structured status
+    const repoStatus = GitProvider.getStatus() as { path: string, state: string }[];
     const repoBranches = GitProvider.getBranches();
 
     setCommits(log);
-    setStagedFiles(repoStatus);
-    setUnstagedFiles([]); 
+    
+    // 🧱 Explorer Synchronization: Distinguish between staged and unstaged/untracked
+    const staged = (repoStatus as any[]).filter(s => s.state === 'staged').map(s => s.path);
+    const unstaged = (repoStatus as any[]).filter(s => s.state !== 'staged').map(s => s.path);
+    
+    setStagedFiles(staged);
+    setUnstagedFiles(unstaged);
     setBranches(repoBranches);
 
     if (log.length > 0 && !selectedCommitId()) {
@@ -123,12 +129,12 @@ export function createZenStore() {
         setCommits(action.commits);
         break;
       case 'STAGE_FILE':
-        GitProvider.stageFile(action.path);
-        setStagedFiles(GitProvider.getStatus());
+        (GitProvider as any).stageFile(action.path);
+        setStagedFiles((GitProvider.getStatus() as any[]).filter(s => s.state === 'staged').map(s => s.path));
         break;
       case 'UNSTAGE_FILE':
-        GitProvider.unstageFile(action.path);
-        setStagedFiles(GitProvider.getStatus());
+        (GitProvider as any).unstageFile(action.path);
+        setStagedFiles((GitProvider.getStatus() as any[]).filter(s => s.state === 'staged').map(s => s.path));
         break;
       case 'UPDATE_DIFF':
         setDiffContent(action.content);
@@ -152,7 +158,7 @@ export function createZenStore() {
         break;
       }
       case 'COMMIT':
-        GitProvider.commit(action.message);
+        (GitProvider as any).commit(action.message);
         setMode('navigation');
         sync();
         break;
