@@ -15,7 +15,7 @@ cd tsjs
 pnpm install
 
 # 3. Hardened Ignition (Build & Start)
-./zen dev
+./zen    # or ./zen dev
 ```
 
 ## 🛠️ The zen Toolchain

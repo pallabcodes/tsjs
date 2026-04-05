@@ -75,6 +75,9 @@ case "$1" in
         ./zen build "$2"
         ./zen start
         ;;
+    "")
+        ./zen dev
+        ;;
     *)
         echo "Usage: ./zen {build|start|dev}"
         exit 1
