@@ -5,32 +5,49 @@ ROOT_DIR=$(pwd)
 APP_DIR="$ROOT_DIR/apps/zen-tui"
 NATIVE_DIR="$ROOT_DIR/apps/zentui-host"
 HOST_BIN="$NATIVE_DIR/target/release/zentui-host"
+JS_ENTRY="$APP_DIR/src/main.tsx"
 JS_BUNDLE="$APP_DIR/dist/host.js"
 LOG_FILE="$ROOT_DIR/zentui.log"
+CACHE_FILE="$ROOT_DIR/.zen_cache"
+
+# calc_fingerprint: Industrial hashing of the source trees
+calc_fingerprint() {
+    # Recursive file listing with size and mtime hashes
+    (
+        ls -lR apps/zentui-host/src 2>/dev/null || true
+        ls -lR apps/zen-tui/src 2>/dev/null || true
+        ls -lR packages/zen-tui-native/native/src 2>/dev/null || true
+        ls -lR packages/zen-tui-core/src 2>/dev/null || true
+    ) | shasum -a 256 | cut -d' ' -f1
+}
 
 case "$1" in
     build)
-        echo "Building ZenTUI Native host..."
-        cargo build --release --manifest-path "$NATIVE_DIR/Cargo.toml"
-        
-        # 🧱 macOS Hardening: Ad-hoc signing for arm64 execution
-        if [[ "$OSTYPE" == "darwin"* ]]; then
-            echo "Signing binary for local execution..."
-            codesign -s - --force "$HOST_BIN"
+        NEW_FINGERPRINT=$(calc_fingerprint)
+        OLD_FINGERPRINT=$(cat "$CACHE_FILE" 2>/dev/null || echo "")
+
+        if [ "$NEW_FINGERPRINT" == "$OLD_FINGERPRINT" ] && [ -f "$HOST_BIN" ] && [ -f "$JS_BUNDLE" ] && [ "$2" != "--force" ]; then
+            # Fast-Path Ignition: Dashboard is Stable
+            exit 0
         fi
 
-        echo "Building ZenTUI JS bundle..."
-        npx esbuild "$APP_DIR/src/main.tsx" \
-            --bundle \
-            --outfile="$JS_BUNDLE" \
-            --platform=neutral \
-            --format=iife \
-            --target=esnext \
-            --minify=false \
-            --jsx=automatic \
-            --jsx-import-source=solid-js
-
-        echo "Done."
+        # Industrial Silence: Project metadata suppressed
+        cargo build --release --quiet --manifest-path apps/zentui-host/Cargo.toml || { echo "Native Build ERROR"; exit 1; }
+        
+        # Binary Hardening: macOS Security Protocol
+        if [[ "$OSTYPE" == "darwin"* ]]; then
+            # Absolute Silence: Muffling OS-level metadata
+            codesign -s - --force "$HOST_BIN" 2>/dev/null || { echo "CodeSign ERROR"; exit 1; }
+        fi
+        
+        # JS Hybrid: Sovereign Bundle (Hardened)
+        npx esbuild "$JS_ENTRY" \
+            --bundle --outfile="$JS_BUNDLE" \
+            --platform=neutral --format=iife --target=esnext \
+            --minify=false --jsx=automatic --jsx-import-source=solid-js \
+            --log-level=error || { echo "Bundle ERROR"; exit 1; }
+            
+        echo "$NEW_FINGERPRINT" > "$CACHE_FILE"
         ;;
     start)
         if [ ! -f "$HOST_BIN" ]; then
@@ -43,6 +60,7 @@ case "$1" in
         touch "$LOG_FILE"
         
         # Ignition
+        clear
         "$HOST_BIN" "$JS_BUNDLE" || {
             CODE=$?
             echo "ZenTUI exited with code: $CODE"
@@ -54,7 +72,7 @@ case "$1" in
         }
         ;;
     dev)
-        ./zen build
+        ./zen build "$2"
         ./zen start
         ;;
     *)

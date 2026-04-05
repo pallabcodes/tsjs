@@ -1,3 +1,4 @@
+#![allow(non_snake_case, unused_imports, unused_mut)]
 /**
  * @zen-tui/native: Terminal Driver
  */
@@ -24,6 +25,7 @@ pub trait TerminalBackend {
     fn disableRawMode(&mut self) -> io::Result<()>;
     fn enterAlternateScreen(&mut self) -> io::Result<()>;
     fn leaveAlternateScreen(&mut self) -> io::Result<()>;
+    fn clearScrollback(&mut self) -> io::Result<()>;
 }
 
 pub struct CrosstermBackend {
@@ -86,6 +88,11 @@ impl TerminalBackend for CrosstermBackend {
 
     fn leaveAlternateScreen(&mut self) -> io::Result<()> {
         write!(self.stdout, "\x1b[?1049l\x1b[?25h")?;
+        self.stdout.flush()
+    }
+
+    fn clearScrollback(&mut self) -> io::Result<()> {
+        write!(self.stdout, "\x1b[3J")?;
         self.stdout.flush()
     }
 }

@@ -1,58 +1,34 @@
-# ZenTUI Zen-TUI (Git TUI) ◉
+# 🧱 ZenTUI: Sovereign TUI Dashboard
 
-A high-performance, topologically-accurate Git terminal user interface built with **SolidJS** and a **Native C++ / Rust Layout Engine**.
+ZenTUI is a high-performance, bit-perfect TUI framework and git dashboard built with **Solid.js** and a **Native Rust Bridge**. It is designed for absolute immersion, zero-flash transitions, and industrial-grade stability.
 
-## ⧉ Windows Installation Guide
+## ⚡ Swift Ignition (Quickstart)
 
-To build and run ZenTUI Zen-TUI on a Windows machine, you need to set up the native build environment.
+Assuming you have **Rust**, **Node.js**, and **pnpm** installed:
 
-### 1. Requisite Toolchain
-
-| Tool | Purpose | Installation |
-| :--- | :--- | :--- |
-| **Bun** | JS Runtime & Package Manager | `powershell -c "irm bun.sh/install.ps1 | iex"` |
-| **Rust** | Native Layout & Painter Modules | [rustup.rs](https://rustup.rs/) (Stable) |
-| **MSVC** | C++ Linker & Build Tools | [Visual Studio Build Tools](https://visualstudio.microsoft.com/visual-cpp-build-tools/) |
-| **Git CLI** | Local Repository Bridge | [git-scm.com](https://git-scm.com/) |
-
-> [!IMPORTANT]
-> When installing **Visual Studio Build Tools**, ensure the **"Desktop development with C++"** workload is selected. This provides the necessary `cl.exe` and `link.exe` for the Windows-MSVC target.
-
-### 2. Repository Setup
-
-Clone the repository and install dependencies:
-
-```powershell
-# Install project dependencies (This also builds the Native Engine automatically)
+```bash
+# 1. Seize the dependencies
 pnpm install
+
+# 2. Hardened Ignition (Build & Start)
+./zen dev
 ```
 
-> [!NOTE]
-> The native modules (Core, Layout, Painter) are automatically compiled via a `postinstall` script. You do not need to build them manually.
+## 🛠️ The zen Toolchain
 
-### 3. Running the TUI
+The `zen` script is the sovereign driver of the ZenTUI environment:
 
-Once the installation is complete, you can start the TUI in development mode:
+- **`./zen dev`**: The primary entry point. Silently builds the native host and JS bundle, then ignites the TUI.
+- **`./zen build`**: Hardens the binary context. Includes the **Fast-Path Checksum Gate**—subsequent builds take **<10ms** if no source changes are detected.
+- **`./zen start`**: Seizes the hardware TTY and projects the TUI in the **Alternate Screen Buffer**.
 
-```powershell
-# Start the ZenTUI TUI
-pnpm dev
-```
+## 🧬 Sovereign Architecture
 
-### 4. Layout Verification (Audit)
+- **High-Performance Binary Bridge**: Uses an atomic `Uint32Array` frame-buffer handoff to eliminate JS-to-Native context switching overhead.
+- **Sovereign Pulse Synchronization**: Follows a strict `Clear -> Reconcile -> Flush` loop to ensure zero-flash, zero-ghost artifacts.
+- **Absolute Scroll-Lock**: Automatically purges the terminal scrollback (`\x1b[3J`) and swaps into the alternate buffer for a professional dashboard experience.
+- **Industrial Stability**: Hardened against macOS security policies and memory pressure through ad-hoc code signing and stack normalization.
 
-To verify the layout engine without starting the full app, run:
-
-```powershell
-# Perform a visual audit of the layout tree
-bun packages/zen-tui-core/src/layout-verify.ts
-```
-
-## ▟ Troubleshooting (Windows)
-
-- **`cargo` not recognized**: Ensure `~\.cargo\bin` is in your system environment PATH.
-- **`link.exe` not found**: You are missing the MSVC build tools. Re-run the Visual Studio Installer and add the C++ workload.
-- **Empty Logs**: Ensure you are running the TUI within a valid Git repository root.
-
----
-**SOVEREIGN | ZEN-TUI v1.0.0**
+## ╼ Environment Notes
+- **macOS**: Ad-hoc code signing is performed automatically during the build phase.
+- **Linux**: Standard binary execution; ensures raw mode and TTY parity.

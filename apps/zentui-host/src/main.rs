@@ -62,9 +62,11 @@ impl HostState {
     fn init() -> Self {
         log_diagnostic("Seizing Hardware TTY...");
         let mut backend = CrosstermBackend::new();
-        let _ = backend.enableRawMode();
-        let _ = backend.enterAlternateScreen();
-        let _ = backend.hideCursor();
+        if let Err(e) = backend.enableRawMode() { log_diagnostic(&format!("ERR: EnableRawMode: {}", e)); }
+        if let Err(e) = backend.enterAlternateScreen() { log_diagnostic(&format!("ERR: EnterAlternateScreen: {}", e)); }
+        if let Err(e) = backend.clearScrollback() { log_diagnostic(&format!("ERR: ClearScrollback: {}", e)); }
+        if let Err(e) = backend.hideCursor() { log_diagnostic(&format!("ERR: HideCursor: {}", e)); }
+        if let Err(e) = backend.flush() { log_diagnostic(&format!("ERR: Flush: {}", e)); }
         let mut size = backend.getSize();
         while size.0 == 0 || size.1 == 0 { std::thread::sleep(Duration::from_millis(10)); size = backend.getSize(); }
         
