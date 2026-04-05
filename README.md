@@ -7,10 +7,14 @@ ZenTUI is a high-performance, bit-perfect TUI framework and git dashboard built 
 Assuming you have **Rust**, **Node.js**, and **pnpm** installed:
 
 ```bash
-# 1. Seize the dependencies
+# 1. Clone the Sovereign Core
+git clone https://github.com/pallabcodes/tsjs.git
+cd tsjs
+
+# 2. Seize the dependencies
 pnpm install
 
-# 2. Hardened Ignition (Build & Start)
+# 3. Hardened Ignition (Build & Start)
 ./zen dev
 ```
 
