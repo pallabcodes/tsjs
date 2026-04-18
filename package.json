@@ -13,9 +13,6 @@
     "build": "turbo run build",
     "dev": "turbo run dev",
     "lint": "turbo run lint",
-    "zbt": "node ./tooling/zbt/src/index.js",
-    "build:native": "pnpm zbt build packages/zen-tui-native && pnpm zbt build packages/zen-tui-layout",
-    "postinstall": "pnpm build:native",
     "test": "turbo run test"
   },
   "devDependencies": {

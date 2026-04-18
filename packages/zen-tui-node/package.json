@@ -1,8 +1,0 @@
-{
-  "name": "@zen-tui/node",
-  "version": "0.1.0",
-  "description": "Sovereign TUI Node Definitions",
-  "type": "module",
-  "main": "./dist/index.js",
-  "dependencies": {}
-}

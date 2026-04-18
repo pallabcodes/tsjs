@@ -13,11 +13,12 @@
     "forceConsistentCasingInFileNames": true,
     "baseUrl": ".",
     "paths": {
-      "@zen-tui/core": ["packages/zen-tui-core/src/index.ts"],
-      "@zen-tui/layout": ["packages/zen-tui-layout/src/index.ts"],
-      "@zen-tui/painter": ["packages/zen-tui-painter/src/index.ts"],
-      "@zen-tui/solid": ["packages/zen-tui-solid/src/index.ts"],
-      "@/*": ["apps/zen-tui/src/*"]
+      "@tsjs/core": ["packages/core/src/index.ts"],
+      "@tsjs/dsa": ["packages/dsa/src/index.ts"],
+      "@tsjs/patterns": ["packages/patterns/src/index.ts"],
+      "@tsjs/knowledge": ["packages/knowledge/src/index.ts"],
+      "@tsjs/frameworks": ["packages/frameworks/src/index.ts"],
+      "@tsjs/learning-lab": ["apps/learning-lab/src/index.ts"]
     }
   },
   "exclude": ["node_modules", "dist"]

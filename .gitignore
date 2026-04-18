@@ -1,20 +1,28 @@
+# Dependencies
 node_modules/
+**/node_modules/
+
+# Build artifacts
+dist/
+**/dist/
+build/
+**/build/
+.turbo/
+**/ .turbo/
+
+# Environment and logs
+*.log
+.env*
+.DS_Store
+Thumbs.db
+
+# Repository specific
 target/
 *.node
 *.dll
 *.exe
 *.pdb
-*.log
-build_log.txt
-build_err.txt
-build_log_layout.txt
-build_err_layout.txt
-build_err_layout_v2.txt
-build_err_layout_v3.txt
-build_err_layout_v4.txt
-dist/
-.DS_Store
-Thumbs.db
+build_*.txt
 
 # Temporary/Debug files
 diag.ts

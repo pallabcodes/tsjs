@@ -1,5 +1,5 @@
 {
-  "name": "@apps/learning-lab",
+  "name": "@tsjs/learning-lab",
   "version": "1.0.0",
   "private": true,
   "scripts": {
@@ -8,9 +8,12 @@
     "test": "vitest run"
   },
   "devDependencies": {
-    "@tooling/typescript-config": "workspace:*",
-    "@packages/frameworks": "workspace:*",
-    "@packages/knowledge": "workspace:*",
+    "@tsjs/frameworks": "workspace:*",
+    "@tsjs/knowledge": "workspace:*",
+    "@tsjs/dsa": "workspace:*",
+    "@tsjs/patterns": "workspace:*",
+    "@tsjs/core": "workspace:*",
+    "@tsjs/typescript-config": "workspace:*",
     "tsx": "^4.0.0",
     "typescript": "^5.0.0",
     "vitest": "^2.1.8"
