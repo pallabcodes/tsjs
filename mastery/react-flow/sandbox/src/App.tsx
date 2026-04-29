@@ -68,7 +68,32 @@ const MemoizedEdge = React.memo(({ edge, sourceNode, targetNode, isPathHovered, 
 
   let strokeWidth = isPathHovered ? 2.5 : 1.5;
 
-  return <path d={path} fill="none" stroke={strokeColor} strokeWidth={strokeWidth} className="transition-all duration-300" />;
+  return (
+    <g style={{ color: strokeColor }}>
+      {/* Base Connector */}
+      <path 
+        d={path} 
+        fill="none" 
+        stroke={strokeColor} 
+        strokeWidth={strokeWidth} 
+        markerEnd="url(#arrowhead)"
+        className="transition-all duration-300" 
+      />
+      
+      {/* Traffic Pulse (Only on Hover or Error) */}
+      {(isPathHovered || isSourceError || isTargetError) && (
+        <path
+          d={path}
+          fill="none"
+          stroke={isSourceError || isTargetError ? "#f43f5e" : "#60a5fa"}
+          strokeWidth={strokeWidth * 0.8}
+          strokeDasharray="8, 12"
+          className="animate-flow"
+          style={{ opacity: isPathHovered ? 1 : 0.4 }}
+        />
+      )}
+    </g>
+  );
 });
 
 const MemoizedNode = React.memo(({ node, isSelected, zoom, onSelect, isSummaryView }: any) => {
@@ -311,10 +336,6 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    engine.setViewport(viewport);
-  }, [viewport, engine]);
-
-  useEffect(() => {
     localStorage.setItem('cntp-blueprint', isBlueprint.toString());
   }, [isBlueprint]);
 
@@ -323,23 +344,74 @@ export default function App() {
   }, [isSummaryView]);
 
   const [isPanning, setIsPanning] = useState(false);
+  const [draggedNodeId, setDraggedNodeId] = useState<string | null>(null);
   const lastMousePos = useRef<Point>({ x: 0, y: 0 });
+  const dragOffset = useRef<Point>({ x: 0, y: 0 });
 
   const handleMouseDown = (e: React.MouseEvent) => {
     if (e.button !== 0) return;
-    setIsPanning(true);
+    
+    // Check if we clicked a node first
+    const point = project({ x: e.clientX, y: e.clientY }, viewport);
+    const nodes = engine.getNodes();
+    const hit = nodes.find((n: Node) => {
+      const w = isSummaryView && viewport.zoom < 0.7 ? 40 : n.data.width;
+      const h = isSummaryView && viewport.zoom < 0.7 ? 40 : n.data.height;
+      return point.x >= n.position.x && point.x <= n.position.x + w &&
+             point.y >= n.position.y && point.y <= n.position.y + h;
+    });
+
+    if (hit) {
+      setDraggedNodeId(hit.id);
+      setSelectedId(hit.id);
+      dragOffset.current = { 
+        x: point.x - hit.position.x, 
+        y: point.y - hit.position.y 
+      };
+      setIsPanning(false);
+    } else {
+      setIsPanning(true);
+      setSelectedId(null);
+    }
+    
     lastMousePos.current = { x: e.clientX, y: e.clientY };
   };
 
+  const lastSyncTime = useRef(0);
+
   const handleMouseMove = (e: React.MouseEvent) => {
+    const v = viewportRef.current;
+
+    // L7 MODULE 3: Node Drag Logic
+    if (draggedNodeId) {
+      const point = project({ x: e.clientX, y: e.clientY }, v);
+      const newX = point.x - dragOffset.current.x;
+      const newY = point.y - dragOffset.current.y;
+      
+      engine.updateNodePosition(draggedNodeId, newX, newY);
+      
+      // Force render update
+      const now = performance.now();
+      if (now - lastSyncTime.current > 16) {
+        setViewport({ ...v }); // Trigger re-render
+        lastSyncTime.current = now;
+      }
+      return;
+    }
+
     if (isPanning) {
       const dx = e.clientX - lastMousePos.current.x;
       const dy = e.clientY - lastMousePos.current.y;
-      const v = viewportRef.current;
       const newViewport = { ...v, x: v.x + dx, y: v.y + dy };
       viewportRef.current = newViewport;
       updateWorldTransform();
       lastMousePos.current = { x: e.clientX, y: e.clientY };
+
+      const now = performance.now();
+      if (now - lastSyncTime.current > 16) {
+        setViewport(newViewport);
+        lastSyncTime.current = now;
+      }
       return;
     }
 
@@ -356,13 +428,19 @@ export default function App() {
   };
 
   const handleMouseUp = () => {
-    if (isPanning) {
+    if (isPanning || draggedNodeId) {
       setIsPanning(false);
+      setDraggedNodeId(null);
       setViewport(viewportRef.current);
     }
   };
 
-  const renderData = useMemo(() => engine.getRenderData(), [viewport, engine]);
+  const renderData = useMemo(() => {
+    // L7 PHASE-LOCK: Synchronize the engine's internal truth BEFORE calculating visibility
+    engine.setViewport(viewport);
+    return engine.getRenderData();
+  }, [viewport, engine]);
+
   const stats = useMemo(() => engine.getStats(), [engine]);
 
   const canvasContent = useMemo(() => {
@@ -391,6 +469,18 @@ export default function App() {
         </div>
 
         <svg className="absolute inset-0 pointer-events-none overflow-visible z-0">
+          <defs>
+            <marker
+              id="arrowhead"
+              markerWidth="8"
+              markerHeight="6"
+              refX="7"
+              refY="3"
+              orient="auto"
+            >
+              <polygon points="0 0, 8 3, 0 6" fill="currentColor" fillOpacity="0.6" />
+            </marker>
+          </defs>
           {currentEdges.map((edge: EngineEdge) => (
             <MemoizedEdge 
               key={edge.id}

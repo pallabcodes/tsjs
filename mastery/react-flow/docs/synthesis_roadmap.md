@@ -14,13 +14,13 @@
 
 ## [MODULE 2] Viewport Sovereignty (Interactive Camera)
 *   **Goal**: Add precision Pan and Zoom to the static mesh.
-*   **Status**: PENDING
+*   **Status**: COMPLETED
 *   **Verification**: Does zoom center on the cursor? Is the parallax grid depth-correct?
 *   **Code Boundary**: `inv02-viewport`.
 
 ## [MODULE 3] Spatial Interaction (Node Mastery)
 *   **Goal**: Precision node-level dragging.
-*   **Status**: PENDING
+*   **Status**: COMPLETED
 *   **Verification**: 60FPS dragging with zoom-normalization. Zero jitter.
 *   **Code Boundary**: `MasteryEngine.handleDrag`.
 

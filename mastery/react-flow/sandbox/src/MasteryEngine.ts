@@ -115,10 +115,10 @@ export class MasteryEngine {
     const worldHeight = this.canvasSize.height / this.viewport.zoom;
 
     const worldRect = {
-      x: worldTopLeft.x - 2000, 
-      y: worldTopLeft.y - 2000,
-      width: worldWidth + 4000,
-      height: worldHeight + 4000
+      x: worldTopLeft.x - 5000, // L7 Over-Render Buffer
+      y: worldTopLeft.y - 5000,
+      width: worldWidth + 10000,
+      height: worldHeight + 10000
     };
 
     const visibleNodeStubs = this.virtualizer.getVisibleNodes(worldRect);
@@ -146,6 +146,25 @@ export class MasteryEngine {
   }
 
   getNodes() { return this.nodes; }
+
+  // L7 MODULE 3: Precision Node Relocation
+  updateNodePosition(id: string, x: number, y: number) {
+    const node = this.nodes.find(n => n.id === id);
+    if (!node) return;
+
+    // Update the visual truth
+    node.position = { x, y };
+
+    // L7 CRITICAL: Update the Spatial Virtualizer so culling knows where the node moved
+    this.virtualizer.updateNodes(this.nodes.map(n => ({
+      id: n.id,
+      x: n.position.x,
+      y: n.position.y,
+      width: n.data.width,
+      height: n.data.height
+    })));
+  }
+
   setViewport(v: Viewport) { this.viewport = v; }
   setCanvasSize(width: number, height: number) { this.canvasSize = { width, height }; }
 }
