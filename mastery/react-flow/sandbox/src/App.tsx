@@ -72,9 +72,12 @@ const MemoizedEdge = React.memo(({ edge, sourceNode, targetNode, isPathHovered, 
 });
 
 const MemoizedNode = React.memo(({ node, isSelected, zoom, onSelect, isSummaryView }: any) => {
-  const isGateway = node.data.type === 'GATEWAY';
   const color = node.data.color;
   const isError = node.data.status === 'CRITICAL';
+  
+  // L7 FEATURE: Auto-LOD Transition
+  // If we are zoomed in enough, force 'Full View' even if 'Summary' is toggled.
+  const effectiveSummaryView = isSummaryView && zoom < 0.7;
 
   return (
     <div 
@@ -82,25 +85,27 @@ const MemoizedNode = React.memo(({ node, isSelected, zoom, onSelect, isSummaryVi
       style={{ 
         left: node.position.x, 
         top: node.position.y, 
-        width: isSummaryView ? 40 : node.data.width, 
-        height: isSummaryView ? 40 : node.data.height, 
-        zIndex: isSelected ? 100 : 10 
+        width: effectiveSummaryView ? 40 : node.data.width, 
+        height: effectiveSummaryView ? 40 : node.data.height, 
+        zIndex: isSelected ? 100 : 10,
+        willChange: 'transform',
+        backfaceVisibility: 'hidden'
       }}
       onMouseDown={(e) => onSelect(node.id)}
     >
-      {isSummaryView ? (
-        <div className={cn(
-          "w-full h-full rounded-md border-2 transition-all duration-300 shadow-lg",
-          isSelected ? "border-white scale-125" : "border-white/20",
-          isError && "border-rose-500 shadow-[0_0_15px_rgba(244,63,94,0.4)]"
-        )} style={{ backgroundColor: color }} />
-      ) : (
-        <div className={cn(
-          "relative h-full w-full flex flex-col bg-[#030712] border rounded-lg overflow-hidden transition-all duration-300 shadow-2xl",
-          isSelected ? "border-white/60 ring-1 ring-white/30" : "border-white/20",
-          isError && "border-rose-500 shadow-[0_0_25px_rgba(244,63,94,0.3)]",
-          "group-hover:border-white/40 group-hover:-translate-y-1"
-        )}>
+      {effectiveSummaryView ? (
+          <div className={cn(
+            "w-full h-full rounded-md border-2 transition-all duration-300",
+            isSelected ? "border-white scale-125" : "border-white/20",
+            isError && (zoom > 0.15 ? "border-rose-500 shadow-[0_0_15px_rgba(244,63,94,0.4)]" : "border-rose-500 bg-rose-500/40")
+          )} style={{ backgroundColor: color }} />
+        ) : (
+          <div className={cn(
+            "relative h-full w-full flex flex-col bg-[#030712] border rounded-lg overflow-hidden transition-all duration-300 shadow-2xl",
+            isSelected ? "border-white/60 ring-1 ring-white/30" : "border-white/20",
+            isError && (zoom > 0.15 ? "border-rose-500 shadow-[0_0_25px_rgba(244,63,94,0.3)]" : "border-rose-500 border-2"),
+            "group-hover:border-white/40 group-hover:-translate-y-1"
+          )}>
           <div className="flex items-center justify-between px-3 py-1.5 bg-white/[0.07] border-b border-white/10">
             <div className="flex items-center gap-2">
               <TypeIcon type={node.data.type} color={color} />
@@ -243,7 +248,8 @@ export default function App() {
   const updateWorldTransform = () => {
     if (worldRef.current) {
       const v = viewportRef.current;
-      worldRef.current.style.transform = `translate(${v.x}px, ${v.y}px) scale(${v.zoom})`;
+      // L7 GPU Isolation: translate3d + scale
+      worldRef.current.style.transform = `translate3d(${v.x}px, ${v.y}px, 0) scale(${v.zoom})`;
     }
     if (radarRef.current) {
       const v = viewportRef.current;
@@ -282,7 +288,13 @@ export default function App() {
       e.preventDefault();
       const factor = e.deltaY > 0 ? 0.9 : 1.1;
       const prev = viewportRef.current;
-      const newZoom = Math.min(Math.max(prev.zoom * factor, 0.1), 5.0);
+      
+      // L7 Refined Constraints: Allow 'God View' but cap 'Infinite Emptiness'
+      const minZoom = 0.15;
+      const maxZoom = 4.0;
+      const newZoom = Math.min(Math.max(prev.zoom * factor, minZoom), maxZoom);
+      
+      // Anchor the zoom to the mouse position
       const worldMouse = project({ x: e.clientX, y: e.clientY }, prev);
       const newScreenPos = unproject(worldMouse, { ...prev, zoom: newZoom });
       const dx = e.clientX - newScreenPos.x;
