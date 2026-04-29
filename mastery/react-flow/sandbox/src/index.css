@@ -1,0 +1,71 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply m-0 bg-bg text-white overflow-hidden antialiased;
+    font-family: 'Outfit', sans-serif;
+  }
+}
+
+.react-flow__background {
+  @apply absolute inset-0 pointer-events-none;
+  background-image: radial-gradient(#1e293b 1px, transparent 0);
+  background-size: 24px 24px;
+}
+
+.glass {
+  background: rgba(30, 41, 59, 0.7);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+  transition: all 0.2s;
+}
+
+.glass-selected {
+  border-color: #3b82f6;
+  box-shadow: 0 0 25px rgba(59,130,246,0.5);
+}
+
+.handle {
+  @apply absolute w-2.5 h-2.5 bg-accent rounded-full border-2 border-bg z-10 shadow-sm cursor-crosshair transition-transform;
+}
+
+.handle:hover {
+  transform: scale(1.25);
+}
+
+@keyframes flow {
+  from { stroke-dashoffset: 10; }
+  to { stroke-dashoffset: 0; }
+}
+
+.edge-path {
+  stroke: #3b82f6;
+  fill: none;
+  transition: all 0.2s;
+  stroke-width: 1.5;
+  stroke-opacity: 0.4;
+}
+
+.edge-path:hover {
+  stroke-opacity: 1;
+  stroke-width: 2.5;
+}
+
+.edge-path.temp {
+  stroke-opacity: 0.8;
+  stroke-dasharray: 5,5;
+  animation: flow 1s linear infinite;
+}
+
+.node-label {
+  @apply font-medium tracking-tight;
+}
+
+.node-badge {
+  @apply font-mono text-[10px] text-accent opacity-80 font-semibold;
+}

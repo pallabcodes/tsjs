@@ -1,0 +1,11 @@
+{
+  "name": "react-flow-mastery",
+  "version": "1.0.0",
+  "description": "Verification engine for ReactFlow invariants",
+  "main": "index.js",
+  "devDependencies": {
+    "@types/node": "^25.6.0",
+    "tsx": "^4.0.0",
+    "typescript": "^5.0.0"
+  }
+}

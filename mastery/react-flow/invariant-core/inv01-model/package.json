@@ -1,0 +1,9 @@
+{
+  "name": "@react-flow-mastery/inv01-model",
+  "version": "1.0.0",
+  "description": "Invariant 01: Core Graph State Model",
+  "main": "src/index.ts",
+  "dependencies": {
+    "nanoid": "^5.0.7"
+  }
+}

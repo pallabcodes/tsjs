@@ -38,3 +38,4 @@ resolve.ts
 # Generated JS and maps (only in src)
 **/src/**/*.js
 **/src/**/*.js.map
+/references/
