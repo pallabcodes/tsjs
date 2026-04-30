@@ -146,22 +146,53 @@ export class MasteryEngine {
   }
 
   getNodes() { return this.nodes; }
+  getEdges() { return this.edges; }
+
+  getNodeById(id: string): Node | undefined {
+    return this.nodes.find(n => n.id === id);
+  }
+
+  getZoneHealth(): Record<string, { healthy: number; degraded: number; critical: number; total: number }> {
+    const zones: Record<string, { healthy: number; degraded: number; critical: number; total: number }> = {
+      'GATEWAY': { healthy: 0, degraded: 0, critical: 0, total: 0 },
+      'LOAD_BALANCER': { healthy: 0, degraded: 0, critical: 0, total: 0 },
+      'SERVICE': { healthy: 0, degraded: 0, critical: 0, total: 0 },
+      'DATABASE': { healthy: 0, degraded: 0, critical: 0, total: 0 },
+    };
+    this.nodes.forEach(n => {
+      const type = n.data?.type;
+      if (type && zones[type]) {
+        zones[type].total++;
+        if (n.data.status === 'CRITICAL') zones[type].critical++;
+        else if (n.data.status === 'DEGRADED') zones[type].degraded++;
+        else zones[type].healthy++;
+      }
+    });
+    return zones;
+  }
+
+  tickTelemetry() {
+    this.nodes.forEach(n => {
+      if (!n.data?.telemetry) return;
+      const t = n.data.telemetry;
+      const latBase = parseFloat(t.latency);
+      t.latency = Math.max(1, latBase + (Math.random() - 0.5) * 3).toFixed(1);
+      const cpuBase = t.cpu;
+      t.cpu = Math.min(95, Math.max(5, cpuBase + Math.round((Math.random() - 0.5) * 6)));
+    });
+  }
 
   // L7 Optimized Node Relocation
   updateNodePosition(id: string, x: number, y: number) {
     const node = this.nodes.find(n => n.id === id);
     if (!node) return;
     node.position = { x, y };
-    // L7 PERFORMANCE: We no longer update the virtualizer here.
-    // We wait for the 'commit' phase on mouseUp to avoid O(N) thrashing.
   }
 
-  // L7 Optimized Edge Lookup: O(1)
   getConnectedEdges(nodeId: string) {
     return this.edges.filter(e => e.source === nodeId || e.target === nodeId);
   }
 
-  // L7 COMMIT PHASE: Update the spatial truth once the interaction is done
   commitNodePositions() {
     this.virtualizer.updateNodes(this.nodes.map(n => ({
       id: n.id,
