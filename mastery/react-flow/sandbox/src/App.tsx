@@ -30,18 +30,16 @@ const TypeIcon = React.memo(({ type, color }: { type: string, color: string }) =
   return <Cpu {...props} />;
 });
 
-const MemoizedEdge = React.memo(({ edge, sourceNode, targetNode, isPathHovered, isBlueprint, isSummaryView }: any) => {
-  if (!sourceNode || !targetNode) return null;
-
+const calculatePath = (sourceNode: any, targetNode: any, effectiveSummaryView: boolean) => {
   // L7 FEATURE: Port-Based Fanning
-  const targetIdPart = edge.id.split('-')[2];
-  const targetIdx = targetIdPart ? parseInt(targetIdPart.replace(/\D/g, '')) : 0;
+  // We use a deterministic hash based on the IDs for stable fanning
+  const targetIdx = parseInt(targetNode.id.replace(/\D/g, '')) || 0;
   const srcYOffset = sourceNode.data.type === 'GATEWAY' ? (targetIdx % 3 - 1) * 30 : 0;
   
-  const nodeWidth = isSummaryView ? 40 : sourceNode.data.width;
-  const nodeHeight = isSummaryView ? 40 : sourceNode.data.height;
-  const targetWidth = isSummaryView ? 40 : targetNode.data.width;
-  const targetHeight = isSummaryView ? 40 : targetNode.data.height;
+  const nodeWidth = effectiveSummaryView ? 40 : sourceNode.data.width;
+  const nodeHeight = effectiveSummaryView ? 40 : sourceNode.data.height;
+  const targetWidth = effectiveSummaryView ? 40 : targetNode.data.width;
+  const targetHeight = effectiveSummaryView ? 40 : targetNode.data.height;
 
   const srcPos = { 
     x: sourceNode.position.x + nodeWidth, 
@@ -53,10 +51,16 @@ const MemoizedEdge = React.memo(({ edge, sourceNode, targetNode, isPathHovered, 
   };
 
   const dx = tgtPos.x - srcPos.x;
-  const dy = tgtPos.y - srcPos.y;
   const cp1x = srcPos.x + dx * 0.4;
   const cp2x = srcPos.x + dx * 0.6;
-  const path = `M ${srcPos.x} ${srcPos.y} C ${cp1x} ${srcPos.y}, ${cp2x} ${tgtPos.y}, ${tgtPos.x} ${tgtPos.y}`;
+  return `M ${srcPos.x} ${srcPos.y} C ${cp1x} ${srcPos.y}, ${cp2x} ${tgtPos.y}, ${tgtPos.x} ${tgtPos.y}`;
+};
+
+const MemoizedEdge = React.memo(({ edge, sourceNode, targetNode, isPathHovered, isBlueprint, isSummaryView, zoom }: any) => {
+  if (!sourceNode || !targetNode) return null;
+
+  const effectiveSummaryView = isSummaryView && zoom < 0.7;
+  const path = calculatePath(sourceNode, targetNode, effectiveSummaryView);
 
   // L7 FEATURE: Tactical Edge Coloring
   const isSourceError = sourceNode.data.status === 'CRITICAL';
@@ -72,6 +76,7 @@ const MemoizedEdge = React.memo(({ edge, sourceNode, targetNode, isPathHovered, 
     <g style={{ color: strokeColor }}>
       {/* Base Connector */}
       <path 
+        id={`edge-path-${edge.id}`}
         d={path} 
         fill="none" 
         stroke={strokeColor} 
@@ -80,9 +85,10 @@ const MemoizedEdge = React.memo(({ edge, sourceNode, targetNode, isPathHovered, 
         className="transition-all duration-300" 
       />
       
-      {/* Traffic Pulse (Only on Hover or Error) */}
-      {(isPathHovered || isSourceError || isTargetError) && (
+      {/* Traffic Pulse (Only on Hover or Error + High Zoom) */}
+      {(isPathHovered || isSourceError || isTargetError) && zoom > 0.5 && (
         <path
+          id={`edge-pulse-${edge.id}`}
           d={path}
           fill="none"
           stroke={isSourceError || isTargetError ? "#f43f5e" : "#60a5fa"}
@@ -106,10 +112,10 @@ const MemoizedNode = React.memo(({ node, isSelected, zoom, onSelect, isSummaryVi
 
   return (
     <div 
+      id={`node-${node.id}`}
       className="absolute pointer-events-auto group" 
       style={{ 
-        left: node.position.x, 
-        top: node.position.y, 
+        transform: `translate3d(${node.position.x}px, ${node.position.y}px, 0)`,
         width: effectiveSummaryView ? 40 : node.data.width, 
         height: effectiveSummaryView ? 40 : node.data.height, 
         zIndex: isSelected ? 100 : 10,
@@ -122,13 +128,15 @@ const MemoizedNode = React.memo(({ node, isSelected, zoom, onSelect, isSummaryVi
           <div className={cn(
             "w-full h-full rounded-md border-2 transition-all duration-300",
             isSelected ? "border-white scale-125" : "border-white/20",
-            isError && (zoom > 0.15 ? "border-rose-500 shadow-[0_0_15px_rgba(244,63,94,0.4)]" : "border-rose-500 bg-rose-500/40")
+            // L7 AGGRESSIVE SHADOW LOD: Kill all blur filters at low zoom
+            isError && (zoom > 0.4 ? "border-rose-500 shadow-[0_0_15px_rgba(244,63,94,0.4)]" : "border-rose-500 bg-rose-500/40")
           )} style={{ backgroundColor: color }} />
         ) : (
           <div className={cn(
             "relative h-full w-full flex flex-col bg-[#030712] border rounded-lg overflow-hidden transition-all duration-300 shadow-2xl",
             isSelected ? "border-white/60 ring-1 ring-white/30" : "border-white/20",
-            isError && (zoom > 0.15 ? "border-rose-500 shadow-[0_0_25px_rgba(244,63,94,0.3)]" : "border-rose-500 border-2"),
+            // L7 AGGRESSIVE SHADOW LOD: Kill all blur filters at low zoom
+            isError && (zoom > 0.4 ? "border-rose-500 shadow-[0_0_25px_rgba(244,63,94,0.3)]" : "border-rose-500 border-2"),
             "group-hover:border-white/40 group-hover:-translate-y-1"
           )}>
           <div className="flex items-center justify-between px-3 py-1.5 bg-white/[0.07] border-b border-white/10">
@@ -279,10 +287,10 @@ export default function App() {
     if (radarRef.current) {
       const v = viewportRef.current;
       const r = radarRef.current;
-      const x = ((-v.x / v.zoom) / 10000) * 192;
-      const y = ((-v.y / v.zoom) / 10000) * 128;
-      const w = ((window.innerWidth / v.zoom) / 10000) * 192;
-      const h = ((window.innerHeight / v.zoom) / 10000) * 128;
+      const x = ((-v.x / v.zoom) / 10000) * 160;
+      const y = ((-v.y / v.zoom) / 10000) * 80;
+      const w = ((window.innerWidth / v.zoom) / 10000) * 160;
+      const h = ((window.innerHeight / v.zoom) / 10000) * 80;
       r.style.transform = `translate(${x}px, ${y}px)`;
       r.style.width = `${w}px`;
       r.style.height = `${h}px`;
@@ -382,20 +390,43 @@ export default function App() {
   const handleMouseMove = (e: React.MouseEvent) => {
     const v = viewportRef.current;
 
-    // L7 MODULE 3: Node Drag Logic
+    // L7 ZERO-LATENCY: Direct-DOM Node Drag
     if (draggedNodeId) {
       const point = project({ x: e.clientX, y: e.clientY }, v);
       const newX = point.x - dragOffset.current.x;
       const newY = point.y - dragOffset.current.y;
       
+      // Update engine state (Silent)
       engine.updateNodePosition(draggedNodeId, newX, newY);
       
-      // Force render update
+      // Update Node DOM directly (Composite Layer)
+      const nodeEl = document.getElementById(`node-${draggedNodeId}`);
+      if (nodeEl) {
+        nodeEl.style.transform = `translate3d(${newX}px, ${newY}px, 0)`;
+      }
+
+      // L7 THROTTLED SYNC: Ensure the virtualizer doesn't 'lose' the world
       const now = performance.now();
-      if (now - lastSyncTime.current > 16) {
-        setViewport({ ...v }); // Trigger re-render
+      if (now - lastSyncTime.current > 32) {
+        setViewport({ ...v });
         lastSyncTime.current = now;
       }
+      
+      // Update connected edges DOM directly (O(1) lookup)
+      const edges = engine.getConnectedEdges(draggedNodeId);
+      
+      edges.forEach((edge: any) => {
+        const edgeEl = document.getElementById(`edge-path-${edge.id}`);
+        const pulseEl = document.getElementById(`edge-pulse-${edge.id}`);
+        
+        const sourceNode = engine.getNodes().find(n => n.id === edge.source);
+        const targetNode = engine.getNodes().find(n => n.id === edge.target);
+        if (sourceNode && targetNode) {
+          const path = calculatePath(sourceNode, targetNode, isSummaryView && v.zoom < 0.7);
+          if (edgeEl) edgeEl.setAttribute('d', path);
+          if (pulseEl) pulseEl.setAttribute('d', path);
+        }
+      });
       return;
     }
 
@@ -404,14 +435,20 @@ export default function App() {
       const dy = e.clientY - lastMousePos.current.y;
       const newViewport = { ...v, x: v.x + dx, y: v.y + dy };
       viewportRef.current = newViewport;
-      updateWorldTransform();
-      lastMousePos.current = { x: e.clientX, y: e.clientY };
+      
+      // Update World DOM directly
+      if (worldRef.current) {
+        worldRef.current.style.transform = `translate3d(${newViewport.x}px, ${newViewport.y}px, 0) scale(${newViewport.zoom})`;
+      }
 
+      // L7 THROTTLED SYNC: Prevent 'Vanishing World'
       const now = performance.now();
-      if (now - lastSyncTime.current > 16) {
+      if (now - lastSyncTime.current > 32) {
         setViewport(newViewport);
         lastSyncTime.current = now;
       }
+      
+      lastMousePos.current = { x: e.clientX, y: e.clientY };
       return;
     }
 
@@ -431,6 +468,8 @@ export default function App() {
     if (isPanning || draggedNodeId) {
       setIsPanning(false);
       setDraggedNodeId(null);
+      // L7 COMMIT: Finalize the spatial truth and update virtualizer
+      engine.commitNodePositions();
       setViewport(viewportRef.current);
     }
   };
@@ -490,6 +529,7 @@ export default function App() {
               isPathHovered={hoveredId === edge.source || hoveredId === edge.target}
               isBlueprint={isBlueprint}
               isSummaryView={isSummaryView}
+              zoom={viewport.zoom}
             />
           ))}
         </svg>
@@ -536,13 +576,22 @@ export default function App() {
         </div>
 
         <div className="absolute top-8 right-8 pointer-events-none hidden lg:block">
-          <div className="bg-[#0f172a]/60 backdrop-blur-md border border-white/5 rounded-lg p-1 w-48 h-32 pointer-events-auto relative overflow-hidden">
+          <div className="bg-[#0f172a]/60 backdrop-blur-md border border-white/5 rounded-lg p-1 w-40 h-20 pointer-events-auto relative overflow-hidden">
             <div className="absolute inset-0 opacity-10" style={{ backgroundImage: `linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px)`, backgroundSize: `10px 10px` }} />
             <div className="absolute inset-0 pointer-events-none flex justify-between px-2 opacity-20">
               {ZONES.map(z => (<div key={z.id} className="h-full w-px bg-white/40" style={{ left: `${(z.x / 10000) * 100}%` }} />))}
             </div>
             <div className="absolute inset-0 pointer-events-none opacity-40">
-              {engine.getNodes().map(n => (<div key={n.id} className="absolute w-0.5 h-0.5 rounded-full" style={{ left: (n.position.x / 10000) * 192, top: (n.position.y / 10000) * 128, backgroundColor: n.data.color }} />))}
+              {engine.getNodes().map(node => (
+                <div 
+                  key={node.id}
+                  className="absolute w-1 h-1 rounded-full translate-z-0"
+                  style={{ 
+                    transform: `translate3d(${(node.position.x / 10000) * 160}px, ${(node.position.y / 10000) * 80}px, 0)`,
+                    backgroundColor: node.data.color
+                  }}
+                />
+              ))}
             </div>
             <div ref={radarRef} className="absolute border border-amber-500/50 bg-amber-500/10 transition-all duration-75 z-10">
               <div className="absolute inset-0 flex items-center justify-center opacity-20">

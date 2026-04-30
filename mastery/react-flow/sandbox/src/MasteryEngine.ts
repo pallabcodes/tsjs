@@ -147,15 +147,22 @@ export class MasteryEngine {
 
   getNodes() { return this.nodes; }
 
-  // L7 MODULE 3: Precision Node Relocation
+  // L7 Optimized Node Relocation
   updateNodePosition(id: string, x: number, y: number) {
     const node = this.nodes.find(n => n.id === id);
     if (!node) return;
-
-    // Update the visual truth
     node.position = { x, y };
+    // L7 PERFORMANCE: We no longer update the virtualizer here.
+    // We wait for the 'commit' phase on mouseUp to avoid O(N) thrashing.
+  }
 
-    // L7 CRITICAL: Update the Spatial Virtualizer so culling knows where the node moved
+  // L7 Optimized Edge Lookup: O(1)
+  getConnectedEdges(nodeId: string) {
+    return this.edges.filter(e => e.source === nodeId || e.target === nodeId);
+  }
+
+  // L7 COMMIT PHASE: Update the spatial truth once the interaction is done
+  commitNodePositions() {
     this.virtualizer.updateNodes(this.nodes.map(n => ({
       id: n.id,
       x: n.position.x,
