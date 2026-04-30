@@ -3,7 +3,7 @@ import { MasteryEngine, type EngineEdge } from './MasteryEngine';
 import { project, unproject } from '../../invariant-core/inv02-viewport/src/index.ts';
 import type { Viewport, Point } from '../../invariant-core/inv02-viewport/src/index.ts';
 import { Node } from '../../invariant-core/inv01-model/src/index.ts';
-import { Shield, Search, Eye, Layout, Database, Activity, X, Terminal, Info, Cpu, Edit2, ExternalLink, ChevronRight, ChevronDown } from 'lucide-react';
+import { Shield, Search, Eye, Layout, Database, Activity, Terminal, Info, Cpu, ChevronRight } from 'lucide-react';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
@@ -30,140 +30,118 @@ const TypeIcon = React.memo(({ type, color }: { type: string, color: string }) =
   return <Cpu {...props} />;
 });
 
-const calculatePath = (sourceNode: any, targetNode: any, effectiveSummaryView: boolean) => {
-  // L7 FEATURE: Port-Based Fanning
-  // We use a deterministic hash based on the IDs for stable fanning
-  const targetIdx = parseInt(targetNode.id.replace(/\D/g, '')) || 0;
-  const srcYOffset = sourceNode.data.type === 'GATEWAY' ? (targetIdx % 3 - 1) * 30 : 0;
-
-  const nodeWidth = effectiveSummaryView ? 40 : sourceNode.data.width;
-  const nodeHeight = effectiveSummaryView ? 40 : sourceNode.data.height;
-  const targetWidth = effectiveSummaryView ? 40 : targetNode.data.width;
-  const targetHeight = effectiveSummaryView ? 40 : targetNode.data.height;
-
-  const srcPos = {
-    x: sourceNode.position.x + nodeWidth,
-    y: sourceNode.position.y + (nodeHeight / 2) + srcYOffset
-  };
-  const tgtPos = {
-    x: targetNode.position.x,
-    y: targetNode.position.y + (targetHeight / 2)
-  };
-
-  const dx = tgtPos.x - srcPos.x;
-  const cp1x = srcPos.x + dx * 0.4;
-  const cp2x = srcPos.x + dx * 0.6;
-  return `M ${srcPos.x} ${srcPos.y} C ${cp1x} ${srcPos.y}, ${cp2x} ${tgtPos.y}, ${tgtPos.x} ${tgtPos.y}`;
+const calculatePath = (sourcePos: Point, targetPos: Point, sourceWidth: number, sourceHeight: number, targetWidth: number, targetHeight: number, targetIdx: number, isGateway: boolean) => {
+  const srcYOffset = isGateway ? (targetIdx % 3 - 1) * 30 : 0;
+  const sX = sourcePos.x + sourceWidth;
+  const sY = sourcePos.y + (sourceHeight / 2) + srcYOffset;
+  const tX = targetPos.x;
+  const tY = targetPos.y + (targetHeight / 2);
+  const dx = tX - sX;
+  const cp1x = sX + dx * 0.4;
+  const cp2x = sX + dx * 0.6;
+  return `M ${sX} ${sY} C ${cp1x} ${sY}, ${cp2x} ${tY}, ${tX} ${tY}`;
 };
 
 const MemoizedEdge = React.memo(({ edge, sourceNode, targetNode, isPathHovered, isBlueprint, isSummaryView, zoom, isAnyNodeHovered }: any) => {
   if (!sourceNode || !targetNode) return null;
-
   const effectiveSummaryView = isSummaryView && zoom < 0.7;
-  const path = calculatePath(sourceNode, targetNode, effectiveSummaryView);
+  const sW = effectiveSummaryView ? 40 : sourceNode.data?.width || 280;
+  const sH = effectiveSummaryView ? 40 : sourceNode.data?.height || 160;
+  const tW = effectiveSummaryView ? 40 : targetNode.data?.width || 280;
+  const tH = effectiveSummaryView ? 40 : targetNode.data?.height || 160;
+  const tIdx = parseInt(targetNode.id.replace(/\D/g, '')) || 0;
+  const path = calculatePath(sourceNode.position, targetNode.position, sW, sH, tW, tH, tIdx, sourceNode.data?.type === 'GATEWAY');
 
-  // L7 FEATURE: Tactical Edge Coloring
-  const isSourceError = sourceNode.data.status === 'CRITICAL';
-  const isTargetError = targetNode.data.status === 'CRITICAL';
-
-  let strokeColor = isBlueprint ? "rgba(255,255,255,0.1)" : "rgba(255,255,255,0.15)";
-  if (isPathHovered) strokeColor = "rgba(255,255,255,0.8)";
-  if (isSourceError || isTargetError) strokeColor = "rgba(244,63,94,0.4)";
-
-  let strokeWidth = isPathHovered ? 2.5 : 1.5;
   const isDimmed = isAnyNodeHovered && !isPathHovered;
 
   return (
-    <g style={{ color: strokeColor }} className={cn("transition-opacity duration-300", isDimmed ? "opacity-10" : "opacity-100")}>
-      {/* Base Connector */}
-      <path
-        id={`edge-path-${edge.id}`}
-        d={path}
-        fill="none"
-        stroke={strokeColor}
-        strokeWidth={strokeWidth}
-        markerEnd="url(#arrowhead)"
-        className="transition-all duration-300"
-      />
-
-      {/* Traffic Pulse (Only on Hover or Error + High Zoom) */}
-      {(isPathHovered || isSourceError || isTargetError) && zoom > 0.5 && (
-        <path
-          id={`edge-pulse-${edge.id}`}
-          d={path}
-          fill="none"
-          stroke={isSourceError || isTargetError ? "#f43f5e" : "#60a5fa"}
-          strokeWidth={strokeWidth * 0.8}
-          strokeDasharray="8, 12"
-          className="animate-flow"
-          style={{ opacity: isPathHovered ? 1 : 0.4 }}
-        />
+    <path
+      id={`edge-path-${edge.id}`}
+      d={path}
+      fill="none"
+      stroke={isPathHovered ? "rgba(255,255,255,1.0)" : isBlueprint ? "rgba(255,255,255,0.2)" : "rgba(255,255,255,0.4)"}
+      strokeWidth={isPathHovered ? 3.0 : 2.0}
+      className={cn(
+        "transition-all duration-500",
+        isDimmed ? "opacity-10" : isPathHovered ? "opacity-100" : "opacity-80",
+        isPathHovered && "animate-flow"
       )}
-    </g>
+      style={{
+        strokeDasharray: isPathHovered ? '8, 8' : 'none',
+        willChange: 'opacity, stroke-width'
+      }}
+    />
   );
 });
 
 const MemoizedNode = React.memo(({ node, isSelected, zoom, onSelect, isSummaryView, isHovered, isAnyHovered }: any) => {
-  const color = node.data.color;
-  const isError = node.data.status === 'CRITICAL';
   const isDimmed = isAnyHovered && !isHovered && !isSelected;
-
-  // L7 FEATURE: Auto-LOD Transition
-  // If we are zoomed in enough, force 'Full View' even if 'Summary' is toggled.
   const effectiveSummaryView = isSummaryView && zoom < 0.7;
+  const isError = node.data?.status === 'CRITICAL';
+  const color = node.data?.color || '#3b82f6';
 
   return (
     <div
       id={`node-${node.id}`}
-      className={cn("absolute pointer-events-auto group transition-opacity duration-300", isDimmed ? "opacity-20" : "opacity-100")}
+      className={cn(
+        "absolute pointer-events-auto group transition-all duration-500",
+        isDimmed ? "opacity-10 scale-95 blur-[2px]" : "opacity-100 scale-100 blur-0"
+      )}
       style={{
         transform: `translate3d(${node.position.x}px, ${node.position.y}px, 0)`,
-        width: effectiveSummaryView ? 40 : node.data.width,
-        height: effectiveSummaryView ? 40 : node.data.height,
+        width: effectiveSummaryView ? 40 : node.data?.width || 280,
+        height: effectiveSummaryView ? 40 : node.data?.height || 160,
         zIndex: isSelected ? 100 : 10,
-        willChange: 'transform',
-        backfaceVisibility: 'hidden'
+        willChange: 'transform'
       }}
-      onMouseDown={(e) => onSelect(node.id)}
+      onMouseDown={() => onSelect(node.id)}
     >
       {effectiveSummaryView ? (
         <div className={cn(
-          "w-full h-full rounded-md border-2 transition-all duration-300",
-          isSelected ? "border-white scale-125" : "border-white/20",
-          // L7 AGGRESSIVE SHADOW LOD: Kill all blur filters at low zoom
-          isError && (zoom > 0.4 ? "border-rose-500 shadow-[0_0_15px_rgba(244,63,94,0.4)]" : "border-rose-500 bg-rose-500/40")
-        )} style={{ backgroundColor: color }} />
+          "w-full h-full rounded-xl border-2 transition-all duration-500 glass-card",
+          isSelected ? "node-selected scale-125 border-white" : "border-white/10",
+          isError && "border-rose-500 bg-rose-500/20"
+        )} style={{ backgroundColor: isSelected ? color : `${color}33` }} />
       ) : (
         <div className={cn(
-          "relative h-full w-full flex flex-col bg-[#030712] border rounded-lg overflow-hidden transition-all duration-300 shadow-2xl",
-          isSelected ? "border-white/60 ring-1 ring-white/30" : "border-white/20",
-          // L7 AGGRESSIVE SHADOW LOD: Kill all blur filters at low zoom
-          isError && (zoom > 0.4 ? "border-rose-500 shadow-[0_0_25px_rgba(244,63,94,0.3)]" : "border-rose-500 border-2"),
-          "group-hover:border-white/40 group-hover:-translate-y-1"
+          "relative h-full w-full flex flex-col rounded-2xl overflow-hidden glass-card transition-all duration-500",
+          isSelected ? "node-selected border-white/40 ring-1 ring-white/20" : "border-white/5",
+          isError && "border-rose-500 shadow-[0_0_40px_rgba(244,63,94,0.1)]"
         )}>
-          <div className="flex items-center justify-between px-3 py-1.5 bg-white/[0.07] border-b border-white/10">
-            <div className="flex items-center gap-2">
-              <TypeIcon type={node.data.type} color={color} />
-              <span className="text-[8px] font-black text-white/80 uppercase">{node.data.type}</span>
+          <div className="absolute inset-0 bg-gradient-to-br from-white/[0.03] to-transparent pointer-events-none" />
+          <div className="flex items-center justify-between px-4 py-3 bg-white/[0.03] border-b border-white/5">
+            <div className="flex items-center gap-2.5">
+              <TypeIcon type={node.data?.type || 'UNIT'} color={color} />
+              <span className="text-[9px] font-black text-white/40 uppercase tracking-[0.2em] font-mono">{node.data?.type || 'UNIT'}</span>
             </div>
-            {isError && <div className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />}
-          </div>
-          <div className="flex-1 px-3 pt-3.5 pb-6">
-            <span className="text-[13px] font-bold text-white leading-tight tracking-tight">{node.data.label}</span>
-            {zoom > 0.45 && (
-              <div className="grid grid-cols-2 gap-x-4 gap-y-2.5 mt-4">
-                <div className="flex flex-col">
-                  <span className="text-[7px] text-white/50 uppercase font-black tracking-widest">Latency</span>
-                  <span className={cn("text-[11px] font-mono font-bold", isError ? "text-rose-400" : "text-white/90")}>{node.data.telemetry.latency}ms</span>
-                </div>
-                <div className="flex flex-col">
-                  <span className="text-[7px] text-white/50 uppercase font-black tracking-widest">Error Rate</span>
-                  <span className={cn("text-[11px] font-mono font-bold", isError ? "text-rose-400" : "text-white/80")}>{node.data.telemetry.errorRate}%</span>
-                </div>
+            {isError && (
+              <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-rose-500/10 border border-rose-500/20">
+                <div className="w-1 h-1 rounded-full bg-rose-500 animate-pulse" />
+                <span className="text-[7px] font-black text-rose-500 uppercase">Alert</span>
               </div>
             )}
           </div>
-          <div className="h-[2.5px] w-full" style={{ backgroundColor: color }} />
+          <div className="flex-1 p-4 flex flex-col justify-between">
+            <div>
+              <h3 className="text-xs font-black text-white/90 tracking-tight truncate uppercase leading-tight">{node.data?.label || 'Unknown Unit'}</h3>
+              <p className="text-[8px] font-bold text-white/20 uppercase tracking-widest mt-1">ID: {node.id}</p>
+            </div>
+            <div className="grid grid-cols-2 gap-3 mt-4 border-t border-white/5 pt-3">
+              <div className="flex flex-col">
+                <span className="text-[7px] font-black text-white/20 uppercase tracking-widest">Latency</span>
+                <span className="text-[10px] font-mono font-bold text-emerald-400/80 mt-0.5">{node.data?.telemetry?.latency || 0}ms</span>
+              </div>
+              <div className="flex flex-col">
+                <span className="text-[7px] font-black text-white/20 uppercase tracking-widest">Load</span>
+                <div className="flex items-center gap-1.5 mt-1">
+                  <div className="flex-1 h-1 bg-white/5 rounded-full overflow-hidden">
+                    <div className="h-full bg-blue-500/40 rounded-full" style={{ width: `${node.data?.telemetry?.cpu || 0}%` }} />
+                  </div>
+                  <span className="text-[8px] font-mono font-bold text-white/40">{node.data?.telemetry?.cpu || 0}%</span>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       )}
     </div>
@@ -171,10 +149,10 @@ const MemoizedNode = React.memo(({ node, isSelected, zoom, onSelect, isSummaryVi
 });
 
 const ZONES = [
-  { id: 'Z01', name: 'INGRESS', x: 4400, color: '#f59e0b' },
-  { id: 'Z02', name: 'ROUTING', x: 4700, color: '#0ea5e9' },
-  { id: 'Z03', name: 'SERVICES', x: 5000, color: '#818cf8' },
-  { id: 'Z04', name: 'PERSISTENCE', x: 5300, color: '#34d399' }
+  { id: 'Z01', name: 'INGRESS', x: 4400 },
+  { id: 'Z02', name: 'ROUTING', x: 4700 },
+  { id: 'Z03', name: 'SERVICES', x: 5000 },
+  { id: 'Z04', name: 'PERSISTENCE', x: 5300 }
 ];
 
 const Breadcrumbs = () => (
@@ -187,7 +165,7 @@ const Breadcrumbs = () => (
   </div>
 );
 
-const StatHUD = React.memo(({ stats, isBlueprintMode, viewport, setIsBlueprint, setIsSummaryView, isSummaryView, isEventFeedVisible, setIsEventFeedVisible, isLegendVisible, setIsLegendVisible, resetView }: any) => {
+const StatHUD = React.memo(({ stats, isBlueprintMode, viewport, setIsBlueprint, setIsSummaryView, isSummaryView, isEventFeedVisible, setIsEventFeedVisible, isLegendVisible, setIsLegendVisible }: any) => {
   const [fps, setFps] = useState(0);
   const frameCount = useRef(0);
   const lastTime = useRef(0);
@@ -211,38 +189,55 @@ const StatHUD = React.memo(({ stats, isBlueprintMode, viewport, setIsBlueprint, 
 
   return (
     <div className="flex flex-col min-w-0">
-      <div className="flex items-baseline gap-2">
-        <h2 className="text-sm font-black text-white tracking-tight uppercase truncate">Cloud-Native Topology</h2>
+      <div className="flex items-center gap-2">
+        <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.4)] animate-pulse" />
+        <h2 className="text-[10px] font-black text-white/80 uppercase tracking-[0.2em] text-gradient">Topology Master</h2>
+        <div className="w-px h-2 bg-white/10 mx-1" />
         <Breadcrumbs />
       </div>
-      <div className="flex items-center gap-4 mt-1.5">
-        <div className="flex items-center gap-2">
-          <span className={cn("text-[10px] font-mono font-bold", fps >= 60 ? "text-emerald-400" : "text-amber-400")}>{fps} FPS</span>
-          <div className="w-px h-2 bg-white/10" />
-          <span className="text-[10px] font-mono text-white/60 font-bold">{stats.totalNodes} Nodes</span>
+      <div className="flex items-center gap-6 mt-3">
+        <div className="flex items-center gap-4">
+          <div className="flex flex-col">
+            <span className="text-[6px] font-black text-white/20 uppercase tracking-widest">Signal</span>
+            <span className={cn("text-[10px] font-mono font-bold tabular-nums", fps >= 60 ? "text-emerald-400" : "text-amber-400")}>{fps} FPS</span>
+          </div>
+          <div className="flex flex-col">
+            <span className="text-[6px] font-black text-white/20 uppercase tracking-widest">Units</span>
+            <span className="text-[10px] font-mono text-white/60 font-bold tabular-nums">{stats?.totalNodes || 0}</span>
+          </div>
         </div>
-        <div className="w-px h-3 bg-white/10" />
-        <div className="flex items-center gap-2">
-          <span className="text-[10px] font-mono text-rose-500/80 font-bold">{stats.critical} Critical</span>
-          <span className="text-[10px] font-mono text-amber-500/80 font-bold">{stats.degraded} Degraded</span>
+        <div className="w-px h-5 bg-white/10" />
+        <div className="flex items-center gap-4">
+          <div className="flex flex-col">
+            <span className="text-[6px] font-black text-rose-500/30 uppercase tracking-widest">Crit</span>
+            <span className="text-[10px] font-mono text-rose-500 font-bold tabular-nums">{stats?.critical || 0}</span>
+          </div>
+          <div className="flex flex-col">
+            <span className="text-[6px] font-black text-amber-500/30 uppercase tracking-widest">Degr</span>
+            <span className="text-[10px] font-mono text-amber-500 font-bold tabular-nums">{stats?.degraded || 0}</span>
+          </div>
         </div>
-        <div className="w-px h-3 bg-white/10" />
-        <div className="flex items-center gap-2 pointer-events-auto">
-          <button onClick={() => setIsSummaryView(!isSummaryView)} className={cn("p-1.5 rounded-md border transition-all", isSummaryView ? "bg-white/20 border-white/40" : "bg-white/5 border-white/10")}>
-            <Eye size={10} className="text-white" />
-          </button>
-          <button onClick={() => setIsBlueprint(!isBlueprintMode)} className={cn("p-1.5 rounded-md border transition-all", isBlueprintMode ? "bg-white/20 border-white/40" : "bg-white/5 border-white/10")}>
-            <Layout size={10} className="text-white" />
-          </button>
-          <button onClick={() => setIsEventFeedVisible(!isEventFeedVisible)} className={cn("p-1.5 rounded-md border transition-all", isEventFeedVisible ? "bg-white/20 border-white/40" : "bg-white/5 border-white/10")}>
-            <Activity size={10} className="text-white" />
-          </button>
-          <button onClick={() => setIsLegendVisible(!isLegendVisible)} className={cn("p-1.5 rounded-md border transition-all", isLegendVisible ? "bg-white/20 border-white/40" : "bg-white/5 border-white/10")}>
-            <Info size={10} className="text-white" />
-          </button>
-          <button onClick={resetView} className="p-1.5 rounded-md border bg-white/5 border-white/10 hover:bg-white/10 transition-all">
-            <Search size={10} className="text-white" />
-          </button>
+        <div className="flex items-center gap-1.5 ml-4">
+          {[
+            { icon: Eye, active: isSummaryView, onClick: () => setIsSummaryView(!isSummaryView), label: 'LOD' },
+            { icon: Layout, active: isBlueprintMode, onClick: () => setIsBlueprint(!isBlueprintMode), label: 'MESH' },
+            { icon: Activity, active: isEventFeedVisible, onClick: () => setIsEventFeedVisible(!isEventFeedVisible), label: 'FEED' },
+            { icon: Info, active: isLegendVisible, onClick: () => setIsLegendVisible(!isLegendVisible), label: 'KEY' }
+          ].map((btn, i) => (
+            <button 
+              key={i}
+              onClick={btn.onClick}
+              className={cn(
+                "p-1.5 rounded-lg border transition-all duration-300 group relative",
+                btn.active ? "bg-white/10 border-white/20 text-white shadow-lg" : "bg-white/5 border-white/5 text-white/30 hover:bg-white/10"
+              )}
+            >
+              <btn.icon size={11} strokeWidth={2.5} />
+              <div className="absolute -top-7 left-1/2 -translate-x-1/2 px-1.5 py-0.5 bg-[#0f172a] rounded border border-white/10 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">
+                <span className="text-[6px] font-black text-white/40 tracking-widest uppercase">{btn.label}</span>
+              </div>
+            </button>
+          ))}
         </div>
       </div>
     </div>
@@ -259,35 +254,32 @@ export default function App() {
     };
   });
 
-  // FORCE RE-INIT for HMR Safety
   const [engine] = useState(() => new MasteryEngine(MAX_NODES, BOUNDARY));
-
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [hoveredId, setHoveredId] = useState<string | null>(null);
   const [isBlueprint, setIsBlueprint] = useState(() => localStorage.getItem('cntp-blueprint') === 'true');
   const [isSummaryView, setIsSummaryView] = useState(() => localStorage.getItem('cntp-summary') === 'true');
   const [isLegendVisible, setIsLegendVisible] = useState(false);
   const [isEventFeedVisible, setIsEventFeedVisible] = useState(true);
-
-  // L7 STATS DAMPING: Decouple HUD from high-speed frame updates
   const [stats, setStats] = useState(() => engine.getStats());
-  const lastStatsUpdate = useRef(0);
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const worldRef = useRef<HTMLDivElement>(null);
   const radarRef = useRef<HTMLDivElement>(null);
+  const lastSyncTime = useRef(0);
+  const lastMousePos = useRef<Point>({ x: 0, y: 0 });
+  const dragOffset = useRef<Point>({ x: 0, y: 0 });
+  const viewportRef = useRef<Viewport>(viewport);
+  const [isPanning, setIsPanning] = useState(false);
+  const [draggedNodeId, setDraggedNodeId] = useState<string | null>(null);
 
-  const initialZoom = getInitialZoom();
-  const viewportRef = useRef<Viewport>({
-    x: window.innerWidth / 2 - WORLD_CENTER.x * initialZoom,
-    y: window.innerHeight / 2 - WORLD_CENTER.y * initialZoom,
-    zoom: initialZoom
-  });
+  const rafId = useRef<number>(0);
+  const nextPos = useRef<Point | null>(null);
 
   const updateWorldTransform = () => {
     if (worldRef.current) {
       const v = viewportRef.current;
-      // L7 GPU Isolation: translate3d + scale
       worldRef.current.style.transform = `translate3d(${v.x}px, ${v.y}px, 0) scale(${v.zoom})`;
     }
     if (radarRef.current) {
@@ -303,141 +295,96 @@ export default function App() {
     }
   };
 
-  const resetView = () => {
-    const zoom = getInitialZoom();
-    const newViewport = {
-      x: window.innerWidth / 2 - WORLD_CENTER.x * zoom,
-      y: window.innerHeight / 2 - WORLD_CENTER.y * zoom,
-      zoom
-    };
-    viewportRef.current = newViewport;
-    setViewport(newViewport);
-    updateWorldTransform();
-  };
-
-  useEffect(() => {
-    updateWorldTransform();
-  }, []);
-
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
-
     const onWheel = (e: WheelEvent) => {
       e.preventDefault();
       const factor = e.deltaY > 0 ? 0.9 : 1.1;
       const prev = viewportRef.current;
-
-      // L7 Refined Constraints: Allow 'God View' but cap 'Infinite Emptiness'
-      const minZoom = 0.15;
-      const maxZoom = 4.0;
-      const newZoom = Math.min(Math.max(prev.zoom * factor, minZoom), maxZoom);
-
-      // Anchor the zoom to the mouse position
+      const newZoom = Math.min(Math.max(prev.zoom * factor, 0.15), 4.0);
       const worldMouse = project({ x: e.clientX, y: e.clientY }, prev);
       const newScreenPos = unproject(worldMouse, { ...prev, zoom: newZoom });
-      const dx = e.clientX - newScreenPos.x;
-      const dy = e.clientY - newScreenPos.y;
-
-      const newViewport = { x: prev.x + dx, y: prev.y + dy, zoom: newZoom };
+      const newViewport = { x: prev.x + (e.clientX - newScreenPos.x), y: prev.y + (e.clientY - newScreenPos.y), zoom: newZoom };
       viewportRef.current = newViewport;
       updateWorldTransform();
       setViewport(newViewport);
     };
-
     el.addEventListener('wheel', onWheel, { passive: false });
     return () => el.removeEventListener('wheel', onWheel);
   }, []);
 
-  useEffect(() => {
-    localStorage.setItem('cntp-blueprint', isBlueprint.toString());
-  }, [isBlueprint]);
-
-  useEffect(() => {
-    localStorage.setItem('cntp-summary', isSummaryView.toString());
-  }, [isSummaryView]);
-
-  const [isPanning, setIsPanning] = useState(false);
-  const [draggedNodeId, setDraggedNodeId] = useState<string | null>(null);
-  const lastMousePos = useRef<Point>({ x: 0, y: 0 });
-  const dragOffset = useRef<Point>({ x: 0, y: 0 });
-
   const handleMouseDown = (e: React.MouseEvent) => {
     if (e.button !== 0) return;
-
-    // Check if we clicked a node first
-    const point = project({ x: e.clientX, y: e.clientY }, viewport);
+    const v = viewportRef.current;
+    const point = project({ x: e.clientX, y: e.clientY }, v);
     const nodes = engine.getNodes();
     const hit = nodes.find((n: Node) => {
-      const w = isSummaryView && viewport.zoom < 0.7 ? 40 : n.data.width;
-      const h = isSummaryView && viewport.zoom < 0.7 ? 40 : n.data.height;
+      const w = isSummaryView && v.zoom < 0.7 ? 40 : n.data?.width || 280;
+      const h = isSummaryView && v.zoom < 0.7 ? 40 : n.data?.height || 160;
       return point.x >= n.position.x && point.x <= n.position.x + w &&
-        point.y >= n.position.y && point.y <= n.position.y + h;
+             point.y >= n.position.y && point.y <= n.position.y + h;
     });
 
     if (hit) {
       setDraggedNodeId(hit.id);
       setSelectedId(hit.id);
-      dragOffset.current = {
-        x: point.x - hit.position.x,
-        y: point.y - hit.position.y
-      };
+      dragOffset.current = { x: point.x - hit.position.x, y: point.y - hit.position.y };
       setIsPanning(false);
+      const nodeEl = document.getElementById(`node-${hit.id}`);
+      if (nodeEl) nodeEl.classList.add('dragging');
     } else {
       setIsPanning(true);
       setSelectedId(null);
     }
-
     lastMousePos.current = { x: e.clientX, y: e.clientY };
   };
 
-  const lastSyncTime = useRef(0);
-
   const handleMouseMove = (e: React.MouseEvent) => {
     const v = viewportRef.current;
-
-    // L7 ZERO-LATENCY: Direct-DOM Node Drag
     if (draggedNodeId) {
       const point = project({ x: e.clientX, y: e.clientY }, v);
-      let newX = point.x - dragOffset.current.x;
-      let newY = point.y - dragOffset.current.y;
+      nextPos.current = {
+        x: Math.round((point.x - dragOffset.current.x) / 8) * 8,
+        y: Math.round((point.y - dragOffset.current.y) / 8) * 8
+      };
 
-      // L7 MAGNETIC SNAPPING: 20px Grid
-      const GRID_SIZE = 20;
-      newX = Math.round(newX / GRID_SIZE) * GRID_SIZE;
-      newY = Math.round(newY / GRID_SIZE) * GRID_SIZE;
+      if (!rafId.current) {
+        rafId.current = requestAnimationFrame(() => {
+          if (!draggedNodeId || !nextPos.current) {
+            rafId.current = 0;
+            return;
+          }
 
-      // Update engine state (Silent)
-      engine.updateNodePosition(draggedNodeId, newX, newY);
+          const id = draggedNodeId;
+          const { x, y } = nextPos.current;
+          
+          engine.updateNodePosition(id, x, y);
+          const nodeEl = document.getElementById(`node-${id}`);
+          if (nodeEl) nodeEl.style.transform = `translate3d(${x}px, ${y}px, 0)`;
 
-      // Update Node DOM directly (Composite Layer)
-      const nodeEl = document.getElementById(`node-${draggedNodeId}`);
-      if (nodeEl) {
-        nodeEl.style.transform = `translate3d(${newX}px, ${newY}px, 0)`;
+          const edges = engine.getConnectedEdges(id);
+          const isSum = isSummaryView && v.zoom < 0.7;
+          const nodes = engine.getNodes();
+          const nodeMap = new Map(nodes.map(n => [n.id, n]));
+
+          edges.forEach((edge: any) => {
+            const edgeEl = document.getElementById(`edge-path-${edge.id}`);
+            const source = nodeMap.get(edge.source);
+            const target = nodeMap.get(edge.target);
+            if (source && target && edgeEl) {
+              const sW = isSum ? 40 : source.data?.width || 280;
+              const sH = isSum ? 40 : source.data?.height || 160;
+              const tW = isSum ? 40 : target.data?.width || 280;
+              const tH = isSum ? 40 : target.data?.height || 160;
+              const tIdx = parseInt(target.id.replace(/\D/g, '')) || 0;
+              edgeEl.setAttribute('d', calculatePath(source.position, target.position, sW, sH, tW, tH, tIdx, source.data?.type === 'GATEWAY'));
+            }
+          });
+
+          rafId.current = 0;
+        });
       }
-
-      // L7 THROTTLED SYNC: Ensure the virtualizer doesn't 'lose' the world
-      const now = performance.now();
-      if (now - lastSyncTime.current > 32) {
-        setViewport({ ...v });
-        lastSyncTime.current = now;
-      }
-
-      // Update connected edges DOM directly (O(1) lookup)
-      const edges = engine.getConnectedEdges(draggedNodeId);
-
-      edges.forEach((edge: any) => {
-        const edgeEl = document.getElementById(`edge-path-${edge.id}`);
-        const pulseEl = document.getElementById(`edge-pulse-${edge.id}`);
-
-        const sourceNode = engine.getNodes().find(n => n.id === edge.source);
-        const targetNode = engine.getNodes().find(n => n.id === edge.target);
-        if (sourceNode && targetNode) {
-          const path = calculatePath(sourceNode, targetNode, isSummaryView && v.zoom < 0.7);
-          if (edgeEl) edgeEl.setAttribute('d', path);
-          if (pulseEl) pulseEl.setAttribute('d', path);
-        }
-      });
       return;
     }
 
@@ -446,30 +393,22 @@ export default function App() {
       const dy = e.clientY - lastMousePos.current.y;
       const newViewport = { ...v, x: v.x + dx, y: v.y + dy };
       viewportRef.current = newViewport;
-
-      // Update World DOM directly
-      if (worldRef.current) {
-        worldRef.current.style.transform = `translate3d(${newViewport.x}px, ${newViewport.y}px, 0) scale(${newViewport.zoom})`;
-      }
-
-      // L7 THROTTLED SYNC: Prevent 'Vanishing World'
+      updateWorldTransform();
       const now = performance.now();
-      if (now - lastSyncTime.current > 32) {
+      if (now - lastSyncTime.current > 16) {
         setViewport(newViewport);
         lastSyncTime.current = now;
       }
-
       lastMousePos.current = { x: e.clientX, y: e.clientY };
       return;
     }
 
-    const point = project({ x: e.clientX, y: e.clientY }, viewport);
-    const nodes = engine.getNodes();
-    const hit = nodes.find((n: Node) => {
-      const w = isSummaryView ? 40 : n.data.width;
-      const h = isSummaryView ? 40 : n.data.height;
+    const point = project({ x: e.clientX, y: e.clientY }, v);
+    const hit = engine.getNodes().find((n: Node) => {
+      const w = isSummaryView && v.zoom < 0.7 ? 40 : n.data?.width || 280;
+      const h = isSummaryView && v.zoom < 0.7 ? 40 : n.data?.height || 160;
       return point.x >= n.position.x && point.x <= n.position.x + w &&
-        point.y >= n.position.y && point.y <= n.position.y + h;
+             point.y >= n.position.y && point.y <= n.position.y + h;
     });
     const newId = hit ? hit.id : null;
     if (newId !== hoveredId) setHoveredId(newId);
@@ -477,42 +416,43 @@ export default function App() {
 
   const handleMouseUp = () => {
     if (isPanning || draggedNodeId) {
+      if (draggedNodeId) {
+        const nodeEl = document.getElementById(`node-${draggedNodeId}`);
+        if (nodeEl) nodeEl.classList.remove('dragging');
+      }
       setIsPanning(false);
       setDraggedNodeId(null);
-      // L7 COMMIT: Finalize the spatial truth and update virtualizer
+      nextPos.current = null;
+      if (rafId.current) {
+        cancelAnimationFrame(rafId.current);
+        rafId.current = 0;
+      }
       engine.commitNodePositions();
       setViewport(viewportRef.current);
     }
   };
 
   const renderData = useMemo(() => {
-    // L7 PHASE-LOCK: Synchronize the engine's internal truth BEFORE calculating visibility
     engine.setViewport(viewport);
-    const data = engine.getRenderData();
-    
-    // L7 TELEMETRY DAMPING: Update HUD only at 10Hz to prevent flicker
-    const now = performance.now();
-    if (now - lastStatsUpdate.current > 100) {
-      setStats(engine.getStats());
-      lastStatsUpdate.current = now;
-    }
-    
-    return data;
+    return engine.getRenderData();
   }, [viewport, engine]);
 
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setStats(engine.getStats());
+    }, 100);
+    return () => clearInterval(timer);
+  }, [engine]);
+
   const canvasContent = useMemo(() => {
-    const currentNodes = renderData.nodes;
-    const currentEdges = renderData.edges;
-    const freshNodeMap = new Map<string, Node>(engine.getNodes().map((n: Node) => [n.id, n]));
-
+    const nodes = engine.getNodes();
+    const nodeMap = new Map(nodes.map(n => [n.id, n]));
+    // L7 Fix: Suppress hover updates during drag to prevent canvas flickering
+    const activeHoveredId = draggedNodeId ? null : hoveredId;
+    
     return (
-      <div
-        ref={worldRef}
-        className={cn("absolute inset-0 will-change-transform", isPanning && "pointer-events-none")}
-        style={{ transformOrigin: '0 0' }}
-      >
+      <div ref={worldRef} className={cn("absolute inset-0 will-change-transform", isPanning && "pointer-events-none")} style={{ transformOrigin: '0 0', transform: `translate3d(${viewport.x}px, ${viewport.y}px, 0) scale(${viewport.zoom})` }}>
         <div className="absolute inset-[-10000px] pointer-events-none opacity-[0.05]" style={{ backgroundImage: `linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px)`, backgroundSize: `100px 100px` }} />
-
         <div className="absolute inset-0 pointer-events-none overflow-hidden">
           {ZONES.map(zone => (
             <div key={zone.id} className="absolute flex flex-col items-center translate-z-0" style={{ left: zone.x, top: 4000, transform: `scale(${Math.max(viewport.zoom, 0.4)})`, opacity: Math.max(viewport.zoom, 0.2) }}>
@@ -524,111 +464,60 @@ export default function App() {
             </div>
           ))}
         </div>
-
         <svg className="absolute inset-0 pointer-events-none overflow-visible z-0">
-          <defs>
-            <marker
-              id="arrowhead"
-              markerWidth="8"
-              markerHeight="6"
-              refX="7"
-              refY="3"
-              orient="auto"
-            >
-              <polygon points="0 0, 8 3, 0 6" fill="currentColor" fillOpacity="0.6" />
-            </marker>
-          </defs>
-          {currentEdges.map((edge: EngineEdge) => (
-            <MemoizedEdge 
-              key={edge.id}
-              edge={edge}
-              sourceNode={freshNodeMap.get(edge.source)}
-              targetNode={freshNodeMap.get(edge.target)}
-              isPathHovered={hoveredId === edge.source || hoveredId === edge.target}
-              isBlueprint={isBlueprint}
-              isSummaryView={isSummaryView}
-              zoom={viewport.zoom}
-              isAnyNodeHovered={!!hoveredId}
-            />
+          {renderData.edges.map((edge: EngineEdge) => (
+            <MemoizedEdge key={edge.id} edge={edge} sourceNode={nodeMap.get(edge.source)} targetNode={nodeMap.get(edge.target)} 
+              isPathHovered={activeHoveredId === edge.source || activeHoveredId === edge.target} isBlueprint={isBlueprint} isSummaryView={isSummaryView} zoom={viewport.zoom} isAnyNodeHovered={!!activeHoveredId} />
           ))}
         </svg>
-
         <div className="absolute inset-0 pointer-events-none z-10">
-          {currentNodes.map((node: Node) => (
-            <MemoizedNode 
-              key={node.id}
-              node={node}
-              isSelected={selectedId === node.id}
-              zoom={viewport.zoom}
-              onSelect={setSelectedId}
-              isSummaryView={isSummaryView}
-              isHovered={hoveredId === node.id}
-              isAnyHovered={!!hoveredId}
-            />
+          {renderData.nodes.map((node: Node) => (
+            <MemoizedNode key={node.id} node={node} isSelected={selectedId === node.id} zoom={viewport.zoom} onSelect={setSelectedId} 
+              isSummaryView={isSummaryView} isHovered={activeHoveredId === node.id} isAnyHovered={!!activeHoveredId} />
           ))}
         </div>
       </div>
     );
-  }, [renderData, selectedId, hoveredId, isBlueprint, isSummaryView, viewport.zoom, isPanning, engine]);
+  }, [renderData, selectedId, hoveredId, isBlueprint, isSummaryView, viewport.x, viewport.y, viewport.zoom, isPanning, engine, draggedNodeId]);
 
   return (
-    <div
-      ref={containerRef}
-      className={cn("w-screen h-screen relative overflow-hidden bg-[#020617] select-none", isPanning ? "cursor-grabbing" : "cursor-grab")}
-      onMouseDown={handleMouseDown}
-      onMouseMove={handleMouseMove}
-      onMouseUp={handleMouseUp}
-      onMouseLeave={handleMouseUp}
-      onClick={() => setSelectedId(null)}
-    >
+    <div ref={containerRef} className={cn("w-screen h-screen relative overflow-hidden bg-[#01040f] select-none", isPanning ? "cursor-grabbing" : "cursor-grab")}
+      onMouseDown={handleMouseDown} onMouseMove={handleMouseMove} onMouseUp={handleMouseUp} onMouseLeave={handleMouseUp} onClick={() => setSelectedId(null)}>
       {canvasContent}
-
       <div className="absolute inset-0 pointer-events-none z-[100]">
-        <div className="absolute top-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-4 pointer-events-none">
-          <div className="bg-[#0f172a]/80 backdrop-blur-xl border border-white/10 rounded-full px-4 py-2 flex items-center gap-3 shadow-2xl pointer-events-auto min-w-[400px]">
-            <Search size={14} className="text-white/40" />
-            <input type="text" placeholder="Search service... (Ctrl+K)" className="bg-transparent border-none outline-none text-xs text-white/80 w-full font-mono" />
+        <div className="absolute top-6 left-1/2 -translate-x-1/2 flex flex-col items-center gap-4 pointer-events-none w-full max-w-xl px-8">
+          <div className={cn("w-full glass-panel rounded-2xl px-5 py-2.5 flex items-center gap-4 shadow-2xl pointer-events-auto transition-all duration-500 relative overflow-hidden", isSearchFocused ? "border-blue-500/40 ring-2 ring-blue-500/5 scale-[1.01]" : "border-white/5")}>
+            <div className={cn("absolute inset-0 shimmer-active opacity-0 transition-opacity duration-700", isSearchFocused && "opacity-100")} />
+            <Search size={15} className={cn("transition-colors duration-500", isSearchFocused ? "text-blue-400" : "text-white/20")} strokeWidth={2.5} />
+            <input type="text" placeholder="Query topological DNA..." onFocus={() => setIsSearchFocused(true)} onBlur={() => setIsSearchFocused(false)} className="bg-transparent border-none outline-none text-xs text-white/80 w-full font-mono placeholder:text-white/5 tracking-tight relative z-10" />
+            <div className="hidden sm:flex items-center gap-2 px-2 py-1 rounded-md bg-white/5 border border-white/5 relative z-10"><span className="text-[7px] font-black text-white/20 uppercase tracking-widest">Search</span></div>
           </div>
           <div className="flex items-center gap-2 pointer-events-auto">
-            {['ALL', 'ERRORS', 'LATENCY', 'SECURE'].map(f => (
-              <button key={f} className={cn("px-3 py-1 rounded-full border text-[9px] font-black", f === 'ALL' ? "bg-white/10 border-white/20 text-white" : "bg-white/5 border-white/5 text-white/40")}>{f}</button>
+            {['ALL', 'CRITICAL', 'DEGRADED', 'LATENCY'].map((f, i) => (
+              <button key={f} className={cn("px-3.5 py-1 rounded-full border text-[7px] font-black tracking-[0.2em] transition-all duration-500 uppercase", i === 0 ? "glass-panel text-white border-white/20 shadow-lg" : "bg-white/5 border-white/5 text-white/20 hover:bg-white/10")}>{f}</button>
             ))}
           </div>
         </div>
-
-        <div className="absolute top-8 right-8 pointer-events-none hidden lg:block">
-          <div className="bg-[#0f172a]/60 backdrop-blur-md border border-white/5 rounded-lg p-1 w-40 h-20 pointer-events-auto relative overflow-hidden">
-            <div className="absolute inset-0 opacity-10" style={{ backgroundImage: `linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px)`, backgroundSize: `10px 10px` }} />
-            <div className="absolute inset-0 pointer-events-none flex justify-between px-2 opacity-20">
-              {ZONES.map(z => (<div key={z.id} className="h-full w-px bg-white/40" style={{ left: `${(z.x / 10000) * 100}%` }} />))}
+        <div className="absolute top-6 right-6 pointer-events-none hidden xl:block">
+          <div className="glass-panel rounded-2xl p-2 w-44 h-22 pointer-events-auto relative overflow-hidden group border-white/5">
+            <div className="absolute inset-0 opacity-[0.02]" style={{ backgroundImage: `linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px)`, backgroundSize: `10px 10px` }} />
+            <div className="absolute inset-0 pointer-events-none flex justify-between px-2 opacity-[0.05]">
+              {ZONES.map(z => (<div key={z.id} className="h-full w-px bg-white" style={{ left: `${(z.x / 10000) * 100}%` }} />))}
             </div>
-            <div className="absolute inset-0 pointer-events-none opacity-40">
-              {engine.getNodes().map(node => (
-                <div
-                  key={node.id}
-                  className="absolute w-1 h-1 rounded-full translate-z-0"
-                  style={{
-                    transform: `translate3d(${(node.position.x / 10000) * 160}px, ${(node.position.y / 10000) * 80}px, 0)`,
-                    backgroundColor: node.data.color
-                  }}
-                />
-              ))}
+            <div className="absolute inset-0 pointer-events-none opacity-40 transition-all duration-500 group-hover:opacity-100">
+              {engine.getNodes().map(node => (<div key={node.id} className="absolute w-1 h-1 rounded-full translate-z-0" style={{ transform: `translate3d(${(node.position.x / 10000) * 176}px, ${(node.position.y / 10000) * 88}px, 0)`, backgroundColor: node.data?.color || '#3b82f6' }} />))}
             </div>
-            <div ref={radarRef} className="absolute border border-amber-500/50 bg-amber-500/10 transition-all duration-75 z-10">
-              <div className="absolute inset-0 flex items-center justify-center opacity-20">
-                <div className="w-full h-px bg-amber-500" /><div className="h-full w-px bg-amber-500 absolute" />
-              </div>
+            <div ref={radarRef} className="absolute border border-blue-500/40 bg-blue-500/5 transition-all duration-100 z-10 rounded-sm" style={{ transform: `translate(${((-viewport.x / viewport.zoom) / 10000) * 160}px, ${((-viewport.y / viewport.zoom) / 10000) * 80}px)`, width: `${((window.innerWidth / viewport.zoom) / 10000) * 160}px`, height: `${((window.innerHeight / viewport.zoom) / 10000) * 80}px` }}>
+              <div className="absolute inset-0 flex items-center justify-center opacity-10"><div className="w-full h-px bg-blue-500" /><div className="h-full w-px bg-blue-500 absolute" /></div>
             </div>
-            <span className="absolute bottom-1 right-1 text-[6px] font-mono text-white/20 uppercase tracking-[0.2em]">Radar</span>
+            <span className="absolute bottom-1 right-2 text-[6px] font-black text-white/10 uppercase tracking-[0.3em] font-mono">Radar-LX</span>
           </div>
         </div>
-
-        <div className="absolute top-8 left-8 pointer-events-none">
-          <div className={cn("border border-white/10 px-5 py-4 rounded-xl bg-[#0f172a] shadow-2xl pointer-events-auto")}>
-            <StatHUD stats={stats} isBlueprintMode={isBlueprint} viewport={viewport} setIsBlueprint={setIsBlueprint} setIsSummaryView={setIsSummaryView} isSummaryView={isSummaryView} isEventFeedVisible={isEventFeedVisible} setIsEventFeedVisible={setIsEventFeedVisible} isLegendVisible={isLegendVisible} setIsLegendVisible={setIsLegendVisible} resetView={resetView} />
+        <div className="absolute top-6 left-6 pointer-events-none">
+          <div className="glass-panel px-4 py-3 rounded-2xl shadow-2xl pointer-events-auto border-white/5">
+            <StatHUD stats={stats} isBlueprintMode={isBlueprint} viewport={viewport} setIsBlueprint={setIsBlueprint} setIsSummaryView={setIsSummaryView} isSummaryView={isSummaryView} isEventFeedVisible={isEventFeedVisible} setIsEventFeedVisible={setIsEventFeedVisible} isLegendVisible={isLegendVisible} setIsLegendVisible={setIsLegendVisible} />
           </div>
         </div>
-
         {isEventFeedVisible && (
           <div className="absolute bottom-8 left-8 w-64 hidden md:block">
             <div className="backdrop-blur-md border border-white/10 bg-[#0f172a]/80 rounded-lg p-3 shadow-2xl pointer-events-auto">
@@ -636,19 +525,6 @@ export default function App() {
               <div className="flex flex-col gap-1.5 text-[9px] font-mono text-white/40 opacity-60">
                 <div className="flex gap-2"><span>15:34:22</span><span className="truncate">Gateway: Optimal</span></div>
                 <div className="flex gap-2"><span>15:34:10</span><span className="truncate">Service-8: Latency Spike</span></div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {isLegendVisible && (
-          <div className="absolute bottom-8 right-8 w-48">
-            <div className="backdrop-blur-md border border-white/10 bg-[#0f172a]/80 rounded-lg p-3 shadow-2xl pointer-events-auto">
-              <div className="flex items-center gap-2 mb-2 border-b border-white/5 pb-1.5 uppercase text-[8px] font-black text-white/40 tracking-widest text-center justify-center">Legend</div>
-              <div className="flex flex-col gap-2 text-[9px] font-mono">
-                <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-emerald-400" /> <span className="text-white/60 uppercase font-black">Healthy</span></div>
-                <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-amber-400" /> <span className="text-white/60 uppercase font-black">Degraded</span></div>
-                <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-rose-500" /> <span className="text-white/60 uppercase font-black">Critical</span></div>
               </div>
             </div>
           </div>
