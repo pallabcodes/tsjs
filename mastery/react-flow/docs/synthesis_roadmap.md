@@ -26,13 +26,13 @@
 
 ## [MODULE 4] Connection Synthesis (Graph DNA)
 *   **Goal**: Render the Bezier "Flow" between services.
-*   **Status**: PENDING
+*   **Status**: COMPLETED
 *   **Verification**: Do lines correctly connect Gateway -> Service -> DB? Are arrowheads visible?
 *   **Code Boundary**: `inv08-routing`.
 
 ## [MODULE 5] Magnetic Interactivity (The "Snap")
 *   **Goal**: High-precision handle snapping and interaction reveal.
-*   **Status**: PENDING
+*   **Status**: IN PROGRESS
 *   **Verification**: Do connections snap magnetically? Do handles pulse on hover?
 *   **Code Boundary**: `inv17-dependency`.
 

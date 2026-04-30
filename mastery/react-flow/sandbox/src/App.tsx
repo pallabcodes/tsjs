@@ -35,18 +35,18 @@ const calculatePath = (sourceNode: any, targetNode: any, effectiveSummaryView: b
   // We use a deterministic hash based on the IDs for stable fanning
   const targetIdx = parseInt(targetNode.id.replace(/\D/g, '')) || 0;
   const srcYOffset = sourceNode.data.type === 'GATEWAY' ? (targetIdx % 3 - 1) * 30 : 0;
-  
+
   const nodeWidth = effectiveSummaryView ? 40 : sourceNode.data.width;
   const nodeHeight = effectiveSummaryView ? 40 : sourceNode.data.height;
   const targetWidth = effectiveSummaryView ? 40 : targetNode.data.width;
   const targetHeight = effectiveSummaryView ? 40 : targetNode.data.height;
 
-  const srcPos = { 
-    x: sourceNode.position.x + nodeWidth, 
+  const srcPos = {
+    x: sourceNode.position.x + nodeWidth,
     y: sourceNode.position.y + (nodeHeight / 2) + srcYOffset
   };
-  const tgtPos = { 
-    x: targetNode.position.x, 
+  const tgtPos = {
+    x: targetNode.position.x,
     y: targetNode.position.y + (targetHeight / 2)
   };
 
@@ -56,7 +56,7 @@ const calculatePath = (sourceNode: any, targetNode: any, effectiveSummaryView: b
   return `M ${srcPos.x} ${srcPos.y} C ${cp1x} ${srcPos.y}, ${cp2x} ${tgtPos.y}, ${tgtPos.x} ${tgtPos.y}`;
 };
 
-const MemoizedEdge = React.memo(({ edge, sourceNode, targetNode, isPathHovered, isBlueprint, isSummaryView, zoom }: any) => {
+const MemoizedEdge = React.memo(({ edge, sourceNode, targetNode, isPathHovered, isBlueprint, isSummaryView, zoom, isAnyNodeHovered }: any) => {
   if (!sourceNode || !targetNode) return null;
 
   const effectiveSummaryView = isSummaryView && zoom < 0.7;
@@ -65,26 +65,27 @@ const MemoizedEdge = React.memo(({ edge, sourceNode, targetNode, isPathHovered, 
   // L7 FEATURE: Tactical Edge Coloring
   const isSourceError = sourceNode.data.status === 'CRITICAL';
   const isTargetError = targetNode.data.status === 'CRITICAL';
-  
+
   let strokeColor = isBlueprint ? "rgba(255,255,255,0.1)" : "rgba(255,255,255,0.15)";
   if (isPathHovered) strokeColor = "rgba(255,255,255,0.8)";
   if (isSourceError || isTargetError) strokeColor = "rgba(244,63,94,0.4)";
 
   let strokeWidth = isPathHovered ? 2.5 : 1.5;
+  const isDimmed = isAnyNodeHovered && !isPathHovered;
 
   return (
-    <g style={{ color: strokeColor }}>
+    <g style={{ color: strokeColor }} className={cn("transition-opacity duration-300", isDimmed ? "opacity-10" : "opacity-100")}>
       {/* Base Connector */}
-      <path 
+      <path
         id={`edge-path-${edge.id}`}
-        d={path} 
-        fill="none" 
-        stroke={strokeColor} 
-        strokeWidth={strokeWidth} 
+        d={path}
+        fill="none"
+        stroke={strokeColor}
+        strokeWidth={strokeWidth}
         markerEnd="url(#arrowhead)"
-        className="transition-all duration-300" 
+        className="transition-all duration-300"
       />
-      
+
       {/* Traffic Pulse (Only on Hover or Error + High Zoom) */}
       {(isPathHovered || isSourceError || isTargetError) && zoom > 0.5 && (
         <path
@@ -102,22 +103,23 @@ const MemoizedEdge = React.memo(({ edge, sourceNode, targetNode, isPathHovered, 
   );
 });
 
-const MemoizedNode = React.memo(({ node, isSelected, zoom, onSelect, isSummaryView }: any) => {
+const MemoizedNode = React.memo(({ node, isSelected, zoom, onSelect, isSummaryView, isHovered, isAnyHovered }: any) => {
   const color = node.data.color;
   const isError = node.data.status === 'CRITICAL';
-  
+  const isDimmed = isAnyHovered && !isHovered && !isSelected;
+
   // L7 FEATURE: Auto-LOD Transition
   // If we are zoomed in enough, force 'Full View' even if 'Summary' is toggled.
   const effectiveSummaryView = isSummaryView && zoom < 0.7;
 
   return (
-    <div 
+    <div
       id={`node-${node.id}`}
-      className="absolute pointer-events-auto group" 
-      style={{ 
+      className={cn("absolute pointer-events-auto group transition-opacity duration-300", isDimmed ? "opacity-20" : "opacity-100")}
+      style={{
         transform: `translate3d(${node.position.x}px, ${node.position.y}px, 0)`,
-        width: effectiveSummaryView ? 40 : node.data.width, 
-        height: effectiveSummaryView ? 40 : node.data.height, 
+        width: effectiveSummaryView ? 40 : node.data.width,
+        height: effectiveSummaryView ? 40 : node.data.height,
         zIndex: isSelected ? 100 : 10,
         willChange: 'transform',
         backfaceVisibility: 'hidden'
@@ -125,20 +127,20 @@ const MemoizedNode = React.memo(({ node, isSelected, zoom, onSelect, isSummaryVi
       onMouseDown={(e) => onSelect(node.id)}
     >
       {effectiveSummaryView ? (
-          <div className={cn(
-            "w-full h-full rounded-md border-2 transition-all duration-300",
-            isSelected ? "border-white scale-125" : "border-white/20",
-            // L7 AGGRESSIVE SHADOW LOD: Kill all blur filters at low zoom
-            isError && (zoom > 0.4 ? "border-rose-500 shadow-[0_0_15px_rgba(244,63,94,0.4)]" : "border-rose-500 bg-rose-500/40")
-          )} style={{ backgroundColor: color }} />
-        ) : (
-          <div className={cn(
-            "relative h-full w-full flex flex-col bg-[#030712] border rounded-lg overflow-hidden transition-all duration-300 shadow-2xl",
-            isSelected ? "border-white/60 ring-1 ring-white/30" : "border-white/20",
-            // L7 AGGRESSIVE SHADOW LOD: Kill all blur filters at low zoom
-            isError && (zoom > 0.4 ? "border-rose-500 shadow-[0_0_25px_rgba(244,63,94,0.3)]" : "border-rose-500 border-2"),
-            "group-hover:border-white/40 group-hover:-translate-y-1"
-          )}>
+        <div className={cn(
+          "w-full h-full rounded-md border-2 transition-all duration-300",
+          isSelected ? "border-white scale-125" : "border-white/20",
+          // L7 AGGRESSIVE SHADOW LOD: Kill all blur filters at low zoom
+          isError && (zoom > 0.4 ? "border-rose-500 shadow-[0_0_15px_rgba(244,63,94,0.4)]" : "border-rose-500 bg-rose-500/40")
+        )} style={{ backgroundColor: color }} />
+      ) : (
+        <div className={cn(
+          "relative h-full w-full flex flex-col bg-[#030712] border rounded-lg overflow-hidden transition-all duration-300 shadow-2xl",
+          isSelected ? "border-white/60 ring-1 ring-white/30" : "border-white/20",
+          // L7 AGGRESSIVE SHADOW LOD: Kill all blur filters at low zoom
+          isError && (zoom > 0.4 ? "border-rose-500 shadow-[0_0_25px_rgba(244,63,94,0.3)]" : "border-rose-500 border-2"),
+          "group-hover:border-white/40 group-hover:-translate-y-1"
+        )}>
           <div className="flex items-center justify-between px-3 py-1.5 bg-white/[0.07] border-b border-white/10">
             <div className="flex items-center gap-2">
               <TypeIcon type={node.data.type} color={color} />
@@ -185,7 +187,7 @@ const Breadcrumbs = () => (
   </div>
 );
 
-const StatHUD = ({ stats, isBlueprintMode, viewport, setIsBlueprint, setIsSummaryView, isSummaryView, isEventFeedVisible, setIsEventFeedVisible, isLegendVisible, setIsLegendVisible, resetView }: any) => {
+const StatHUD = React.memo(({ stats, isBlueprintMode, viewport, setIsBlueprint, setIsSummaryView, isSummaryView, isEventFeedVisible, setIsEventFeedVisible, isLegendVisible, setIsLegendVisible, resetView }: any) => {
   const [fps, setFps] = useState(0);
   const frameCount = useRef(0);
   const lastTime = useRef(0);
@@ -233,49 +235,53 @@ const StatHUD = ({ stats, isBlueprintMode, viewport, setIsBlueprint, setIsSummar
             <Layout size={10} className="text-white" />
           </button>
           <button onClick={() => setIsEventFeedVisible(!isEventFeedVisible)} className={cn("p-1.5 rounded-md border transition-all", isEventFeedVisible ? "bg-white/20 border-white/40" : "bg-white/5 border-white/10")}>
-            <Terminal size={10} className="text-white" />
+            <Activity size={10} className="text-white" />
           </button>
           <button onClick={() => setIsLegendVisible(!isLegendVisible)} className={cn("p-1.5 rounded-md border transition-all", isLegendVisible ? "bg-white/20 border-white/40" : "bg-white/5 border-white/10")}>
             <Info size={10} className="text-white" />
           </button>
-          <button onClick={() => resetView()} className="p-1.5 rounded-md border bg-white/5 border-white/10 hover:bg-white/10 ml-2">
+          <button onClick={resetView} className="p-1.5 rounded-md border bg-white/5 border-white/10 hover:bg-white/10 transition-all">
             <Search size={10} className="text-white" />
           </button>
         </div>
       </div>
     </div>
   );
-};
+});
 
 export default function App() {
   const [viewport, setViewport] = useState<Viewport>(() => {
     const zoom = getInitialZoom();
-    return { 
-      x: window.innerWidth / 2 - WORLD_CENTER.x * zoom, 
-      y: window.innerHeight / 2 - WORLD_CENTER.y * zoom, 
-      zoom 
+    return {
+      x: window.innerWidth / 2 - WORLD_CENTER.x * zoom,
+      y: window.innerHeight / 2 - WORLD_CENTER.y * zoom,
+      zoom
     };
   });
-  
+
   // FORCE RE-INIT for HMR Safety
   const [engine] = useState(() => new MasteryEngine(MAX_NODES, BOUNDARY));
-  
+
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [hoveredId, setHoveredId] = useState<string | null>(null);
   const [isBlueprint, setIsBlueprint] = useState(() => localStorage.getItem('cntp-blueprint') === 'true');
   const [isSummaryView, setIsSummaryView] = useState(() => localStorage.getItem('cntp-summary') === 'true');
   const [isLegendVisible, setIsLegendVisible] = useState(false);
   const [isEventFeedVisible, setIsEventFeedVisible] = useState(true);
-  
+
+  // L7 STATS DAMPING: Decouple HUD from high-speed frame updates
+  const [stats, setStats] = useState(() => engine.getStats());
+  const lastStatsUpdate = useRef(0);
+
   const containerRef = useRef<HTMLDivElement>(null);
   const worldRef = useRef<HTMLDivElement>(null);
   const radarRef = useRef<HTMLDivElement>(null);
 
   const initialZoom = getInitialZoom();
-  const viewportRef = useRef<Viewport>({ 
-    x: window.innerWidth / 2 - WORLD_CENTER.x * initialZoom, 
-    y: window.innerHeight / 2 - WORLD_CENTER.y * initialZoom, 
-    zoom: initialZoom 
+  const viewportRef = useRef<Viewport>({
+    x: window.innerWidth / 2 - WORLD_CENTER.x * initialZoom,
+    y: window.innerHeight / 2 - WORLD_CENTER.y * initialZoom,
+    zoom: initialZoom
   });
 
   const updateWorldTransform = () => {
@@ -316,23 +322,23 @@ export default function App() {
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
-    
+
     const onWheel = (e: WheelEvent) => {
       e.preventDefault();
       const factor = e.deltaY > 0 ? 0.9 : 1.1;
       const prev = viewportRef.current;
-      
+
       // L7 Refined Constraints: Allow 'God View' but cap 'Infinite Emptiness'
       const minZoom = 0.15;
       const maxZoom = 4.0;
       const newZoom = Math.min(Math.max(prev.zoom * factor, minZoom), maxZoom);
-      
+
       // Anchor the zoom to the mouse position
       const worldMouse = project({ x: e.clientX, y: e.clientY }, prev);
       const newScreenPos = unproject(worldMouse, { ...prev, zoom: newZoom });
       const dx = e.clientX - newScreenPos.x;
       const dy = e.clientY - newScreenPos.y;
-      
+
       const newViewport = { x: prev.x + dx, y: prev.y + dy, zoom: newZoom };
       viewportRef.current = newViewport;
       updateWorldTransform();
@@ -358,7 +364,7 @@ export default function App() {
 
   const handleMouseDown = (e: React.MouseEvent) => {
     if (e.button !== 0) return;
-    
+
     // Check if we clicked a node first
     const point = project({ x: e.clientX, y: e.clientY }, viewport);
     const nodes = engine.getNodes();
@@ -366,22 +372,22 @@ export default function App() {
       const w = isSummaryView && viewport.zoom < 0.7 ? 40 : n.data.width;
       const h = isSummaryView && viewport.zoom < 0.7 ? 40 : n.data.height;
       return point.x >= n.position.x && point.x <= n.position.x + w &&
-             point.y >= n.position.y && point.y <= n.position.y + h;
+        point.y >= n.position.y && point.y <= n.position.y + h;
     });
 
     if (hit) {
       setDraggedNodeId(hit.id);
       setSelectedId(hit.id);
-      dragOffset.current = { 
-        x: point.x - hit.position.x, 
-        y: point.y - hit.position.y 
+      dragOffset.current = {
+        x: point.x - hit.position.x,
+        y: point.y - hit.position.y
       };
       setIsPanning(false);
     } else {
       setIsPanning(true);
       setSelectedId(null);
     }
-    
+
     lastMousePos.current = { x: e.clientX, y: e.clientY };
   };
 
@@ -393,12 +399,17 @@ export default function App() {
     // L7 ZERO-LATENCY: Direct-DOM Node Drag
     if (draggedNodeId) {
       const point = project({ x: e.clientX, y: e.clientY }, v);
-      const newX = point.x - dragOffset.current.x;
-      const newY = point.y - dragOffset.current.y;
-      
+      let newX = point.x - dragOffset.current.x;
+      let newY = point.y - dragOffset.current.y;
+
+      // L7 MAGNETIC SNAPPING: 20px Grid
+      const GRID_SIZE = 20;
+      newX = Math.round(newX / GRID_SIZE) * GRID_SIZE;
+      newY = Math.round(newY / GRID_SIZE) * GRID_SIZE;
+
       // Update engine state (Silent)
       engine.updateNodePosition(draggedNodeId, newX, newY);
-      
+
       // Update Node DOM directly (Composite Layer)
       const nodeEl = document.getElementById(`node-${draggedNodeId}`);
       if (nodeEl) {
@@ -411,14 +422,14 @@ export default function App() {
         setViewport({ ...v });
         lastSyncTime.current = now;
       }
-      
+
       // Update connected edges DOM directly (O(1) lookup)
       const edges = engine.getConnectedEdges(draggedNodeId);
-      
+
       edges.forEach((edge: any) => {
         const edgeEl = document.getElementById(`edge-path-${edge.id}`);
         const pulseEl = document.getElementById(`edge-pulse-${edge.id}`);
-        
+
         const sourceNode = engine.getNodes().find(n => n.id === edge.source);
         const targetNode = engine.getNodes().find(n => n.id === edge.target);
         if (sourceNode && targetNode) {
@@ -435,7 +446,7 @@ export default function App() {
       const dy = e.clientY - lastMousePos.current.y;
       const newViewport = { ...v, x: v.x + dx, y: v.y + dy };
       viewportRef.current = newViewport;
-      
+
       // Update World DOM directly
       if (worldRef.current) {
         worldRef.current.style.transform = `translate3d(${newViewport.x}px, ${newViewport.y}px, 0) scale(${newViewport.zoom})`;
@@ -447,7 +458,7 @@ export default function App() {
         setViewport(newViewport);
         lastSyncTime.current = now;
       }
-      
+
       lastMousePos.current = { x: e.clientX, y: e.clientY };
       return;
     }
@@ -458,7 +469,7 @@ export default function App() {
       const w = isSummaryView ? 40 : n.data.width;
       const h = isSummaryView ? 40 : n.data.height;
       return point.x >= n.position.x && point.x <= n.position.x + w &&
-             point.y >= n.position.y && point.y <= n.position.y + h;
+        point.y >= n.position.y && point.y <= n.position.y + h;
     });
     const newId = hit ? hit.id : null;
     if (newId !== hoveredId) setHoveredId(newId);
@@ -477,10 +488,17 @@ export default function App() {
   const renderData = useMemo(() => {
     // L7 PHASE-LOCK: Synchronize the engine's internal truth BEFORE calculating visibility
     engine.setViewport(viewport);
-    return engine.getRenderData();
+    const data = engine.getRenderData();
+    
+    // L7 TELEMETRY DAMPING: Update HUD only at 10Hz to prevent flicker
+    const now = performance.now();
+    if (now - lastStatsUpdate.current > 100) {
+      setStats(engine.getStats());
+      lastStatsUpdate.current = now;
+    }
+    
+    return data;
   }, [viewport, engine]);
-
-  const stats = useMemo(() => engine.getStats(), [engine]);
 
   const canvasContent = useMemo(() => {
     const currentNodes = renderData.nodes;
@@ -488,13 +506,13 @@ export default function App() {
     const freshNodeMap = new Map<string, Node>(engine.getNodes().map((n: Node) => [n.id, n]));
 
     return (
-      <div 
-        ref={worldRef} 
-        className={cn("absolute inset-0 will-change-transform", isPanning && "pointer-events-none")} 
+      <div
+        ref={worldRef}
+        className={cn("absolute inset-0 will-change-transform", isPanning && "pointer-events-none")}
         style={{ transformOrigin: '0 0' }}
       >
         <div className="absolute inset-[-10000px] pointer-events-none opacity-[0.05]" style={{ backgroundImage: `linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px)`, backgroundSize: `100px 100px` }} />
-        
+
         <div className="absolute inset-0 pointer-events-none overflow-hidden">
           {ZONES.map(zone => (
             <div key={zone.id} className="absolute flex flex-col items-center translate-z-0" style={{ left: zone.x, top: 4000, transform: `scale(${Math.max(viewport.zoom, 0.4)})`, opacity: Math.max(viewport.zoom, 0.2) }}>
@@ -530,6 +548,7 @@ export default function App() {
               isBlueprint={isBlueprint}
               isSummaryView={isSummaryView}
               zoom={viewport.zoom}
+              isAnyNodeHovered={!!hoveredId}
             />
           ))}
         </svg>
@@ -543,6 +562,8 @@ export default function App() {
               zoom={viewport.zoom}
               onSelect={setSelectedId}
               isSummaryView={isSummaryView}
+              isHovered={hoveredId === node.id}
+              isAnyHovered={!!hoveredId}
             />
           ))}
         </div>
@@ -551,7 +572,7 @@ export default function App() {
   }, [renderData, selectedId, hoveredId, isBlueprint, isSummaryView, viewport.zoom, isPanning, engine]);
 
   return (
-    <div 
+    <div
       ref={containerRef}
       className={cn("w-screen h-screen relative overflow-hidden bg-[#020617] select-none", isPanning ? "cursor-grabbing" : "cursor-grab")}
       onMouseDown={handleMouseDown}
@@ -583,10 +604,10 @@ export default function App() {
             </div>
             <div className="absolute inset-0 pointer-events-none opacity-40">
               {engine.getNodes().map(node => (
-                <div 
+                <div
                   key={node.id}
                   className="absolute w-1 h-1 rounded-full translate-z-0"
-                  style={{ 
+                  style={{
                     transform: `translate3d(${(node.position.x / 10000) * 160}px, ${(node.position.y / 10000) * 80}px, 0)`,
                     backgroundColor: node.data.color
                   }}
@@ -619,7 +640,7 @@ export default function App() {
             </div>
           </div>
         )}
-        
+
         {isLegendVisible && (
           <div className="absolute bottom-8 right-8 w-48">
             <div className="backdrop-blur-md border border-white/10 bg-[#0f172a]/80 rounded-lg p-3 shadow-2xl pointer-events-auto">
