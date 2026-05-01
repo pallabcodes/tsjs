@@ -53,23 +53,27 @@ const MemoizedEdge = React.memo(({ edge, sourceNode, targetNode, isPathHovered, 
   const isDimmed = isAnyNodeHovered && !isPathHovered;
 
   return (
-    <path
-      id={`edge-path-${edge.id}`}
-      d={path}
-      fill="none"
-      stroke={isPathHovered ? "rgba(255,255,255,1.0)" : isBlueprint ? "rgba(255,255,255,0.2)" : "rgba(255,255,255,0.4)"}
-      strokeWidth={isPathHovered ? 4.0 : 1.5 + (parseFloat(sourceNode.data.telemetry.cpu) / 50)}
-      className={cn(
-        "transition-opacity duration-300",
-        isDimmed ? "opacity-20" : isPathHovered ? "opacity-100" : "opacity-80",
-        (isPathHovered || parseFloat(sourceNode.data.telemetry.cpu) > 60) && "animate-flow"
-      )}
-      style={{
-        animationDuration: `${Math.max(0.2, 3 - (parseFloat(sourceNode.data.telemetry.cpu) / 30))}s`,
-        strokeDasharray: isBlueprint ? '4, 4' : (isPathHovered ? '8, 8' : 'none'),
-        willChange: 'opacity, stroke-width'
-      }}
-    />
+    <g className="transition-opacity duration-500" style={{ opacity: isDimmed ? 0.2 : 1 }}>
+      {/* Structural Baseline */}
+      <path d={path} fill="none" stroke="rgba(255,255,255,0.03)" strokeWidth={4} />
+      {/* Data Flow Stroke */}
+      <path
+        id={`edge-path-${edge.id}`}
+        d={path}
+        fill="none"
+        stroke={isPathHovered ? "rgba(255,255,255,1.0)" : isBlueprint ? "rgba(255,255,255,0.1)" : "rgba(255,255,255,0.3)"}
+        strokeWidth={isPathHovered ? 2.0 : 0.8 + (parseFloat(sourceNode.data.telemetry.cpu) / 120)}
+        className={cn(
+          "transition-all duration-300",
+          (isPathHovered || parseFloat(sourceNode.data.telemetry.cpu) > 60) && "animate-flow"
+        )}
+        style={{
+          animationDuration: `${Math.max(0.5, 4 - (parseFloat(sourceNode.data.telemetry.cpu) / 25))}s`,
+          strokeDasharray: isBlueprint ? '4, 4' : (isPathHovered ? '10, 10' : 'none'),
+          willChange: 'stroke, stroke-width, opacity'
+        }}
+      />
+    </g>
   );
 });
 
@@ -107,9 +111,9 @@ const MemoizedNode = React.memo(({ node, isSelected, zoom, onSelect, onInspect, 
         </div>
       ) : (
         <div className={cn(
-          "relative h-full w-full flex flex-col rounded-2xl overflow-hidden glass-card transition-colors duration-300",
-          isSelected ? "node-selected ring-2 ring-white/20" : "border-white/5",
-          isError && "bg-rose-500/5 border-rose-500/20"
+          "relative h-full w-full flex flex-col rounded-2xl overflow-hidden glass-card-premium transition-all duration-300 cursor-pointer",
+          isSelected ? "node-selected ring-1 ring-white/30 shadow-[0_0_40px_rgba(255,255,255,0.1)]" : "border-white/10 shadow-2xl",
+          isError && "bg-rose-500/[0.02] border-rose-500/30 shadow-[0_0_30px_rgba(244,63,94,0.1)]"
         )}>
           <div className="absolute inset-0 bg-gradient-to-br from-white/[0.03] to-transparent pointer-events-none" />
           <div className="flex items-center justify-between px-4 py-3 bg-white/[0.03] border-b border-white/5">
@@ -168,8 +172,9 @@ const Breadcrumbs = () => (
   </div>
 );
 
-const StatHUD = React.memo(({ stats, engine, isBlueprintMode, setIsBlueprint, setIsSummaryView, isSummaryView }: any) => {
+const StatHUD = React.memo(({ stats, engine, isBlueprintMode, setIsBlueprint, setIsSummaryView, isSummaryView, onReset }: any) => {
   const [fps, setFps] = useState(0);
+  const [isResetting, setIsResetting] = useState(false);
   const frameCount = useRef(0);
   const lastTime = useRef(0);
 
@@ -190,11 +195,17 @@ const StatHUD = React.memo(({ stats, engine, isBlueprintMode, setIsBlueprint, se
     return () => cancelAnimationFrame(animId);
   }, []);
 
+  const handleReset = () => {
+    setIsResetting(true);
+    onReset();
+    setTimeout(() => setIsResetting(false), 800);
+  };
+
   return (
     <div className="flex flex-col min-w-0">
       <div className="flex items-center gap-2">
-        <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.4)] animate-pulse" />
-        <h2 className="text-[10px] font-black text-white/80 uppercase tracking-[0.2em] text-gradient">Topology Master</h2>
+        <div className="w-1.5 h-1.5 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.4)] animate-pulse" />
+        <h2 className="text-[10px] font-black text-white/80 uppercase tracking-[0.2em] text-gradient">Infrastructure HLD</h2>
         <div className="w-px h-2 bg-white/10 mx-1" />
         <Breadcrumbs />
       </div>
@@ -224,17 +235,18 @@ const StatHUD = React.memo(({ stats, engine, isBlueprintMode, setIsBlueprint, se
           {[
             { icon: Eye, active: isSummaryView, onClick: () => setIsSummaryView(!isSummaryView), label: 'LOD' },
             { icon: Layout, active: isBlueprintMode, onClick: () => setIsBlueprint(!isBlueprintMode), label: 'MESH' },
-            { icon: RotateCcw, active: false, onClick: () => { if(confirm('Reset all node positions to system defaults?')) { localStorage.removeItem('cntp-topology-layout'); window.location.reload(); } }, label: 'RESET' }
+            { icon: RotateCcw, active: isResetting, onClick: handleReset, label: 'RESET' }
           ].map((btn, i) => (
             <button 
               key={i}
               onClick={btn.onClick}
               className={cn(
                 "p-1.5 rounded-lg border transition-all duration-300 group relative",
-                btn.active ? "bg-white/10 border-white/20 text-white shadow-lg" : "bg-white/5 border-white/5 text-white/30 hover:bg-white/10 hover:text-rose-400"
+                btn.active ? "bg-blue-500/10 border-blue-500/40 text-blue-400 shadow-[0_0_15px_rgba(59,130,246,0.2)]" : "bg-white/5 border-white/5 text-white/30 hover:bg-white/10 hover:text-rose-400",
+                btn.label === 'RESET' && isResetting && "animate-pulse border-blue-500 shadow-[0_0_20px_rgba(59,130,246,0.4)]"
               )}
             >
-              <btn.icon size={11} strokeWidth={2.5} />
+              <btn.icon size={11} strokeWidth={2.5} className={cn(btn.label === 'RESET' && isResetting && "animate-spin")} />
               <div className="absolute -top-7 left-1/2 -translate-x-1/2 px-1.5 py-0.5 bg-[#0f172a] rounded border border-white/10 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">
                 <span className="text-[6px] font-black tracking-widest uppercase">{btn.label}</span>
               </div>
@@ -500,7 +512,7 @@ export default function App() {
     
     return (
       <div ref={worldRef} className={cn("absolute inset-0 will-change-transform", isPanning && "pointer-events-none")} style={{ transformOrigin: '0 0', transform: `translate3d(${viewport.x}px, ${viewport.y}px, 0) scale(${viewport.zoom})` }}>
-        <div className="absolute inset-[-10000px] pointer-events-none opacity-[0.05]" style={{ backgroundImage: `linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px)`, backgroundSize: `100px 100px` }} />
+        <div className="absolute inset-[-10000px] pointer-events-none opacity-[0.03]" style={{ backgroundImage: `linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px)`, backgroundSize: `100px 100px` }} />
         <div className="absolute inset-0 pointer-events-none overflow-hidden">
           {ZONES.map(zone => {
             const zh = zoneHealth[zone.nodeType] || { healthy: 0, degraded: 0, critical: 0, total: 0 };
@@ -569,7 +581,7 @@ export default function App() {
           <div className={cn("w-full glass-panel rounded-2xl px-5 py-2.5 flex items-center gap-4 shadow-2xl pointer-events-auto transition-all duration-500 relative overflow-hidden", isSearchFocused ? "border-blue-500/40 ring-2 ring-blue-500/5 scale-[1.01]" : "border-white/5")}>
             <div className={cn("absolute inset-0 shimmer-active opacity-0 transition-opacity duration-700", isSearchFocused && "opacity-100")} />
             <Search size={14} className={cn("transition-colors duration-500 shrink-0", isSearchFocused ? "text-blue-400" : "text-white/20")} strokeWidth={2.5} />
-            <input type="text" placeholder="Query topological DNA..." onFocus={() => setIsSearchFocused(true)} onBlur={() => setIsSearchFocused(false)} className="bg-transparent border-none outline-none text-[11px] text-white/80 w-full font-mono placeholder:text-white/10 tracking-tight relative z-10" />
+            <input type="text" placeholder="Search Infrastructure DNA..." onFocus={() => setIsSearchFocused(true)} onBlur={() => setIsSearchFocused(false)} className="bg-transparent border-none outline-none text-[11px] text-white/80 w-full font-mono placeholder:text-white/10 tracking-tight relative z-10" />
           </div>
           <div className="flex items-center gap-1.5 pointer-events-auto">
             {['ALL', 'CRITICAL', 'DEGRADED', 'LATENCY'].map(f => (
@@ -593,7 +605,20 @@ export default function App() {
         </div>
         <div className="absolute top-6 left-6 pointer-events-none">
           <div className="glass-panel px-4 py-3 rounded-2xl shadow-2xl pointer-events-auto border-white/5">
-            <StatHUD stats={stats} engine={engine} isBlueprintMode={isBlueprint} setIsBlueprint={setIsBlueprint} setIsSummaryView={setIsSummaryView} isSummaryView={isSummaryView} />
+            <StatHUD stats={stats} engine={engine} isBlueprintMode={isBlueprint} setIsBlueprint={setIsBlueprint} setIsSummaryView={setIsSummaryView} isSummaryView={isSummaryView} 
+              onReset={() => {
+                localStorage.removeItem('cntp-topology-layout');
+                engine.resetToGoldenLayout();
+                const zoom = getInitialZoom();
+                const newViewport = {
+                  x: window.innerWidth / 2 - WORLD_CENTER.x * zoom,
+                  y: window.innerHeight / 2 - WORLD_CENTER.y * zoom,
+                  zoom
+                };
+                viewportRef.current = newViewport;
+                updateWorldTransform();
+                setViewport(newViewport);
+              }} />
           </div>
         </div>
         {/* Status Bar */}

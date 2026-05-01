@@ -17,6 +17,7 @@ export class MasteryEngine {
   private canvasSize = { width: 800, height: 600 };
   private nodes: Node[] = [];
   private edges: EngineEdge[] = [];
+  private goldenLayout: Map<string, { x: number; y: number }> = new Map();
 
   constructor(maxNodes: number, boundary: { width: number, height: number }) {
     this.dbStore = new DoubleBufferStore(maxNodes);
@@ -28,8 +29,8 @@ export class MasteryEngine {
     
     const LAYERS = 4;
     const SERVICES_PER_LAYER = [1, 3, 5, 8];
-    const LAYER_GAP = 600; 
-    const SERVICE_GAP = 400; 
+    const LAYER_GAP = 850; 
+    const SERVICE_GAP = 380; 
 
     const meshWidth = (LAYERS - 1) * LAYER_GAP;
     const meshStartX = (boundary.width / 2) - (meshWidth / 2);
@@ -95,6 +96,11 @@ export class MasteryEngine {
     
     this.nodes = initialNodes;
     this.edges = initialEdges;
+
+    // Capture Golden Layout (HLD Architectural Defaults)
+    this.nodes.forEach(n => {
+      this.goldenLayout.set(n.id, { ...n.position });
+    });
 
     // L7 CRITICAL FIX: Correctly populate the virtualizer using the proper method
     this.virtualizer.updateNodes(this.nodes.map(n => ({
@@ -280,6 +286,16 @@ export class MasteryEngine {
       width: n.data.width,
       height: n.data.height
     })));
+  }
+
+  resetToGoldenLayout() {
+    this.nodes.forEach(node => {
+      const golden = this.goldenLayout.get(node.id);
+      if (golden) {
+        node.position = { ...golden };
+      }
+    });
+    this.commitNodePositions();
   }
 
   setViewport(v: Viewport) { this.viewport = v; }
