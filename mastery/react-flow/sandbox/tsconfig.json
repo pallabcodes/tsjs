@@ -16,8 +16,12 @@
     "noEmit": true,
     "allowImportingTsExtensions": true,
     "jsx": "react-jsx",
-    "types": ["vite/client"]
+    "types": ["vite/client"],
+    "baseUrl": ".",
+    "paths": {
+      "@core/*": ["../invariant-core/*"]
+    }
   },
-  "include": ["src"],
+  "include": ["src", "../invariant-core"],
   "references": [{ "path": "./tsconfig.node.json" }]
 }

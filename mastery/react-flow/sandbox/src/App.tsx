@@ -1,26 +1,16 @@
 import React, { useEffect, useRef, useState, useMemo } from 'react';
 import { MasteryEngine, type EngineEdge } from './MasteryEngine';
-import { project, unproject } from '../../invariant-core/inv02-viewport/src/index.ts';
-import type { Viewport, Point } from '../../invariant-core/inv02-viewport/src/index.ts';
-import { Node } from '../../invariant-core/inv01-model/src/index.ts';
+import { project, unproject } from '@core/inv02-viewport/src/index';
+import type { Viewport, Point } from '@core/inv02-viewport/src/index';
+import { Node } from '@core/inv01-model/src/index';
 import { Shield, Search, Eye, Layout, Database, Activity, Cpu, ChevronRight, X, RotateCcw } from 'lucide-react';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
+import { useTopologyStore, MAX_NODES, BOUNDARY, WORLD_CENTER, getInitialZoom } from './useTopologyStore';
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
-
-const MAX_NODES = 1000;
-const BOUNDARY = { width: 10000, height: 10000 };
-const WORLD_CENTER = { x: 5000, y: 5000 };
-
-const getInitialZoom = () => {
-  if (typeof window === 'undefined') return 0.35;
-  const w = window.innerWidth;
-  const h = window.innerHeight;
-  return Math.min(w / 4000, h / 3500, 0.38);
-};
 
 const TypeIcon = React.memo(({ type, color }: { type: string, color: string }) => {
   const props = { size: 12, style: { color } };
@@ -172,7 +162,12 @@ const Breadcrumbs = () => (
   </div>
 );
 
-const StatHUD = React.memo(({ stats, engine, isBlueprintMode, setIsBlueprint, setIsSummaryView, isSummaryView, onReset }: any) => {
+const StatHUD = React.memo(({ stats, onReset }: any) => {
+  const { 
+    isBlueprint, setIsBlueprint, 
+    isSummaryView, setIsSummaryView 
+  } = useTopologyStore();
+  
   const [fps, setFps] = useState(0);
   const [isResetting, setIsResetting] = useState(false);
   const frameCount = useRef(0);
@@ -234,7 +229,7 @@ const StatHUD = React.memo(({ stats, engine, isBlueprintMode, setIsBlueprint, se
         <div className="flex items-center gap-1.5 ml-4">
           {[
             { icon: Eye, active: isSummaryView, onClick: () => setIsSummaryView(!isSummaryView), label: 'LOD' },
-            { icon: Layout, active: isBlueprintMode, onClick: () => setIsBlueprint(!isBlueprintMode), label: 'MESH' },
+            { icon: Layout, active: isBlueprint, onClick: () => setIsBlueprint(!isBlueprint), label: 'MESH' },
             { icon: RotateCcw, active: isResetting, onClick: handleReset, label: 'RESET' }
           ].map((btn, i) => (
             <button 
@@ -259,14 +254,16 @@ const StatHUD = React.memo(({ stats, engine, isBlueprintMode, setIsBlueprint, se
 });
 
 export default function App() {
-  const [viewport, setViewport] = useState<Viewport>(() => {
-    const zoom = getInitialZoom();
-    return {
-      x: window.innerWidth / 2 - WORLD_CENTER.x * zoom,
-      y: window.innerHeight / 2 - WORLD_CENTER.y * zoom,
-      zoom
-    };
-  });
+  const {
+    viewport, setViewport,
+    selectedId, setSelectedId,
+    hoveredId, setHoveredId,
+    inspectedId, setInspectedId,
+    isBlueprint, setIsBlueprint,
+    isSummaryView, setIsSummaryView,
+    activeFilter, setActiveFilter,
+    recordMutation, flushPersistence
+  } = useTopologyStore();
 
   const [engine] = useState(() => {
     const instance = new MasteryEngine(MAX_NODES, BOUNDARY);
@@ -280,16 +277,11 @@ export default function App() {
     }
     return instance;
   });
-  const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [inspectedId, setInspectedId] = useState<string | null>(null);
-  const [hoveredId, setHoveredId] = useState<string | null>(null);
-  const [isBlueprint, setIsBlueprint] = useState(() => localStorage.getItem('cntp-blueprint') === 'true');
-  const [isSummaryView, setIsSummaryView] = useState(() => localStorage.getItem('cntp-summary') === 'true');
-  const [activeFilter, setActiveFilter] = useState<string>(() => localStorage.getItem('cntp-filter') || 'ALL');
-  const [stats, setStats] = useState(() => engine.getStats());
-  const [isSearchFocused, setIsSearchFocused] = useState(false);
+
   const [telemetryTick, setTelemetryTick] = useState(0);
   const [inspectorTab, setInspectorTab] = useState<'OVERVIEW' | 'METRICS' | 'CONTROLS'>('OVERVIEW');
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
+  const [stats, setStats] = useState(() => engine.getStats());
 
   const containerRef = useRef<HTMLDivElement>(null);
   const worldRef = useRef<HTMLDivElement>(null);
@@ -298,6 +290,12 @@ export default function App() {
   const lastMousePos = useRef<Point>({ x: 0, y: 0 });
   const dragOffset = useRef<Point>({ x: 0, y: 0 });
   const viewportRef = useRef<Viewport>(viewport);
+  
+  // Sync ref with store for external updates (like reset)
+  useEffect(() => {
+    viewportRef.current = viewport;
+    updateWorldTransform();
+  }, [viewport]);
   const [isPanning, setIsPanning] = useState(false);
   const [draggedNodeId, setDraggedNodeId] = useState<string | null>(null);
 
@@ -465,9 +463,7 @@ export default function App() {
     if (draggedNodeId) {
       const node = engine.getNodeById(draggedNodeId);
       if (node) {
-        const layout = JSON.parse(localStorage.getItem('cntp-topology-layout') || '{}');
-        layout[draggedNodeId] = { x: node.position.x, y: node.position.y };
-        localStorage.setItem('cntp-topology-layout', JSON.stringify(layout));
+        recordMutation();
       }
     }
     setDraggedNodeId(null);
@@ -493,6 +489,18 @@ export default function App() {
     }, 5000);
     return () => { clearInterval(statsTimer); clearInterval(telemetryTimer); };
   }, [engine]);
+
+  // L7 WAL: Debounced Flush
+  useEffect(() => {
+    const timer = setInterval(() => {
+      const layout: Record<string, Point> = {};
+      engine.getNodes().forEach(n => {
+        layout[n.id] = { x: n.position.x, y: n.position.y };
+      });
+      flushPersistence(layout);
+    }, 2000);
+    return () => clearInterval(timer);
+  }, [engine, flushPersistence]);
 
   const zoneHealth = useMemo(() => engine.getZoneHealth(), [stats]);
 
@@ -585,7 +593,7 @@ export default function App() {
           </div>
           <div className="flex items-center gap-1.5 pointer-events-auto">
             {['ALL', 'CRITICAL', 'DEGRADED', 'LATENCY'].map(f => (
-              <button key={f} onClick={(e) => { e.stopPropagation(); setActiveFilter(f); localStorage.setItem('cntp-filter', f); }}
+              <button key={f} onClick={(e) => { e.stopPropagation(); setActiveFilter(f); }}
                 className={cn("px-3 py-1 rounded-full border text-[7px] font-black tracking-[0.15em] transition-all duration-300 uppercase",
                   activeFilter === f ? "glass-panel text-white border-white/20 shadow-lg" : "bg-white/5 border-white/5 text-white/20 hover:bg-white/10 hover:text-white/40")}>{f}</button>
             ))}
@@ -605,18 +613,16 @@ export default function App() {
         </div>
         <div className="absolute top-6 left-6 pointer-events-none">
           <div className="glass-panel px-4 py-3 rounded-2xl shadow-2xl pointer-events-auto border-white/5">
-            <StatHUD stats={stats} engine={engine} isBlueprintMode={isBlueprint} setIsBlueprint={setIsBlueprint} setIsSummaryView={setIsSummaryView} isSummaryView={isSummaryView} 
+            <StatHUD stats={stats} engine={engine} 
               onReset={() => {
-                localStorage.removeItem('cntp-topology-layout');
                 engine.resetToGoldenLayout();
+                recordMutation();
                 const zoom = getInitialZoom();
                 const newViewport = {
                   x: window.innerWidth / 2 - WORLD_CENTER.x * zoom,
                   y: window.innerHeight / 2 - WORLD_CENTER.y * zoom,
                   zoom
                 };
-                viewportRef.current = newViewport;
-                updateWorldTransform();
                 setViewport(newViewport);
               }} />
           </div>
@@ -731,13 +737,21 @@ export default function App() {
                     className="w-full py-3 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 text-[9px] font-black text-emerald-400 uppercase tracking-widest transition-all">
                     Restart Service Instance
                   </button>
-                  <button onClick={() => { setIsBlueprint(!isBlueprint); localStorage.setItem('cntp-blueprint', String(!isBlueprint)); }}
+                  <button onClick={() => setIsBlueprint(!isBlueprint)}
                     className={cn("w-full py-3 rounded-lg transition-all duration-300 border text-[9px] font-black uppercase tracking-widest", isBlueprint ? "bg-blue-500/20 text-blue-400 border-blue-500/30" : "bg-white/5 text-white/40 border-white/5 hover:bg-white/10")}>
                     Toggle Blueprint Mode
                   </button>
-                  <button onClick={() => { if(confirm('Reset all node positions to system defaults?')) { localStorage.removeItem('cntp-topology-layout'); window.location.reload(); } }}
-                    className="w-full py-3 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 text-[9px] font-black text-rose-400 uppercase tracking-widest transition-all">
-                    Reset Layout
+                  <button onClick={() => { 
+                    setViewport({ 
+                      x: window.innerWidth / 2 - WORLD_CENTER.x * getInitialZoom(),
+                      y: window.innerHeight / 2 - WORLD_CENTER.y * getInitialZoom(),
+                      zoom: getInitialZoom()
+                    });
+                    engine.resetToGoldenLayout();
+                    recordMutation();
+                  }}
+                    className="w-full py-3 rounded-lg bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/20 text-[9px] font-black text-blue-400 uppercase tracking-widest transition-all">
+                    Reset To Golden Layout
                   </button>
                   <button onClick={(e) => { e.stopPropagation(); engine.injectFault(selectedNode.id); }}
                     className="w-full py-3 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 text-[9px] font-black text-rose-400 uppercase tracking-widest transition-all">

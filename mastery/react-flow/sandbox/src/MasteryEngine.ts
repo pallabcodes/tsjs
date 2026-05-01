@@ -1,7 +1,7 @@
-import { DoubleBufferStore } from '../../invariant-core/scaling-inv24-double-buffer/src/index.ts';
-import { SpatialVirtualizer } from '../../invariant-core/scaling-inv15-virtualization/src/index.ts';
-import type { Viewport } from '../../invariant-core/inv02-viewport/src/index.ts';
-import { Node } from '../../invariant-core/inv01-model/src/index.ts';
+import { DoubleBufferStore } from '@core/scaling-inv24-double-buffer/src/index';
+import { SpatialVirtualizer } from '@core/scaling-inv15-virtualization/src/index';
+import type { Viewport } from '@core/inv02-viewport/src/index';
+import { Node } from '@core/inv01-model/src/index';
 
 export interface EngineEdge {
   id: string;
@@ -140,8 +140,9 @@ export class MasteryEngine {
   }
 
   getStats() {
-    const critical = this.nodes.filter(n => n.data.status === 'CRITICAL').length;
-    const degraded = this.nodes.filter(n => n.data.status === 'DEGRADED').length;
+    if (!this.nodes) return { totalNodes: 0, totalEdges: 0, critical: 0, degraded: 0, healthy: 0 };
+    const critical = this.nodes.filter(n => n.data?.status === 'CRITICAL').length;
+    const degraded = this.nodes.filter(n => n.data?.status === 'DEGRADED').length;
     return {
       totalNodes: this.nodes.length,
       totalEdges: this.edges.length,
@@ -216,9 +217,9 @@ export class MasteryEngine {
 
       // 2. Base Jitter
       const t = n.data.telemetry;
-      const latBase = parseFloat(t.latency);
+      const latBase = parseFloat(t.latency || '5');
       t.latency = Math.max(1, latBase + (Math.random() - 0.5) * 2).toFixed(1);
-      const cpuBase = t.cpu;
+      const cpuBase = t.cpu || 20;
       t.cpu = Math.min(100, Math.max(0, cpuBase + (Math.random() - 0.5) * 4));
 
       // 3. Propagation Logic (Optimized)
