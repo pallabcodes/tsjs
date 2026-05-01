@@ -1,9 +1,10 @@
 import React, { useEffect, useRef, useState, useMemo } from 'react';
 import { MasteryEngine, type EngineEdge } from './MasteryEngine';
+import TopologyWorker from './topology.worker?worker';
 import { project, unproject } from '@core/inv02-viewport/src/index';
 import type { Viewport, Point } from '@core/inv02-viewport/src/index';
 import { Node } from '@core/inv01-model/src/index';
-import { Shield, Search, Eye, Layout, Database, Activity, Cpu, ChevronRight, X, RotateCcw } from 'lucide-react';
+import { Shield, Search, Eye, Layout, Database, Activity, Cpu, ChevronRight, X, RotateCcw, Layers } from 'lucide-react';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { useTopologyStore, MAX_NODES, BOUNDARY, WORLD_CENTER, getInitialZoom } from './useTopologyStore';
@@ -17,6 +18,7 @@ const TypeIcon = React.memo(({ type, color }: { type: string, color: string }) =
   if (type === 'GATEWAY') return <Shield {...props} />;
   if (type === 'SERVICE') return <Cpu {...props} />;
   if (type === 'DATABASE') return <Database {...props} />;
+  if (type === 'CLUSTER') return <Layers {...props} />;
   return <Cpu {...props} />;
 });
 
@@ -30,7 +32,7 @@ const calculatePath = (sourcePos: Point, targetPos: Point, sourceWidth: number, 
   return `M ${sX} ${sY} C ${sX + curvature} ${sY}, ${tX - curvature} ${tY}, ${tX} ${tY}`;
 };
 
-const MemoizedEdge = React.memo(({ edge, sourceNode, targetNode, isPathHovered, isBlueprint, isSummaryView, zoom, isAnyNodeHovered }: any) => {
+const MemoizedEdge = React.memo(({ edge, sourceNode, targetNode, isPathHovered, isBlueprint, isSummaryView, zoom, isAnyNodeHovered, sX, sY, tX, tY }: any) => {
   if (!sourceNode || !targetNode) return null;
   const effectiveSummaryView = isSummaryView && zoom < 0.3;
   const sW = effectiveSummaryView ? 40 : sourceNode.data?.width || 280;
@@ -38,7 +40,7 @@ const MemoizedEdge = React.memo(({ edge, sourceNode, targetNode, isPathHovered, 
   const tW = effectiveSummaryView ? 40 : targetNode.data?.width || 280;
   const tH = effectiveSummaryView ? 40 : targetNode.data?.height || 160;
   const tIdx = parseInt(targetNode.id.replace(/\D/g, '')) || 0;
-  const path = calculatePath(sourceNode.position, targetNode.position, sW, sH, tW, tH, tIdx, sourceNode.data?.type === 'GATEWAY');
+  const path = calculatePath({ x: sX, y: sY }, { x: tX, y: tY }, sW, sH, tW, tH, tIdx, sourceNode.data?.type === 'GATEWAY');
 
   const isDimmed = isAnyNodeHovered && !isPathHovered;
 
@@ -67,11 +69,48 @@ const MemoizedEdge = React.memo(({ edge, sourceNode, targetNode, isPathHovered, 
   );
 });
 
-const MemoizedNode = React.memo(({ node, isSelected, zoom, onSelect, onInspect, isSummaryView, isHovered, isAnyHovered }: any) => {
+const MemoizedNode = React.memo(({ node, isSelected, zoom, onSelect, onInspect, isSummaryView, isHovered, isAnyHovered, posX, posY }: any) => {
   const isDimmed = isAnyHovered && !isHovered && !isSelected;
   const effectiveSummaryView = isSummaryView && zoom < 0.3;
   const isError = node.data?.status === 'CRITICAL';
   const color = node.data?.color || '#3b82f6';
+
+  if (node.isCluster) {
+    return (
+      <div
+        id={`node-${node.id}`}
+        className={cn(
+          "absolute transition-transform duration-500 ease-out z-20 pointer-events-auto",
+          isHovered ? "z-30 scale-105" : "z-20"
+        )}
+        style={{ transform: `translate3d(${posX}px, ${posY}px, 0)`, width: 600, height: 400 }}
+        onClick={(e) => { e.stopPropagation(); onInspect(node.id); }}
+        onMouseEnter={() => useTopologyStore.getState().setHoveredId(node.id)}
+        onMouseLeave={() => useTopologyStore.getState().setHoveredId(null)}
+      >
+        <div className={cn(
+          "relative h-full w-full flex flex-col rounded-[48px] overflow-hidden glass-panel-dark transition-all duration-500 border-4",
+          isSelected ? "border-blue-400 shadow-[0_0_100px_rgba(59,130,246,0.3)]" : "border-white/5 shadow-2xl",
+          isError && "border-rose-500/40 shadow-[0_0_100px_rgba(244,63,94,0.2)]"
+        )}>
+          <div className="absolute inset-0 bg-gradient-to-br from-white/[0.05] to-transparent pointer-events-none" />
+          <div className="flex-1 flex flex-col items-center justify-center p-12 text-center">
+            <div className="w-20 h-20 rounded-3xl bg-white/5 flex items-center justify-center mb-8 border border-white/10 shadow-inner">
+              <TypeIcon type="CLUSTER" color={color} />
+            </div>
+            <h3 className="text-2xl font-black text-white/90 tracking-[0.3em] uppercase mb-4">{node.data?.label}</h3>
+            <div className="flex items-baseline gap-4">
+              <span className="text-8xl font-black text-white tabular-nums tracking-tighter drop-shadow-2xl">{node.data?.count}</span>
+              <span className="text-xl font-black text-white/30 uppercase tracking-[0.2em]">Units</span>
+            </div>
+          </div>
+          <div className="h-4 w-full bg-white/5 overflow-hidden">
+            <div className="h-full transition-all duration-1000 ease-in-out" style={{ width: '100%', backgroundColor: color }} />
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div
@@ -83,7 +122,7 @@ const MemoizedNode = React.memo(({ node, isSelected, zoom, onSelect, onInspect, 
         node.data.status === 'RESTARTING' && "recovery-glow"
       )}
       style={{
-        transform: `translate3d(${node.position.x}px, ${node.position.y}px, 0)`,
+        transform: `translate3d(${posX}px, ${posY}px, 0)`,
         width: effectiveSummaryView ? 40 : node.data?.width || 280,
         height: effectiveSummaryView ? 40 : node.data?.height || 160,
         zIndex: isSelected ? 100 : 10,
@@ -279,6 +318,7 @@ export default function App() {
   });
 
   const [telemetryTick, setTelemetryTick] = useState(0);
+  const [dragTick, setDragTick] = useState(0);
   const [inspectorTab, setInspectorTab] = useState<'OVERVIEW' | 'METRICS' | 'CONTROLS'>('OVERVIEW');
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [stats, setStats] = useState(() => engine.getStats());
@@ -299,10 +339,53 @@ export default function App() {
   const [isPanning, setIsPanning] = useState(false);
   const [draggedNodeId, setDraggedNodeId] = useState<string | null>(null);
 
+  const didDrag = useRef(false);
   const rafId = useRef<number>(0);
   const nextPos = useRef<Point | null>(null);
   const dragStartPos = useRef<Point>({ x: 0, y: 0 });
-  const didDrag = useRef(false);
+  const workerRef = useRef<Worker | null>(null);
+
+  // L7 Worker Initialization
+  useEffect(() => {
+    const worker = new TopologyWorker();
+    workerRef.current = worker;
+
+    worker.postMessage({ 
+      type: 'INIT', 
+      payload: { nodes: engine.getNodes(), edges: engine.getEdges() } 
+    });
+
+    worker.onmessage = (e) => {
+      const { type, payload } = e.data;
+      if (type === 'TELEMETRY_UPDATE') {
+        engine.applyTelemetryDelta(payload);
+        setTelemetryTick(t => t + 1);
+        setStats(engine.getStats());
+      }
+    };
+
+    const ticker = setInterval(() => {
+      worker.postMessage({ type: 'TICK' });
+    }, 100); // 10Hz Telemetry Resolution
+
+    return () => {
+      clearInterval(ticker);
+      worker.terminate();
+    };
+  }, [engine]);
+
+  // L7 Canvas Synchronization
+  useEffect(() => {
+    if (!containerRef.current) return;
+    const observer = new ResizeObserver((entries) => {
+      for (let entry of entries) {
+        const { width, height } = entry.contentRect;
+        engine.setCanvasSize(width, height);
+      }
+    });
+    observer.observe(containerRef.current);
+    return () => observer.disconnect();
+  }, [engine]);
 
   const updateWorldTransform = () => {
     if (worldRef.current) {
@@ -339,6 +422,18 @@ export default function App() {
     };
     el.addEventListener('wheel', onWheel, { passive: false });
     return () => el.removeEventListener('wheel', onWheel);
+  }, []);
+
+  // L7 Keyboard Interactions: ESC to close Inspector
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setInspectedId(null);
+        setSelectedId(null);
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
   }, []);
 
   const handleMouseDown = (e: React.MouseEvent) => {
@@ -392,34 +487,13 @@ export default function App() {
           const { x, y } = nextPos.current;
           
           engine.updateNodePosition(id, x, y);
-          const nodeEl = document.getElementById(`node-${id}`);
-          if (nodeEl) nodeEl.style.transform = `translate3d(${x}px, ${y}px, 0)`;
-
-          const edges = engine.getConnectedEdges(id);
-          const isSum = isSummaryView && v.zoom < 0.7;
-          const nodes = engine.getNodes();
-          const nodeMap = new Map(nodes.map(n => [n.id, n]));
-
-          edges.forEach((edge: any) => {
-            const edgeEl = document.getElementById(`edge-path-${edge.id}`);
-            const source = nodeMap.get(edge.source);
-            const target = nodeMap.get(edge.target);
-            if (source && target && edgeEl) {
-              const sW = isSum ? 40 : source.data?.width || 280;
-              const sH = isSum ? 40 : source.data?.height || 160;
-              const tW = isSum ? 40 : target.data?.width || 280;
-              const tH = isSum ? 40 : target.data?.height || 160;
-              const tIdx = parseInt(target.id.replace(/\D/g, '')) || 0;
-              edgeEl.setAttribute('d', calculatePath(source.position, target.position, sW, sH, tW, tH, tIdx, source.data?.type === 'GATEWAY'));
-            }
-          });
+          setDragTick(t => t + 1);
 
           rafId.current = 0;
         });
       }
       return;
     }
-
     if (isPanning) {
       const dx = e.clientX - lastMousePos.current.x;
       const dy = e.clientY - lastMousePos.current.y;
@@ -456,7 +530,7 @@ export default function App() {
       if (nodeEl) nodeEl.classList.remove('dragging');
     } else if (isPanning && wasClick) {
       setSelectedId(null);
-      setInspectedId(null);
+      // We no longer setInspectedId(null) here to prevent accidental dismissal
     }
 
     setIsPanning(false);
@@ -478,17 +552,10 @@ export default function App() {
 
   const renderData = useMemo(() => {
     engine.setViewport(viewport);
-    return engine.getRenderData();
-  }, [viewport, engine]);
+    return engine.getClusteredRenderData(viewport.zoom, draggedNodeId);
+  }, [viewport, engine, telemetryTick, dragTick, draggedNodeId]);
 
-  useEffect(() => {
-    const statsTimer = setInterval(() => setStats(engine.getStats()), 500);
-    const telemetryTimer = setInterval(() => {
-      engine.tickTelemetry();
-      setTelemetryTick(t => t + 1);
-    }, 5000);
-    return () => { clearInterval(statsTimer); clearInterval(telemetryTimer); };
-  }, [engine]);
+  // Telemetry updates are now handled by the L7 Worker (INV-13)
 
   // L7 WAL: Debounced Flush
   useEffect(() => {
@@ -547,6 +614,7 @@ export default function App() {
             const filterDimmed = isFiltering && srcNode && tgtNode && !matchesFilter(srcNode) && !matchesFilter(tgtNode);
             return (
               <MemoizedEdge key={edge.id} edge={edge} sourceNode={srcNode} targetNode={tgtNode} 
+                sX={srcNode?.position.x} sY={srcNode?.position.y} tX={tgtNode?.position.x} tY={tgtNode?.position.y}
                 isPathHovered={activeHoveredId === edge.source || activeHoveredId === edge.target} isBlueprint={isBlueprint || filterDimmed} isSummaryView={isSummaryView} zoom={viewport.zoom} isAnyNodeHovered={!!activeHoveredId} />
             );
           })}
@@ -556,13 +624,14 @@ export default function App() {
             const filterDimmed = isFiltering && !matchesFilter(node);
             return (
               <MemoizedNode key={node.id} node={node} isSelected={selectedId === node.id} zoom={viewport.zoom} onSelect={setSelectedId} onInspect={setInspectedId}
+                posX={node.position.x} posY={node.position.y}
                 isSummaryView={isSummaryView} isHovered={activeHoveredId === node.id} isAnyHovered={!!activeHoveredId || filterDimmed} />
             );
           })}
         </div>
       </div>
     );
-  }, [renderData, selectedId, hoveredId, isBlueprint, isSummaryView, viewport.x, viewport.y, viewport.zoom, isPanning, engine, draggedNodeId, activeFilter, zoneHealth, telemetryTick]);
+  }, [renderData, selectedId, hoveredId, isBlueprint, isSummaryView, viewport.x, viewport.y, viewport.zoom, isPanning, engine, draggedNodeId, activeFilter, zoneHealth, telemetryTick, inspectedId]);
 
   const selectedNode = inspectedId ? engine.getNodeById(inspectedId) : null;
   const selectedEdges = inspectedId ? engine.getConnectedEdges(inspectedId) : [];
@@ -599,18 +668,40 @@ export default function App() {
             ))}
           </div>
         </div>
-        <div className="absolute top-6 right-6 pointer-events-none hidden xl:block">
-          <div className="glass-panel rounded-2xl p-2 w-48 h-24 pointer-events-auto relative overflow-hidden group border-white/5">
-            <div className="absolute inset-0 opacity-[0.02]" style={{ backgroundImage: `linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px)`, backgroundSize: `10px 10px` }} />
-            <div className="absolute inset-0 pointer-events-none opacity-40 transition-all duration-500 group-hover:opacity-100">
-              {engine.getNodes().map(node => (<div key={node.id} className="absolute w-1 h-1 rounded-full" style={{ transform: `translate3d(${(node.position.x - 3500) / 3000 * 192}px, ${(node.position.y - 4000) / 2000 * 96}px, 0)`, backgroundColor: node.data?.color || '#3b82f6' }} />))}
+
+        {/* High-Fidelity Radar (MiniMap) - Hidden when Inspecting for Focus */}
+        {!inspectedId && (
+          <div className="fixed top-6 right-6 pointer-events-none hidden xl:block z-40 transition-all duration-500 animate-in fade-in slide-in-from-right-4">
+            <div className="glass-panel rounded-2xl p-2 w-48 h-24 pointer-events-auto relative overflow-hidden group border-white/5 shadow-2xl">
+              <div className="absolute inset-0 opacity-[0.02]" style={{ backgroundImage: `linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px)`, backgroundSize: `10px 10px` }} />
+              <div className="absolute inset-0 pointer-events-none opacity-40 transition-all duration-500 group-hover:opacity-100 p-2">
+                {engine.getNodes().map(node => (
+                  <div key={node.id} className="absolute w-1 h-1 rounded-full" 
+                    style={{ 
+                      left: `${(node.position.x / 10000) * 100}%`, 
+                      top: `${(node.position.y / 10000) * 100}%`,
+                      backgroundColor: node.data?.color || '#3b82f6' 
+                    }} 
+                  />
+                ))}
+              </div>
+              <div ref={radarRef} className="absolute border border-blue-500/40 bg-blue-500/5 transition-all duration-100 z-10 rounded-sm" 
+                style={{ 
+                  left: `${((-viewport.x / viewport.zoom) / 10000) * 192}px`, 
+                  top: `${((-viewport.y / viewport.zoom) / 10000) * 96}px`, 
+                  width: `${((window.innerWidth / viewport.zoom) / 10000) * 192}px`, 
+                  height: `${((window.innerHeight / viewport.zoom) / 10000) * 96}px` 
+                }}>
+                <div className="absolute inset-0 flex items-center justify-center opacity-10">
+                  <div className="w-full h-px bg-blue-500" />
+                  <div className="h-full w-px bg-blue-500 absolute" />
+                </div>
+              </div>
+              <span className="absolute bottom-0.5 right-1.5 text-[5px] font-black text-white/10 uppercase tracking-[0.2em] font-mono">Radar</span>
             </div>
-            <div ref={radarRef} className="absolute border border-blue-500/40 bg-blue-500/5 transition-all duration-100 z-10 rounded-sm" style={{ transform: `translate(${((-viewport.x / viewport.zoom - 3500) / 3000) * 192}px, ${((-viewport.y / viewport.zoom - 4000) / 2000) * 96}px)`, width: `${((window.innerWidth / viewport.zoom) / 3000) * 192}px`, height: `${((window.innerHeight / viewport.zoom) / 2000) * 96}px` }}>
-              <div className="absolute inset-0 flex items-center justify-center opacity-10"><div className="w-full h-px bg-blue-500" /><div className="h-full w-px bg-blue-500 absolute" /></div>
-            </div>
-            <span className="absolute bottom-0.5 right-1.5 text-[5px] font-black text-white/10 uppercase tracking-[0.2em] font-mono">Radar</span>
           </div>
-        </div>
+        )}
+
         <div className="absolute top-6 left-6 pointer-events-none">
           <div className="glass-panel px-4 py-3 rounded-2xl shadow-2xl pointer-events-auto border-white/5">
             <StatHUD stats={stats} engine={engine} 
@@ -733,7 +824,7 @@ export default function App() {
               <div className="p-5 flex flex-col gap-6">
                 <h4 className="text-[7px] font-black text-white/20 uppercase tracking-[0.2em] mb-2">Operational Interventions</h4>
                 <div className="flex flex-col gap-2">
-                  <button onClick={(e) => { e.stopPropagation(); engine.restartNode(selectedNode.id); }}
+                  <button onClick={(e) => { e.stopPropagation(); workerRef.current?.postMessage({ type: 'RESTART_NODE', payload: { id: selectedNode.id } }); }}
                     className="w-full py-3 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 text-[9px] font-black text-emerald-400 uppercase tracking-widest transition-all">
                     Restart Service Instance
                   </button>
@@ -753,7 +844,7 @@ export default function App() {
                     className="w-full py-3 rounded-lg bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/20 text-[9px] font-black text-blue-400 uppercase tracking-widest transition-all">
                     Reset To Golden Layout
                   </button>
-                  <button onClick={(e) => { e.stopPropagation(); engine.injectFault(selectedNode.id); }}
+                  <button onClick={(e) => { e.stopPropagation(); workerRef.current?.postMessage({ type: 'INJECT_FAULT', payload: { id: selectedNode.id } }); }}
                     className="w-full py-3 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 text-[9px] font-black text-rose-400 uppercase tracking-widest transition-all">
                     Inject Fault (VPC Pressure)
                   </button>

@@ -18,6 +18,7 @@ export class MasteryEngine {
   private nodes: Node[] = [];
   private edges: EngineEdge[] = [];
   private goldenLayout: Map<string, { x: number; y: number }> = new Map();
+  private isClusteredMode = false;
 
   constructor(maxNodes: number, boundary: { width: number, height: number }) {
     this.dbStore = new DoubleBufferStore(maxNodes);
@@ -56,11 +57,14 @@ export class MasteryEngine {
         const width = 190;
         const height = 140;
 
+        // Assign to logical clusters for INV-22
+        const clusterId = x < 4000 ? 'ZONE_WEST' : (x > 6000 ? 'ZONE_EAST' : 'ZONE_CORE');
+
         const nodeData = { 
           id, 
           position: { x, y },
           data: { 
-            width, height, color, 
+            width, height, color, clusterId,
             label: `${type} ${nodeCount - 1}`, 
             type, status,
             telemetry: {
@@ -112,7 +116,87 @@ export class MasteryEngine {
     })));
   }
 
-  getRenderData() {
+  // Scaling Invariant 22: Geometric Hysteresis
+  getClusteredRenderData(zoom: number, draggedNodeId: string | null = null) {
+    const THRESHOLD = 0.18;
+    const HYSTERESIS = 0.03;
+    
+    // L7 Stateful Hysteresis: Directional state locking to prevent flickering
+    if (this.isClusteredMode) {
+      if (zoom > THRESHOLD + HYSTERESIS) this.isClusteredMode = false;
+    } else {
+      if (zoom < THRESHOLD - HYSTERESIS) this.isClusteredMode = true;
+    }
+
+    if (!this.isClusteredMode) {
+      return this.getRenderData(draggedNodeId);
+    }
+
+    const clusters = new Map<string, any[]>();
+    this.nodes.forEach(node => {
+      const cid = node.data?.clusterId || 'DEFAULT';
+      const clusterNodes = clusters.get(cid) || [];
+      clusterNodes.push(node);
+      clusters.set(cid, clusterNodes);
+    });
+
+    const clusteredNodes: any[] = [];
+    const clusterMap = new Map<string, any>();
+
+    clusters.forEach((cNodes, cid) => {
+      const avgX = cNodes.reduce((sum, n) => sum + n.position.x, 0) / cNodes.length;
+      const avgY = cNodes.reduce((sum, n) => sum + n.position.y, 0) / cNodes.length;
+      
+      const cluster = {
+        id: `cluster-${cid}`,
+        position: { x: avgX, y: avgY },
+        isCluster: true,
+        data: {
+          label: cid.replace('_', ' '),
+          count: cNodes.length,
+          type: 'CLUSTER',
+          status: cNodes.some(n => n.data.status === 'CRITICAL') ? 'CRITICAL' : 
+                  (cNodes.some(n => n.data.status === 'DEGRADED') ? 'DEGRADED' : 'HEALTHY'),
+          color: cNodes.some(n => n.data.status === 'CRITICAL') ? '#f43f5e' : 
+                 (cNodes.some(n => n.data.status === 'DEGRADED') ? '#fbbf24' : '#3b82f6'),
+          width: 600,
+          height: 400
+        }
+      };
+      clusteredNodes.push(cluster);
+      clusterMap.set(cid, cluster);
+    });
+
+    // Aggregate Edges
+    const clusteredEdges: any[] = [];
+    const edgeKeySet = new Set<string>();
+
+    this.edges.forEach(edge => {
+      const sourceNode = this.nodes.find(n => n.id === edge.source);
+      const targetNode = this.nodes.find(n => n.id === edge.target);
+      if (!sourceNode || !targetNode) return;
+
+      const sCid = sourceNode.data.clusterId;
+      const tCid = targetNode.data.clusterId;
+
+      if (sCid !== tCid) {
+        const edgeKey = `cluster-${sCid}-to-cluster-${tCid}`;
+        if (!edgeKeySet.has(edgeKey)) {
+          clusteredEdges.push({
+            id: edgeKey,
+            source: `cluster-${sCid}`,
+            target: `cluster-${tCid}`,
+            type: 'CLUSTER_LINK'
+          });
+          edgeKeySet.add(edgeKey);
+        }
+      }
+    });
+
+    return { nodes: clusteredNodes, edges: clusteredEdges };
+  }
+
+  getRenderData(draggedNodeId: string | null = null) {
     const worldTopLeft = {
       x: -this.viewport.x / this.viewport.zoom,
       y: -this.viewport.y / this.viewport.zoom
@@ -121,17 +205,26 @@ export class MasteryEngine {
     const worldHeight = this.canvasSize.height / this.viewport.zoom;
 
     const worldRect = {
-      x: worldTopLeft.x - 5000, // L7 Over-Render Buffer
-      y: worldTopLeft.y - 5000,
-      width: worldWidth + 10000,
-      height: worldHeight + 10000
+      x: worldTopLeft.x - 8000, 
+      y: worldTopLeft.y - 8000,
+      width: worldWidth + 16000,
+      height: worldHeight + 16000
     };
 
     const visibleNodeStubs = this.virtualizer.getVisibleNodes(worldRect);
     const nodeIds = new Set(visibleNodeStubs.map(n => n.id));
     
-    const visibleNodes = this.nodes.filter(n => nodeIds.has(n.id));
+    // L7 Invariant: Dragged node MUST always be materialized
+    if (draggedNodeId) nodeIds.add(draggedNodeId);
+
+    // L7 Invariant: If an edge is visible, both its nodes must be materialized
     const visibleEdges = this.edges.filter(e => nodeIds.has(e.source) || nodeIds.has(e.target));
+    visibleEdges.forEach(e => {
+      nodeIds.add(e.source);
+      nodeIds.add(e.target);
+    });
+
+    const visibleNodes = this.nodes.filter(n => nodeIds.has(n.id));
     
     return {
       nodes: visibleNodes,
@@ -198,57 +291,25 @@ export class MasteryEngine {
     return zones;
   }
 
-  tickTelemetry() {
-    // Create a lookup map for O(1) performance
-    const nodeMap = new Map(this.nodes.map(n => [n.id, n]));
-
-    this.nodes.forEach(n => {
-      if (!n.data?.telemetry) return;
-
-      // 1. Recovery Machine
-      if (n.data.status === 'RESTARTING') {
-        n.data.telemetry.cpu += 5;
-        if (n.data.telemetry.cpu >= 100) {
-          n.data.status = 'HEALTHY';
-          n.data.color = '#3b82f6';
-          n.data.telemetry.cpu = 20 + Math.random() * 5;
-        }
-      }
-
-      // 2. Base Jitter
-      const t = n.data.telemetry;
-      const latBase = parseFloat(t.latency || '5');
-      t.latency = Math.max(1, latBase + (Math.random() - 0.5) * 2).toFixed(1);
-      const cpuBase = t.cpu || 20;
-      t.cpu = Math.min(100, Math.max(0, cpuBase + (Math.random() - 0.5) * 4));
-
-      // 3. Propagation Logic (Optimized)
-      const upstreams = this.edges.filter(e => e.target === n.id);
-      let backPressure = 0;
-      upstreams.forEach(edge => {
-        const source = nodeMap.get(edge.source);
-        if (source?.data.status === 'CRITICAL') backPressure += 30;
-        if (source?.data.status === 'DEGRADED') backPressure += 10;
-      });
-
-      if (backPressure > 0) {
-        t.cpu = Math.min(100, t.cpu + backPressure);
-        if (t.cpu > 90) { n.data.status = 'CRITICAL'; n.data.color = '#f43f5e'; }
-        else if (t.cpu > 70) { n.data.status = 'DEGRADED'; n.data.color = '#fbbf24'; }
-      } else if (n.data.status !== 'HEALTHY' && n.data.status !== 'RESTARTING' && t.cpu < 70) {
-        n.data.status = 'HEALTHY';
-        n.data.color = '#3b82f6';
-      }
-    });
-  }
-
-  // L7 Optimized Node Relocation
+  // L7 Optimized Node Relocation - Defer virtualizer sync to commit phase
   updateNodePosition(id: string, x: number, y: number) {
     const node = this.nodes.find(n => n.id === id);
     if (!node) return;
     node.position = { x, y };
+  }
+
+  applyTelemetryDelta(updates: any[]) {
+    const nodeMap = new Map(this.nodes.map(n => [n.id, n]));
+    updates.forEach(update => {
+      const node = nodeMap.get(update.id);
+      if (node) {
+        node.data.status = update.status;
+        node.data.color = update.color;
+        node.data.telemetry = update.telemetry;
+      }
+    });
     
-    // Sync Virtualizer
+    // Low-frequency spatial re-index (only during telemetry ticks, not drag)
     this.virtualizer.updateNodes(this.nodes.map(n => ({
       id: n.id,
       x: n.position.x,
