@@ -3,7 +3,7 @@ import { MasteryEngine, type EngineEdge } from './MasteryEngine';
 import { project, unproject } from '../../invariant-core/inv02-viewport/src/index.ts';
 import type { Viewport, Point } from '../../invariant-core/inv02-viewport/src/index.ts';
 import { Node } from '../../invariant-core/inv01-model/src/index.ts';
-import { Shield, Search, Eye, Layout, Database, Activity, Cpu, ChevronRight, X } from 'lucide-react';
+import { Shield, Search, Eye, Layout, Database, Activity, Cpu, ChevronRight, X, RotateCcw } from 'lucide-react';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
@@ -58,14 +58,15 @@ const MemoizedEdge = React.memo(({ edge, sourceNode, targetNode, isPathHovered, 
       d={path}
       fill="none"
       stroke={isPathHovered ? "rgba(255,255,255,1.0)" : isBlueprint ? "rgba(255,255,255,0.2)" : "rgba(255,255,255,0.4)"}
-      strokeWidth={isPathHovered ? 3.0 : 2.0}
+      strokeWidth={isPathHovered ? 4.0 : 1.5 + (parseFloat(sourceNode.data.telemetry.cpu) / 50)}
       className={cn(
-        "transition-all duration-500",
+        "transition-opacity duration-300",
         isDimmed ? "opacity-20" : isPathHovered ? "opacity-100" : "opacity-80",
-        isPathHovered && "animate-flow"
+        (isPathHovered || parseFloat(sourceNode.data.telemetry.cpu) > 60) && "animate-flow"
       )}
       style={{
-        strokeDasharray: isPathHovered ? '8, 8' : 'none',
+        animationDuration: `${Math.max(0.2, 3 - (parseFloat(sourceNode.data.telemetry.cpu) / 30))}s`,
+        strokeDasharray: isBlueprint ? '4, 4' : (isPathHovered ? '8, 8' : 'none'),
         willChange: 'opacity, stroke-width'
       }}
     />
@@ -82,8 +83,10 @@ const MemoizedNode = React.memo(({ node, isSelected, zoom, onSelect, onInspect, 
     <div
       id={`node-${node.id}`}
       className={cn(
-        "absolute pointer-events-auto group transition-all duration-500",
-        isDimmed ? "opacity-30 scale-95" : "opacity-100 scale-100"
+        "absolute pointer-events-auto group",
+        isDimmed ? "opacity-30 scale-95" : "opacity-100 scale-100",
+        node.data.status === 'CRITICAL' && node.data.telemetry.cpu > 90 && "stress-vibration",
+        node.data.status === 'RESTARTING' && "recovery-glow"
       )}
       style={{
         transform: `translate3d(${node.position.x}px, ${node.position.y}px, 0)`,
@@ -96,7 +99,7 @@ const MemoizedNode = React.memo(({ node, isSelected, zoom, onSelect, onInspect, 
     >
       {effectiveSummaryView ? (
         <div className={cn(
-          "w-full h-full rounded-xl border-2 transition-all duration-500 glass-card flex items-center justify-center",
+          "w-full h-full rounded-xl border-2 glass-card flex items-center justify-center transition-opacity duration-300",
           isSelected ? "node-selected scale-125 border-white" : "border-white/10",
           isError && "border-rose-500 bg-rose-500/20"
         )} style={{ backgroundColor: isSelected ? color : `${color}33` }}>
@@ -104,9 +107,9 @@ const MemoizedNode = React.memo(({ node, isSelected, zoom, onSelect, onInspect, 
         </div>
       ) : (
         <div className={cn(
-          "relative h-full w-full flex flex-col rounded-2xl overflow-hidden glass-card transition-all duration-500",
-          isSelected ? "node-selected border-white/40 ring-1 ring-white/20" : "border-white/5",
-          isError && "border-rose-500 shadow-[0_0_40px_rgba(244,63,94,0.1)]"
+          "relative h-full w-full flex flex-col rounded-2xl overflow-hidden glass-card transition-colors duration-300",
+          isSelected ? "node-selected ring-2 ring-white/20" : "border-white/5",
+          isError && "bg-rose-500/5 border-rose-500/20"
         )}>
           <div className="absolute inset-0 bg-gradient-to-br from-white/[0.03] to-transparent pointer-events-none" />
           <div className="flex items-center justify-between px-4 py-3 bg-white/[0.03] border-b border-white/5">
@@ -165,7 +168,7 @@ const Breadcrumbs = () => (
   </div>
 );
 
-const StatHUD = React.memo(({ stats, isBlueprintMode, viewport, setIsBlueprint, setIsSummaryView, isSummaryView }: any) => {
+const StatHUD = React.memo(({ stats, engine, isBlueprintMode, setIsBlueprint, setIsSummaryView, isSummaryView }: any) => {
   const [fps, setFps] = useState(0);
   const frameCount = useRef(0);
   const lastTime = useRef(0);
@@ -220,19 +223,20 @@ const StatHUD = React.memo(({ stats, isBlueprintMode, viewport, setIsBlueprint, 
         <div className="flex items-center gap-1.5 ml-4">
           {[
             { icon: Eye, active: isSummaryView, onClick: () => setIsSummaryView(!isSummaryView), label: 'LOD' },
-            { icon: Layout, active: isBlueprintMode, onClick: () => setIsBlueprint(!isBlueprintMode), label: 'MESH' }
+            { icon: Layout, active: isBlueprintMode, onClick: () => setIsBlueprint(!isBlueprintMode), label: 'MESH' },
+            { icon: RotateCcw, active: false, onClick: () => { if(confirm('Reset all node positions to system defaults?')) { localStorage.removeItem('cntp-topology-layout'); window.location.reload(); } }, label: 'RESET' }
           ].map((btn, i) => (
             <button 
               key={i}
               onClick={btn.onClick}
               className={cn(
                 "p-1.5 rounded-lg border transition-all duration-300 group relative",
-                btn.active ? "bg-white/10 border-white/20 text-white shadow-lg" : "bg-white/5 border-white/5 text-white/30 hover:bg-white/10"
+                btn.active ? "bg-white/10 border-white/20 text-white shadow-lg" : "bg-white/5 border-white/5 text-white/30 hover:bg-white/10 hover:text-rose-400"
               )}
             >
               <btn.icon size={11} strokeWidth={2.5} />
               <div className="absolute -top-7 left-1/2 -translate-x-1/2 px-1.5 py-0.5 bg-[#0f172a] rounded border border-white/10 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">
-                <span className="text-[6px] font-black text-white/40 tracking-widest uppercase">{btn.label}</span>
+                <span className="text-[6px] font-black tracking-widest uppercase">{btn.label}</span>
               </div>
             </button>
           ))}
@@ -252,7 +256,18 @@ export default function App() {
     };
   });
 
-  const [engine] = useState(() => new MasteryEngine(MAX_NODES, BOUNDARY));
+  const [engine] = useState(() => {
+    const instance = new MasteryEngine(MAX_NODES, BOUNDARY);
+    const savedLayout = localStorage.getItem('cntp-topology-layout');
+    if (savedLayout) {
+      try {
+        instance.hydratePositions(JSON.parse(savedLayout));
+      } catch (e) {
+        console.error("Failed to hydrate layout", e);
+      }
+    }
+    return instance;
+  });
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [inspectedId, setInspectedId] = useState<string | null>(null);
   const [hoveredId, setHoveredId] = useState<string | null>(null);
@@ -262,6 +277,7 @@ export default function App() {
   const [stats, setStats] = useState(() => engine.getStats());
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [telemetryTick, setTelemetryTick] = useState(0);
+  const [inspectorTab, setInspectorTab] = useState<'OVERVIEW' | 'METRICS' | 'CONTROLS'>('OVERVIEW');
 
   const containerRef = useRef<HTMLDivElement>(null);
   const worldRef = useRef<HTMLDivElement>(null);
@@ -434,6 +450,14 @@ export default function App() {
     }
 
     setIsPanning(false);
+    if (draggedNodeId) {
+      const node = engine.getNodeById(draggedNodeId);
+      if (node) {
+        const layout = JSON.parse(localStorage.getItem('cntp-topology-layout') || '{}');
+        layout[draggedNodeId] = { x: node.position.x, y: node.position.y };
+        localStorage.setItem('cntp-topology-layout', JSON.stringify(layout));
+      }
+    }
     setDraggedNodeId(null);
     nextPos.current = null;
     if (rafId.current) {
@@ -450,7 +474,7 @@ export default function App() {
   }, [viewport, engine]);
 
   useEffect(() => {
-    const statsTimer = setInterval(() => setStats(engine.getStats()), 100);
+    const statsTimer = setInterval(() => setStats(engine.getStats()), 500);
     const telemetryTimer = setInterval(() => {
       engine.tickTelemetry();
       setTelemetryTick(t => t + 1);
@@ -540,7 +564,7 @@ export default function App() {
     <div ref={containerRef} className={cn("w-screen h-screen relative overflow-hidden bg-[#01040f] select-none", isPanning ? "cursor-grabbing" : "cursor-grab")}
       onMouseDown={handleMouseDown} onMouseMove={handleMouseMove} onMouseUp={handleMouseUp} onMouseLeave={handleMouseLeave} onClick={() => { setSelectedId(null); setInspectedId(null); }}>
       {canvasContent}
-      <div className="absolute inset-0 pointer-events-none z-[100]">
+      <div className="absolute inset-0 pointer-events-none z-[9999] overflow-hidden">
         <div className="absolute top-6 left-1/2 -translate-x-1/2 flex flex-col items-center gap-3 pointer-events-none w-full max-w-lg px-8">
           <div className={cn("w-full glass-panel rounded-2xl px-5 py-2.5 flex items-center gap-4 shadow-2xl pointer-events-auto transition-all duration-500 relative overflow-hidden", isSearchFocused ? "border-blue-500/40 ring-2 ring-blue-500/5 scale-[1.01]" : "border-white/5")}>
             <div className={cn("absolute inset-0 shimmer-active opacity-0 transition-opacity duration-700", isSearchFocused && "opacity-100")} />
@@ -569,7 +593,7 @@ export default function App() {
         </div>
         <div className="absolute top-6 left-6 pointer-events-none">
           <div className="glass-panel px-4 py-3 rounded-2xl shadow-2xl pointer-events-auto border-white/5">
-            <StatHUD stats={stats} isBlueprintMode={isBlueprint} viewport={viewport} setIsBlueprint={setIsBlueprint} setIsSummaryView={setIsSummaryView} isSummaryView={isSummaryView} />
+            <StatHUD stats={stats} engine={engine} isBlueprintMode={isBlueprint} setIsBlueprint={setIsBlueprint} setIsSummaryView={setIsSummaryView} isSummaryView={isSummaryView} />
           </div>
         </div>
         {/* Status Bar */}
@@ -599,79 +623,109 @@ export default function App() {
       {/* Node Detail Panel */}
       {selectedNode && (
         <div className="absolute top-0 right-0 bottom-7 w-80 glass-panel border-l border-white/10 z-[200] pointer-events-auto detail-panel-enter overflow-y-auto" onClick={e => e.stopPropagation()}>
-          <div className="sticky top-0 flex items-center justify-between px-5 py-4 border-b border-white/5 bg-[#0f172a]/95 backdrop-blur-md z-10">
+          <div className="sticky top-0 flex items-center justify-between px-5 py-4 border-b border-white/5 bg-[#0f172a] z-10">
             <div className="flex items-center gap-2.5">
               <div className="w-2 h-2 rounded-full" style={{ backgroundColor: selectedNode.data?.color || '#3b82f6' }} />
               <span className="text-[10px] font-black text-white/80 uppercase tracking-[0.15em]">{selectedNode.data?.type || 'UNIT'}</span>
             </div>
             <button onClick={(e) => { e.stopPropagation(); setInspectedId(null); }} className="p-1 rounded-md hover:bg-white/10 transition-colors text-white/30 hover:text-white/60"><X size={14} /></button>
           </div>
-          <div className="p-5 flex flex-col gap-5">
-            <div>
-              <h3 className="text-sm font-black text-white/90 tracking-tight">{selectedNode.data?.label}</h3>
-              <p className="text-[9px] font-mono text-white/20 mt-1">ID: {selectedNode.id}</p>
-            </div>
-            <div className={cn("inline-flex self-start px-2.5 py-1 rounded-full text-[7px] font-black uppercase tracking-widest border",
-              selectedNode.data?.status === 'CRITICAL' ? "text-rose-400 bg-rose-500/10 border-rose-500/20" :
-              selectedNode.data?.status === 'DEGRADED' ? "text-amber-400 bg-amber-500/10 border-amber-500/20" :
-              "text-emerald-400 bg-emerald-500/10 border-emerald-500/20"
-            )}>{selectedNode.data?.status || 'HEALTHY'}</div>
-            {selectedNode.data?.telemetry && (
-              <div className="flex flex-col gap-4 border-t border-white/5 pt-4">
-                <span className="text-[7px] font-black text-white/20 uppercase tracking-[0.3em]">Telemetry</span>
-                <div className="flex flex-col gap-1">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[8px] text-white/30 font-mono">Latency</span>
-                    <span className="text-[10px] font-mono font-bold text-emerald-400">{selectedNode.data.telemetry.latency}ms</span>
-                  </div>
-                  <div className="h-1 bg-white/5 rounded-full overflow-hidden">
-                    <div className="h-full bg-emerald-500/40 rounded-full transition-all duration-700" style={{ width: `${Math.min(100, parseFloat(selectedNode.data.telemetry.latency) * 2)}%` }} />
-                  </div>
+          <div className="flex items-center gap-6 px-5 border-b border-white/5 bg-white/[0.01]">
+            {['OVERVIEW', 'METRICS', 'CONTROLS'].map(tab => (
+              <button key={tab} onClick={() => setInspectorTab(tab as any)}
+                className={cn("py-3 text-[8px] font-black tracking-widest uppercase transition-all relative", 
+                  inspectorTab === tab ? "text-blue-400" : "text-white/20 hover:text-white/40")}>
+                {tab}
+                {inspectorTab === tab && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.5)]" />}
+              </button>
+            ))}
+          </div>
+
+          <div className="flex-1 overflow-y-auto">
+            {inspectorTab === 'OVERVIEW' && (
+              <div className="p-5 flex flex-col gap-6">
+                <div>
+                  <h3 className="text-sm font-black text-white/90 tracking-tight">{selectedNode.data?.label}</h3>
+                  <p className="text-[9px] font-mono text-white/20 mt-1">UUID: {selectedNode.id}</p>
                 </div>
-                <div className="flex flex-col gap-1">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[8px] text-white/30 font-mono">CPU Load</span>
-                    <span className="text-[10px] font-mono font-bold text-blue-400">{selectedNode.data.telemetry.cpu}%</span>
-                  </div>
-                  <div className="h-1 bg-white/5 rounded-full overflow-hidden">
-                    <div className={cn("h-full rounded-full transition-all duration-700", selectedNode.data.telemetry.cpu > 80 ? "bg-rose-500/60" : selectedNode.data.telemetry.cpu > 50 ? "bg-amber-500/40" : "bg-blue-500/40")} style={{ width: `${selectedNode.data.telemetry.cpu}%` }} />
-                  </div>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-[8px] text-white/30 font-mono">Error Rate</span>
-                  <span className={cn("text-[10px] font-mono font-bold", parseFloat(selectedNode.data.telemetry.errorRate) > 1 ? "text-rose-400" : "text-white/30")}>{selectedNode.data.telemetry.errorRate}%</span>
+                
+                <div className={cn("inline-flex self-start px-2.5 py-1 rounded-full text-[7px] font-black uppercase tracking-widest border",
+                  selectedNode.data?.status === 'CRITICAL' ? "text-rose-400 bg-rose-500/10 border-rose-500/20" :
+                  selectedNode.data?.status === 'DEGRADED' ? "text-amber-400 bg-amber-500/10 border-amber-500/20" :
+                  selectedNode.data?.status === 'RESTARTING' ? "text-blue-400 bg-blue-500/10 border-blue-500/20" :
+                  "text-emerald-400 bg-emerald-500/10 border-emerald-500/20"
+                )}>{selectedNode.data?.status || 'HEALTHY'}</div>
+
+                <div className="flex flex-col gap-3 border-t border-white/5 pt-4">
+                  <span className="text-[7px] font-black text-white/20 uppercase tracking-[0.3em]">Topological Context</span>
+                  {selectedEdges.filter(e => e.target === selectedNode.id).length > 0 && (
+                    <div className="flex flex-col gap-1.5">
+                      <span className="text-[7px] text-white/15 uppercase tracking-widest">Inbound traffic</span>
+                      {selectedEdges.filter(e => e.target === selectedNode.id).map(e => (
+                        <div key={e.id} className="flex items-center gap-2 text-[9px] font-mono text-white/30 p-2 bg-white/[0.02] rounded border border-white/5">
+                          <ChevronRight size={8} className="text-white/10 rotate-180" /><span>{e.source}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
             )}
-            <div className="flex flex-col gap-3 border-t border-white/5 pt-4">
-              <span className="text-[7px] font-black text-white/20 uppercase tracking-[0.3em]">Connections</span>
-              {selectedEdges.filter(e => e.target === selectedNode.id).length > 0 && (
-                <div className="flex flex-col gap-1.5">
-                  <span className="text-[7px] text-white/15 uppercase tracking-widest">Upstream ({selectedEdges.filter(e => e.target === selectedNode.id).length})</span>
-                  {selectedEdges.filter(e => e.target === selectedNode.id).map(e => (
-                    <div key={e.id} className="flex items-center gap-2 text-[9px] font-mono text-white/30">
-                      <ChevronRight size={8} className="text-white/10 rotate-180" /><span>{e.source}</span>
+
+            {inspectorTab === 'METRICS' && (
+              <div className="p-5 flex flex-col gap-5">
+                <span className="text-[7px] font-black text-white/20 uppercase tracking-[0.3em]">Live Telemetry</span>
+                <div className="flex flex-col gap-4">
+                  <div className="flex flex-col gap-1">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[8px] text-white/30 font-mono uppercase tracking-widest">Latency</span>
+                      <span className="text-[10px] font-mono font-bold text-emerald-400">{selectedNode.data.telemetry.latency}ms</span>
                     </div>
-                  ))}
-                </div>
-              )}
-              {selectedEdges.filter(e => e.source === selectedNode.id).length > 0 && (
-                <div className="flex flex-col gap-1.5">
-                  <span className="text-[7px] text-white/15 uppercase tracking-widest">Downstream ({selectedEdges.filter(e => e.source === selectedNode.id).length})</span>
-                  {selectedEdges.filter(e => e.source === selectedNode.id).map(e => (
-                    <div key={e.id} className="flex items-center gap-2 text-[9px] font-mono text-white/30">
-                      <ChevronRight size={8} className="text-white/10" /><span>{e.target}</span>
+                    <div className="h-1 bg-white/5 rounded-full overflow-hidden">
+                      <div className="h-full bg-emerald-500/40 rounded-full transition-all duration-700" style={{ width: `${Math.min(100, parseFloat(selectedNode.data.telemetry.latency) * 2)}%` }} />
                     </div>
-                  ))}
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[8px] text-white/30 font-mono uppercase tracking-widest">CPU LOAD</span>
+                      <span className="text-[10px] font-mono font-bold text-blue-400">{selectedNode.data.telemetry.cpu.toFixed(1)}%</span>
+                    </div>
+                    <div className="h-1 bg-white/5 rounded-full overflow-hidden">
+                      <div className={cn("h-full rounded-full transition-all duration-1000", selectedNode.data.telemetry.cpu > 80 ? "bg-rose-500/60" : selectedNode.data.telemetry.cpu > 50 ? "bg-amber-500/40" : "bg-blue-500/40")} style={{ width: `${selectedNode.data.telemetry.cpu}%` }} />
+                    </div>
+                  </div>
                 </div>
-              )}
-            </div>
-          </div>
-          <div className="mt-auto p-5 border-t border-white/5 bg-white/[0.02] pointer-events-auto">
-            <h4 className="text-[7px] font-black text-white/20 uppercase tracking-[0.2em] mb-3">Unit Controls</h4>
-            <button className="w-full py-2.5 rounded-lg bg-white/5 hover:bg-rose-500/10 border border-white/5 hover:border-rose-500/20 text-[8px] font-black text-white/30 hover:text-rose-500 uppercase tracking-widest transition-all duration-300">
-              Restart Service Instance
-            </button>
+              </div>
+            )}
+
+            {inspectorTab === 'CONTROLS' && (
+              <div className="p-5 flex flex-col gap-6">
+                <h4 className="text-[7px] font-black text-white/20 uppercase tracking-[0.2em] mb-2">Operational Interventions</h4>
+                <div className="flex flex-col gap-2">
+                  <button onClick={(e) => { e.stopPropagation(); engine.restartNode(selectedNode.id); }}
+                    className="w-full py-3 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 text-[9px] font-black text-emerald-400 uppercase tracking-widest transition-all">
+                    Restart Service Instance
+                  </button>
+                  <button onClick={() => { setIsBlueprint(!isBlueprint); localStorage.setItem('cntp-blueprint', String(!isBlueprint)); }}
+                    className={cn("w-full py-3 rounded-lg transition-all duration-300 border text-[9px] font-black uppercase tracking-widest", isBlueprint ? "bg-blue-500/20 text-blue-400 border-blue-500/30" : "bg-white/5 text-white/40 border-white/5 hover:bg-white/10")}>
+                    Toggle Blueprint Mode
+                  </button>
+                  <button onClick={() => { if(confirm('Reset all node positions to system defaults?')) { localStorage.removeItem('cntp-topology-layout'); window.location.reload(); } }}
+                    className="w-full py-3 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 text-[9px] font-black text-rose-400 uppercase tracking-widest transition-all">
+                    Reset Layout
+                  </button>
+                  <button onClick={(e) => { e.stopPropagation(); engine.injectFault(selectedNode.id); }}
+                    className="w-full py-3 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 text-[9px] font-black text-rose-400 uppercase tracking-widest transition-all">
+                    Inject Fault (VPC Pressure)
+                  </button>
+                </div>
+                <div className="p-4 rounded-xl bg-amber-500/5 border border-amber-500/10">
+                  <p className="text-[8px] text-amber-200/40 leading-relaxed uppercase tracking-tighter">
+                    Warning: Injecting faults will simulate cascading back-pressure to all downstream dependencies. Use only for resilience testing.
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}
