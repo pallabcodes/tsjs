@@ -1,0 +1,63 @@
+syntax = "proto3";
+
+package ostream.v1;
+
+option go_package = "github.com/picon/ostream/contracts/v1;ostreamv1";
+option java_package = "com.picon.ostream.contracts.v1";
+option java_multiple_files = true;
+
+/**
+ * MediaFrameMetadata is the atomic unit of the OStream engine.
+ * It is extracted by the C++ Parser and injected into OTEL spans by the Go Agent.
+ */
+message MediaFrameMetadata {
+  // Unique sequence number for the frame within the stream session.
+  uint64 sequence_number = 1;
+  
+  // High-resolution timestamp from the media header (RTP or Container).
+  uint64 media_timestamp_ns = 2;
+  
+  // The type of NAL unit (e.g., IDR, P-Frame, B-Frame).
+  enum NalType {
+    NAL_TYPE_UNSPECIFIED = 0;
+    NAL_TYPE_IDR = 1;      // Instantaneous Decoding Refresh (I-Frame)
+    NAL_TYPE_NON_IDR = 2;  // P-Frame
+    NAL_TYPE_PPS = 3;      // Picture Parameter Set
+    NAL_TYPE_SPS = 4;      // Sequence Parameter Set
+  }
+  NalType nal_type = 3;
+
+  // Position within the current Group of Pictures (GOP).
+  uint32 gop_index = 4;
+
+  // Size of the frame in bytes.
+  uint32 frame_size_bytes = 5;
+
+  // Distributed Trace Context (W3C TraceContext standard).
+  // This allows the media frame to be linked to a specific OTEL trace.
+  string trace_id = 6;
+  string span_id = 7;
+}
+
+/**
+ * StreamHealth contains the calculated invariants of a live media stream.
+ */
+message StreamHealth {
+  string stream_id = 1;
+  
+  // Current bitrate in kilobits per second.
+  float bitrate_kbps = 2;
+  
+  // Network jitter in milliseconds.
+  float jitter_ms = 3;
+  
+  // Percentage of packet loss in the last reporting window.
+  float packet_loss_percent = 4;
+  
+  // End-to-end latency (glass-to-glass) in milliseconds.
+  float latency_ms = 5;
+
+  // Codec information.
+  string codec = 6; // e.g., "h264", "h265", "vp9"
+  string resolution = 7; // e.g., "1920x1080"
+}

@@ -1,50 +1,47 @@
-# OStream: The Media-Native Observability Mesh
+# Project OStream: The Media-Native Observability Mesh
 
-**OStream** (a play on "Observability Stream" and the C++ `std::ostream`) is a high-performance, distributed observability platform designed to watch over **Video Management Systems (VMS)** and **Streaming Pipelines** while you sleep.
+Despite virtually every Video Management System (VMS) facing the same scaling and troubleshooting challenges, teams are still left to manually correlate video artifacts with server logs. Standard observability tools (Datadog, OTEL) are "Media-Blind," and legacy VMS health tools are "System-Blind." 
 
-## 1. The Core Vision
-The goal of OStream is to eliminate the "3AM Incident Response" for streaming infrastructure. By providing atomic visibility into the media pipeline, OStream identifies "unknown-unknown" failures that standard observability tools ignore.
-
-## 2. The Core Problem: "The Green Dashboard Paradox"
-Standard tools (Datadog, CloudWatch) monitor infrastructure, not "Media Reality."
-*   **Infrastructure Health**: CPU, RAM, and Network are 100% healthy.
-*   **Media Reality**: The video stream is stuttering, frames are being dropped, or the GOP (Group of Pictures) is malformed.
-*   **The Result**: Engineers are woken up at 3AM to manually "hunt" for a bug that the dashboard says doesn't exist.
-
-## 3. The Objective: "Semantic Tracing"
-OStream provides a **Traceable Path** for every frame. It correlates **Media Invariants** with **System Invariants** to provide instant root-cause analysis.
-
-## 4. The "Engine and Shell" Architecture
-
-### The Engine (The "Night-Watcher")
-*   **Implementation**: A headless, zero-overhead sidecar built in **Go** and **C++**.
-*   **Function**: 
-    *   **NAL-Level Parsing**: Deep-packet inspection of RTSP/WebRTC streams.
-    *   **Metadata Injection**: Injects frame-level health (Jitter, PTS/DTS offsets, Sequence gaps) into standard OpenTelemetry (OTEL) Spans.
-    *   **Performance**: Utilizes zero-copy buffers and hardware-accelerated headers to handle 10k+ concurrent streams with <1ms overhead.
-
-### The Shell (The "Lighthouse")
-*   **Implementation**: A React-based visualization platform built on **ReactFlow**.
-*   **Function**:
-    *   **Flow-Centric Graph**: Renders the media pipeline as a live topology.
-    *   **Visual Debugging**: Nodes change state based on the **Media Health** reported by the engine. 
-    *   **Causality Replay**: Allows engineers to "rewind" an incident to see exactly where the "Ozhukk" (Flow) was interrupted.
-
-## 5. Technology Stack
-
-To ensure "Mechanical Sympathy" with existing VMS infrastructure, OStream utilizes a polyglot stack optimized for both raw performance and enterprise governance:
-
-*   **The Engine (The Core)**: **C / C++**. 
-    *   *Role*: Deep-packet inspection, zero-copy buffer analysis, and NAL-unit parsing. Chosen for maximum performance and direct integration with existing C-based media drivers.
-*   **The Connective Tissue**: **Go** (or **Elixir** for high-concurrency signaling).
-    *   *Role*: Managing the OTEL collection pipeline, signaling between edge/cloud, and providing high-availability distributed coordination.
-*   **The Management Plane**: **Java (Spring Boot / DGS)**.
-    *   *Role*: Handling complex business logic, multi-tenancy, authentication, and the GraphQL API for the Shell.
-*   **The Analysis Layer**: **Python**.
-    *   *Role*: Real-time anomaly detection and predictive failure analysis using the ingested telemetry.
-*   **The Interface (The Shell)**: **React, TypeScript, ReactFlow**.
-    *   *Role*: High-fidelity, reactive visualization of the media pipeline.
+**OStream** is built to bridge this gap, providing a high-performance, polyglot engine that correlates real-time Media Pipeline invariants (GOP, NAL, RTP) with distributed system traces.
 
 ---
 
-**OStream: High-performance visibility at the speed of the stream.**
+## 1. Why We Are Building OStream (The Conflict)
+
+Building a modern, software-defined VMS at scale requires a system that can handle thousands of high-bitrate streams while providing sub-millisecond diagnostic clarity. Existing tools fail for three specific reasons:
+
+1.  **The "Blind Blob" Problem**: Standard OTEL treats video as an opaque `byte[]`. It can tell you a service is slow, but it cannot tell you if that slowness caused a **Reference Frame Loss** or a **GOP Violation**.
+2.  **The "Reactive Dashboard" Trap**: Tools like Milestone/Genetec monitor hardware resources (CPU/Disk), but they cannot trace a **single frame's lifecycle** across a microservice mesh. When a stream lags, engineers are forced to guess where the "ghost" in the machine is.
+3.  **The "Metadata Drift" Crisis**: AI events (e.g., Object Detection) often drift from the video frames they describe. There is no industry-standard way to **atomically sync** an OTEL Span ID with a specific Media Sequence Number.
+
+---
+
+## 2. Our Non-Negotiable Requirements
+
+These requirements shape every architectural decision for OStream, from our C++ parser to our React/xyflow visualizer:
+
+*   **Media-Protocol Awareness**: The system must natively parse RTP/RTSP/NAL headers at the "Edge" (C++ Engine) to extract semantic meaning without full decoding.
+*   **Atomic Trace Correlation**: Every media frame must be uniquely correlated with a **Distributed Trace ID**. We must be able to ask: *"Show me the exact system trace for the frame where the Jitter exceeded 50ms."*
+*   **Zero-Overhead Ingress**: Processing must handle 10k+ metadata points per second with <1ms of overhead on the media path.
+*   **Cost-Centric Observability**: We must identify "Greedy Streams" (misconfigured bitrates/profiles) that are causing cluster-wide resource exhaustion.
+*   **Sovereign Deployment**: The engine must be a lightweight **Sidecar** that runs on-prem (Metal) or in the Cloud (AWS) with zero external data dependencies.
+
+---
+
+## 3. The Architecture (Engine & Shell)
+
+To achieve these requirements, OStream is split into three independently operating layers:
+
+1.  **The Parser (C++ Engine)**: A headless sidecar that hooks into the media pipe. It extracts GOP structure, NAL types, and RTP timestamps.
+2.  **The Injector (Go Middleware)**: A high-performance bridge that normalizes media metadata and injects it into standard OTEL Spans. It handles the context propagation between the Media Pipe and the Trace Pipe.
+3.  **The Visualizer (React/xyflow Shell)**: A "Live Pipeline Map" that renders the graph of the distributed VMS. It doesn't just show services; it shows the **Bitrate Flow** and **Quality Health** across the mesh.
+
+---
+
+## 4. Learning Growth Map (The Staff Engineering Journey)
+
+Building OStream provides deep technical mastery in:
+*   **Systems Programming**: High-performance binary protocol parsing (RTP/NAL) in C++ and Go.
+*   **Distributed Systems**: Mastering custom OTEL instrumentation and polyglot context propagation.
+*   **Mechanical Sympathy**: Zero-copy data passing and hardware-accelerated observability.
+*   **Frontend Mastery**: Building 60FPS telemetry-driven graph UIs with xyflow.
