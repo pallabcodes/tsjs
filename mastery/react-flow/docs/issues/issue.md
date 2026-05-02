@@ -213,10 +213,10 @@ In a massive repo, you don't learn the whole repo. You learn **one specific path
 In frontend, we look at the Zustand store. In a Spring Boot framework like DGS, the "State" is the `ApplicationContext` and the `GraphQLSchema`.
 *   **The Shift:** Instead of asking how data mutates, you ask the AI: "How does DGS scan the classpath for `@DgsComponent` annotations and dynamically build the `GraphQLSchema` object at startup?"
 
-#### 4. Live Debugging (Your Superpower)
+#### 4. Live Debugging Context
 This is where Java and IntelliJ IDEA shine brighter than anything else. 
 *   **The Action:** You don't build the DGS framework itself. You create a tiny, empty Spring Boot app that imports the DGS framework as a dependency. 
-*   **The Magic:** You open IntelliJ, search for the `DgsQueryExecutor.java` class (the one the AI told you about in Phase 2), and put a breakpoint right in the middle of it. When you send a GraphQL request via Postman, IntelliJ pauses execution *inside the framework code*. You can now hit "Step Into" and watch the massive framework execute line-by-line.
+*   **Execution Trace:** You open IntelliJ, search for the `DgsQueryExecutor.java` class (the one the AI told you about in Phase 2), and put a breakpoint right in the middle of it. When you send a GraphQL request via Postman, IntelliJ pauses execution *inside the framework code*. You can now hit "Step Into" and watch the massive framework execute line-by-line.
 
 ---
 
@@ -278,4 +278,64 @@ You have successfully bridged the gap between learning a concept, mastering an o
 
 Are we ready to close out this theoretical phase and move on to your next objective?
 
+---
+
+## 4. Sequential Core Flows: The "Systematic Audit" Methodology
+
+To bridge the gap between static Invariants (70-80% clarity) and the actual Living System (the remaining 20-30%), we must execute a **Sequential Core Flow Audit**. This ensures we aren't just reading files, but tracing the execution path of the application.
+
+### The Audit Sequence
+For any massive OG repo (e.g., `xyflow`, `maple`, `dgs-framework`), you must trace these flows in this exact order:
+
+1.  **Bootstrap Flow**: 
+    *   *Question*: How does the system wake up? 
+    *   *Trace*: From the entry point (main/index) through auto-configuration, bean/state initialization, and finally to the "Idle" state.
+2.  **Input/Event Flow**: 
+    *   *Question*: How does the system react to a single user interaction? 
+    *   *Trace*: From the DOM/Network event listener through the event-bus/state-manager, down to the coordinate/logic update, and back up to the render/response.
+3.  **Data Ingress/Sync Flow**: 
+    *   *Question*: How does the system handle high-frequency external data?
+    *   *Trace*: From the Webhook/OTLP/Websocket buffer through the background worker/serialization layer, into the central store, and finally to the reactive UI update.
+4.  **Persistence/Recovery Flow**: 
+    *   *Question*: How does the system ensure its state survives a crash/refresh?
+    *   *Trace*: From a state mutation through the WAL (Write-Ahead Log) or DB-commit layer, to the storage medium (SQLite/D1), and back through the hydration logic on reboot.
+
+### Why "Sequential"?
+If you jump into Trace 3 (Ingress) before Trace 1 (Bootstrap), you will have no context for how the buffers are initialized. If you trace Trace 4 (Persistence) without Trace 2 (Input), you won't understand what data is actually being saved. 
+
+**This completes the Systematic Audit methodology.** By combining isolated Invariants with Sequential Core Flows, you gain the ability to build and contribute to any complex system on the planet.
+
+### The Response Standard (Augment Style)
+Every core flow audit we perform must adhere to this structural standard for maximum engineering clarity:
+
+*   **Sequential Execution Trace**: Bulleted list of logic flow across file boundaries (e.g., Component -> Controller -> Store -> Service).
+*   **Key Wiring Snippets**: Fenced code blocks with `LineRange:FilePath` markers.
+*   **State & Lifecycle Deep-Dives**: Dedicated headings for:
+    *   *Where state is updated* (Mutations, Reducers, Stores).
+    *   *Which components re-render* (React lifecycle, Observer pattern).
+    *   *Triggering Mechanism* (Undo/Redo logic, Persistence hooks).
+*   **Sequence Diagrams**: Mermaid diagrams for complex, multi-threaded, or asynchronous flows.
+
+---
+
+## 5. Scaling Rendering for High-Density Graphs
+
+When building products like `maple` that require visualizing 10k-100k nodes with high-frequency OTLP data updates ("The Metabolism"), SVG-based rendering reaches its performance limit due to DOM overhead.
+
+### Architectural Decision Matrix: Implementation Trade-offs
+
+| Approach | Use Case | Engineering Trade-off |
+| :--- | :--- | :--- |
+| **Standard SVG Shell** | General-purpose UIs, <1000 nodes. | Optimal developer experience; DOM node count limits performance at scale. |
+| **Custom Implementation** | Specialized coordinate systems, 1M+ nodes. | Maximum performance; high maintenance cost to recreate interaction logic. |
+| **Decoupled Renderer** | High-density visualization (>10k nodes). | Retains core invariants while replacing the bottleneck (SVG) with a GPU-backed layer. |
+
+### Decoupled Rendering Implementation
+Since `xyflow` separates `@xyflow/system` (Logic) from `@xyflow/react` (SVG Shell), performance can be scaled by substituting the rendering layer:
+
+1.  **Logic Preservation**: Retain the Zustand store and `@xyflow/system` logic (Dragging, Snapping, Connection Validation).
+2.  **Renderer Substitution**: Bypass the SVG-based `EdgeRenderer` and `NodeRenderer`. 
+3.  **GPU-Backed Shell**: Implement a custom renderer (WebGL or Canvas2D) that consumes the existing `xyflow` state but draws the graph in a single draw call.
+
+This approach achieves high-density performance while utilizing the existing interaction logic of the core library.
 
