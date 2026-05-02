@@ -218,10 +218,10 @@ export class MasteryEngine {
     const worldHeight = this.canvasSize.height / this.viewport.zoom;
 
     const worldRect = {
-      x: worldTopLeft.x - 8000, 
-      y: worldTopLeft.y - 8000,
-      width: worldWidth + 16000,
-      height: worldHeight + 16000
+      x: worldTopLeft.x - 2000, 
+      y: worldTopLeft.y - 2000,
+      width: worldWidth + 4000,
+      height: worldHeight + 4000
     };
 
     const visibleNodeStubs = this.virtualizer.getVisibleNodes(worldRect);
@@ -231,7 +231,29 @@ export class MasteryEngine {
     if (draggedNodeId) nodeIds.add(draggedNodeId);
 
     // L7 Invariant: If an edge is visible, both its nodes must be materialized
-    const visibleEdges = this.edges.filter(e => nodeIds.has(e.source) || nodeIds.has(e.target));
+    // L7 Fix (Clipping): Ensure edges spanning across the screen are rendered even if nodes are outside
+    const visibleEdges = this.edges.filter(e => {
+      const sourceNode = this.nodes.find(n => n.id === e.source);
+      const targetNode = this.nodes.find(n => n.id === e.target);
+      if (!sourceNode || !targetNode) return false;
+      
+      // If either node is visible, the edge is visible
+      if (nodeIds.has(e.source) || nodeIds.has(e.target)) return true;
+      
+      // L7 Fix (Clipping): Check bounding box overlap with padding to account for bezier arcs
+      const minX = Math.min(sourceNode.position.x, targetNode.position.x) - 1000;
+      const maxX = Math.max(sourceNode.position.x, targetNode.position.x) + 1000;
+      const minY = Math.min(sourceNode.position.y, targetNode.position.y) - 1000;
+      const maxY = Math.max(sourceNode.position.y, targetNode.position.y) + 1000;
+      
+      return (
+        minX <= worldRect.x + worldRect.width &&
+        maxX >= worldRect.x &&
+        minY <= worldRect.y + worldRect.height &&
+        maxY >= worldRect.y
+      );
+    });
+    
     visibleEdges.forEach(e => {
       nodeIds.add(e.source);
       nodeIds.add(e.target);
@@ -326,15 +348,7 @@ export class MasteryEngine {
       node.data.telemetry.requests = buffer[offset + 3];
       node.data.telemetry.errorRate = buffer[offset + 4].toFixed(2);
     });
-
-    // Low-frequency spatial re-index
-    this.virtualizer.updateNodes(this.nodes.map(n => ({
-      id: n.id,
-      x: n.position.x,
-      y: n.position.y,
-      width: n.data.width,
-      height: n.data.height
-    })));
+    // L7 Fix: Removed spatial re-indexing from telemetry loop. Telemetry does not change spatial positions.
   }
 
   applyTelemetryDelta(updates: any[]) {
@@ -347,15 +361,7 @@ export class MasteryEngine {
         node.data.telemetry = update.telemetry;
       }
     });
-    
-    // Low-frequency spatial re-index (only during telemetry ticks, not drag)
-    this.virtualizer.updateNodes(this.nodes.map(n => ({
-      id: n.id,
-      x: n.position.x,
-      y: n.position.y,
-      width: n.data.width,
-      height: n.data.height
-    })));
+    // L7 Fix: Removed spatial re-indexing from telemetry loop.
   }
 
   hydratePositions(layout: Record<string, { x: number; y: number }>) {

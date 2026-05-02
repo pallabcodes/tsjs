@@ -41,9 +41,8 @@ const calculatePath = (sourcePos: Point, targetPos: Point, sourceWidth: number, 
   return `M ${sX} ${sY} C ${sX + curvature} ${sY}, ${tX - curvature} ${tY}, ${tX} ${tY}`;
 };
 
-const MemoizedEdge = React.memo(({ edge, sourceNode, targetNode, isPathHovered, isBlueprint, isSummaryView, zoom, isAnyNodeHovered, sX, sY, tX, tY }: any) => {
+const MemoizedEdge = React.memo(({ edge, sourceNode, targetNode, isPathHovered, isBlueprint, effectiveSummaryView, isAnyNodeHovered, sX, sY, tX, tY, telemetryTick }: any) => {
   if (!sourceNode || !targetNode) return null;
-  const effectiveSummaryView = isSummaryView && zoom < 0.3;
   const sW = effectiveSummaryView ? 40 : sourceNode.data?.width || 280;
   const sH = effectiveSummaryView ? 40 : sourceNode.data?.height || 160;
   const tW = effectiveSummaryView ? 40 : targetNode.data?.width || 280;
@@ -65,22 +64,20 @@ const MemoizedEdge = React.memo(({ edge, sourceNode, targetNode, isPathHovered, 
         stroke={isPathHovered ? "rgba(255,255,255,1.0)" : isBlueprint ? "rgba(255,255,255,0.1)" : "rgba(255,255,255,0.3)"}
         strokeWidth={isPathHovered ? 2.0 : 0.8 + (parseFloat(sourceNode.data.telemetry.cpu) / 120)}
         className={cn(
-          "transition-all duration-300",
-          (isPathHovered || parseFloat(sourceNode.data.telemetry.cpu) > 60) && "animate-flow"
+          "transition-colors duration-300",
+          (isPathHovered || parseFloat(sourceNode.data.telemetry.cpu) > 80) && "animate-flow"
         )}
         style={{
           animationDuration: `${Math.max(0.5, 4 - (parseFloat(sourceNode.data.telemetry.cpu) / 25))}s`,
-          strokeDasharray: isBlueprint ? '4, 4' : (isPathHovered ? '10, 10' : 'none'),
-          willChange: 'stroke, stroke-width, opacity'
+          strokeDasharray: isBlueprint ? '4, 4' : (isPathHovered ? '10, 10' : 'none')
         }}
       />
     </g>
   );
 });
 
-const MemoizedNode = React.memo(({ node, isSelected, zoom, onSelect, onInspect, isSummaryView, isHovered, isAnyHovered, posX, posY }: any) => {
+const MemoizedNode = React.memo(({ node, isSelected, effectiveSummaryView, onSelect, onInspect, isHovered, isAnyHovered, posX, posY, telemetryTick }: any) => {
   const isDimmed = isAnyHovered && !isHovered && !isSelected;
-  const effectiveSummaryView = isSummaryView && zoom < 0.3;
   const isError = node.data?.status === 'CRITICAL';
   const color = node.data?.color || '#3b82f6';
 
@@ -485,9 +482,16 @@ export default function App() {
       const worldMouse = project({ x: e.clientX, y: e.clientY }, prev);
       const newScreenPos = unproject(worldMouse, { ...prev, zoom: newZoom });
       const newViewport = { x: prev.x + (e.clientX - newScreenPos.x), y: prev.y + (e.clientY - newScreenPos.y), zoom: newZoom };
+      
       viewportRef.current = newViewport;
       updateWorldTransform();
-      setViewport(newViewport);
+      
+      // L7 Throttle React state updates during high-frequency scrolling (wheel)
+      const now = performance.now();
+      if (now - lastSyncTime.current > 16) {
+        setViewport(newViewport);
+        lastSyncTime.current = now;
+      }
     };
     el.addEventListener('wheel', onWheel, { passive: false });
     return () => el.removeEventListener('wheel', onWheel);
@@ -735,7 +739,7 @@ export default function App() {
     const isFiltering = activeFilter !== 'ALL';
     
     return (
-      <div ref={worldRef} className={cn("absolute inset-0 will-change-transform", isPanning && "pointer-events-none")} style={{ transformOrigin: '0 0', transform: `translate3d(${viewport.x}px, ${viewport.y}px, 0) scale(${viewport.zoom})` }}>
+      <div ref={worldRef} className={cn("absolute inset-0 will-change-transform", isPanning && "pointer-events-none")} style={{ transformOrigin: '0 0' }}>
         <div className="absolute inset-[-10000px] pointer-events-none opacity-[0.03]" style={{ backgroundImage: `linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px)`, backgroundSize: `100px 100px` }} />
         <div className="absolute inset-0 pointer-events-none overflow-hidden">
           {/* L7 Magnetic Alignment Guide (INV-10) */}
@@ -775,9 +779,9 @@ export default function App() {
             const tgtNode = nodeMap.get(edge.target);
             const filterDimmed = isFiltering && srcNode && tgtNode && !matchesFilter(srcNode) && !matchesFilter(tgtNode);
             return (
-              <MemoizedEdge key={edge.id} edge={edge} sourceNode={srcNode} targetNode={tgtNode} 
+              <MemoizedEdge key={edge.id} edge={edge} sourceNode={srcNode} targetNode={tgtNode} telemetryTick={telemetryTick}
                 sX={srcNode?.position.x} sY={srcNode?.position.y} tX={tgtNode?.position.x} tY={tgtNode?.position.y}
-                isPathHovered={activeHoveredId === edge.source || activeHoveredId === edge.target} isBlueprint={isBlueprint || filterDimmed} isSummaryView={isSummaryView} zoom={viewport.zoom} isAnyNodeHovered={!!activeHoveredId} />
+                isPathHovered={activeHoveredId === edge.source || activeHoveredId === edge.target} isBlueprint={isBlueprint || filterDimmed} effectiveSummaryView={isSummaryView && viewport.zoom < 0.3} isAnyNodeHovered={!!activeHoveredId} />
             );
           })}
         </svg>
@@ -785,15 +789,15 @@ export default function App() {
           {renderData.nodes.map((node: Node) => {
             const filterDimmed = isFiltering && !matchesFilter(node);
             return (
-              <MemoizedNode key={node.id} node={node} isSelected={selectedId === node.id} zoom={viewport.zoom} onSelect={setSelectedId} onInspect={setInspectedId}
-                posX={node.position.x} posY={node.position.y}
-                isSummaryView={isSummaryView} isHovered={activeHoveredId === node.id} isAnyHovered={!!activeHoveredId || filterDimmed} />
+              <MemoizedNode key={node.id} node={node} isSelected={selectedId === node.id} effectiveSummaryView={isSummaryView && viewport.zoom < 0.3} onSelect={setSelectedId} onInspect={setInspectedId}
+                posX={node.position.x} posY={node.position.y} telemetryTick={telemetryTick}
+                isHovered={activeHoveredId === node.id} isAnyHovered={!!activeHoveredId || filterDimmed} />
             );
           })}
         </div>
       </div>
     );
-  }, [renderData, selectedId, hoveredId, isBlueprint, isSummaryView, viewport.x, viewport.y, viewport.zoom, isPanning, engine, draggedNodeId, activeFilter, zoneHealth, telemetryTick, inspectedId]);
+  }, [renderData, selectedId, hoveredId, isBlueprint, isSummaryView, viewport.zoom < 0.3, isPanning, draggedNodeId, activeFilter, zoneHealth, inspectedId, telemetryTick]);
 
   const selectedNode = inspectedId ? engine.getNodeById(inspectedId) : null;
   const selectedEdges = inspectedId ? engine.getConnectedEdges(inspectedId) : [];
@@ -883,8 +887,8 @@ export default function App() {
             )}
           </div>
           <div className="flex items-center gap-1.5 pointer-events-auto">
-            <button onClick={handleExport} className="px-3 py-1 rounded-full border bg-white/5 border-white/5 text-white/20 hover:bg-white/10 hover:text-white/40 text-[7px] font-black tracking-[0.15em] uppercase transition-all duration-300">Export Blueprint</button>
-            <button onClick={() => fileInputRef.current?.click()} className="px-3 py-1 rounded-full border bg-white/5 border-white/5 text-white/20 hover:bg-white/10 hover:text-white/40 text-[7px] font-black tracking-[0.15em] uppercase transition-all duration-300">Import Blueprint</button>
+            <button onClick={handleExport} className="px-3 py-1 rounded-full border bg-white/5 border-white/5 text-white/20 hover:bg-white/10 hover:text-white/40 text-[7px] font-black tracking-[0.15em] uppercase transition-all duration-300">Export</button>
+            <button onClick={() => fileInputRef.current?.click()} className="px-3 py-1 rounded-full border bg-white/5 border-white/5 text-white/20 hover:bg-white/10 hover:text-white/40 text-[7px] font-black tracking-[0.15em] uppercase transition-all duration-300">Import</button>
             <input type="file" ref={fileInputRef} className="hidden" accept=".json" onChange={handleImport} />
             <div className="w-px h-3 bg-white/10 mx-2" />
             {['ALL', 'CRITICAL', 'DEGRADED', 'LATENCY'].map(f => (
