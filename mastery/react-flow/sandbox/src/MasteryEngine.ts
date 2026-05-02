@@ -20,6 +20,19 @@ export class MasteryEngine {
   private goldenLayout: Map<string, { x: number; y: number }> = new Map();
   private isClusteredMode = false;
 
+  getZoneXForType(type: string) {
+    const zone = MasteryEngine.ZONES.find(z => z.nodeType === type);
+    return zone ? zone.x : null;
+  }
+
+  // L7 Architectural Zones (INV-10 Gravity Targets)
+  public static readonly ZONES = [
+    { id: 'Z01', name: 'INGRESS', x: 3800, nodeType: 'GATEWAY' },
+    { id: 'Z02', name: 'ROUTING', x: 4400, nodeType: 'LOAD_BALANCER' },
+    { id: 'Z03', name: 'SERVICES', x: 5000, nodeType: 'SERVICE' },
+    { id: 'Z04', name: 'PERSISTENCE', x: 5600, nodeType: 'DATABASE' }
+  ];
+
   constructor(maxNodes: number, boundary: { width: number, height: number }) {
     this.dbStore = new DoubleBufferStore(maxNodes);
     this.virtualizer = new SpatialVirtualizer({ x: 0, y: 0, width: boundary.width, height: boundary.height });
@@ -296,6 +309,32 @@ export class MasteryEngine {
     const node = this.nodes.find(n => n.id === id);
     if (!node) return;
     node.position = { x, y };
+  }
+
+  // L7 Zero-Copy Sync (INV-19)
+  updateFromBuffer(buffer: Float32Array) {
+    const STATUS_REV_MAP = ['HEALTHY', 'DEGRADED', 'CRITICAL', 'RESTARTING'];
+    const COLOR_MAP = ['#3b82f6', '#fbbf24', '#f43f5e', '#3b82f6'];
+
+    this.nodes.forEach((node, i) => {
+      const offset = i * 5;
+      node.data.telemetry.latency = buffer[offset].toFixed(1);
+      node.data.telemetry.cpu = buffer[offset + 1];
+      const statusIdx = buffer[offset + 2];
+      node.data.status = STATUS_REV_MAP[statusIdx] || 'HEALTHY';
+      node.data.color = COLOR_MAP[statusIdx] || '#3b82f6';
+      node.data.telemetry.requests = buffer[offset + 3];
+      node.data.telemetry.errorRate = buffer[offset + 4].toFixed(2);
+    });
+
+    // Low-frequency spatial re-index
+    this.virtualizer.updateNodes(this.nodes.map(n => ({
+      id: n.id,
+      x: n.position.x,
+      y: n.position.y,
+      width: n.data.width,
+      height: n.data.height
+    })));
   }
 
   applyTelemetryDelta(updates: any[]) {

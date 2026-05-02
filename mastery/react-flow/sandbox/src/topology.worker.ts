@@ -10,6 +10,12 @@
 let nodes: any[] = [];
 let edges: any[] = [];
 let nodeMap = new Map<string, any>();
+let sharedBuffer: Float32Array | null = null;
+let snapshotHistory: Float32Array[] = [];
+const MAX_HISTORY = 600; // 60 seconds at 10Hz
+
+// L7 Status Enum
+const STATUS_MAP = { 'HEALTHY': 0, 'DEGRADED': 1, 'CRITICAL': 2, 'RESTARTING': 3 };
 
 self.onmessage = (e: MessageEvent) => {
   const { type, payload } = e.data;
@@ -18,6 +24,7 @@ self.onmessage = (e: MessageEvent) => {
     case 'INIT':
       nodes = JSON.parse(JSON.stringify(payload.nodes));
       edges = JSON.parse(JSON.stringify(payload.edges));
+      sharedBuffer = new Float32Array(payload.buffer);
       updateNodeMap();
       break;
 
@@ -41,22 +48,64 @@ self.onmessage = (e: MessageEvent) => {
       }
       break;
 
+    case 'REGION_OUTAGE':
+      // L7 Advanced Resilience (Module 11): Entire INGRESS zone fails
+      nodes.filter(n => n.data.type === 'GATEWAY').forEach(n => {
+        n.data.status = 'CRITICAL';
+        n.data.color = '#f43f5e';
+        n.data.telemetry.cpu = 100;
+        n.data.telemetry.errorRate = "100.0";
+      });
+      break;
+
+    case 'DB_DEADLOCK':
+      // L7 Advanced Resilience (Module 11): Data layer stalls causing cascading back-pressure
+      nodes.filter(n => n.data.type === 'DATABASE').forEach(n => {
+        n.data.status = 'CRITICAL';
+        n.data.color = '#f43f5e';
+        n.data.telemetry.cpu = 100;
+        n.data.telemetry.errorRate = "99.9";
+      });
+      break;
+
     case 'TICK':
       tickTelemetry();
-      const deltas = nodes.map(n => ({
-        id: n.id,
-        status: n.data.status,
-        color: n.data.color,
-        telemetry: n.data.telemetry
-      }));
-      self.postMessage({ type: 'TELEMETRY_UPDATE', payload: deltas });
+      syncToBuffer();
+      captureHistory();
+      self.postMessage({ type: 'TELEMETRY_TICK', historyCount: snapshotHistory.length });
+      break;
+
+    case 'GET_HISTORY':
+      if (payload.index < snapshotHistory.length) {
+        self.postMessage({ type: 'HISTORY_SNAPSHOT', snapshot: snapshotHistory[payload.index], index: payload.index });
+      }
       break;
   }
 };
 
+function captureHistory() {
+  if (!sharedBuffer) return;
+  const snapshot = new Float32Array(sharedBuffer);
+  snapshotHistory.push(snapshot);
+  if (snapshotHistory.length > MAX_HISTORY) snapshotHistory.shift();
+}
+
 function updateNodeMap() {
   nodeMap.clear();
   nodes.forEach(n => nodeMap.set(n.id, n));
+}
+
+function syncToBuffer() {
+  const buf = sharedBuffer;
+  if (!buf) return;
+  nodes.forEach((n, i) => {
+    const offset = i * 5;
+    buf[offset] = parseFloat(n.data.telemetry.latency);
+    buf[offset + 1] = n.data.telemetry.cpu;
+    buf[offset + 2] = STATUS_MAP[n.data.status as keyof typeof STATUS_MAP] || 0;
+    buf[offset + 3] = n.data.telemetry.requests || 0;
+    buf[offset + 4] = parseFloat(n.data.telemetry.errorRate || '0');
+  });
 }
 
 function tickTelemetry() {

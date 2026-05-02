@@ -1,66 +1,58 @@
-# Phase 3: Modular Tracking Roadmap (CNTP Synthesis)
+# Phase 3: L7 Infrastructure Mastery Roadmap (v2.0)
 
-## Product: The Cloud-Native Topology Plane (CNTP)
-**What**: A live, high-performance spatial map of 1,000+ microservices.
-**Why**: To solve "Architectural Drift" by bridging the gap between System Design (HLD) and Operational Telemetry.
+## Product: The Infrastructure Topology Plane
+**What**: A production-grade, high-performance spatial twin of a cloud-native mesh.
+**Standards**: 60FPS+ throughput, Zero-Copy Shared Memory, Off-Thread Simulation.
 
 ---
 
-## [MODULE 1] The Static Canvas (Visual Sovereignty)
-*   **Goal**: Render the "Service Mesh" structured layout (Gateway -> Services -> DBs) with zero interactivity.
-*   **Status**: COMPLETED
-*   **Verification**: Does it look like a professional Cloud Console? Is the "Gateway" the clear entry point?
-*   **Code Boundary**: `MasteryEngine` / `App.tsx` (CSS & Layout).
+## [MODULE 1-4] The High-Fidelity Foundations
+*   **Goal**: Static Mesh, Camara Camera, Smooth Dragging, and Topological Routing.
+*   **Status**: COMPLETED (L7 Standard)
+*   **Engineering Invariant**: Virtualized Rendering (INV-15) and 60FPS Interaction Sync.
 
-## [MODULE 2] Viewport Sovereignty (Interactive Camera)
-*   **Goal**: Add precision Pan and Zoom to the static mesh.
-*   **Status**: COMPLETED
-*   **Verification**: Does zoom center on the cursor? Is the parallax grid depth-correct?
-*   **Code Boundary**: `inv02-viewport`.
+## [MODULE 5] Structural Sovereignty (Magnetic Gravity)
+*   **Goal**: Logical zone snapping and alignment guides.
+*   **Status**: COMPLETED (INV-10)
+*   **Verification**: Units snap to INGRESS/ROUTING/SERVICES/PERSISTENCE columns with visual guides.
 
-## [MODULE 3] Spatial Interaction (Node Mastery)
-*   **Goal**: Precision node-level dragging.
-*   **Status**: COMPLETED
-*   **Verification**: 60FPS dragging with zoom-normalization. Zero jitter.
-*   **Code Boundary**: `MasteryEngine.handleDrag`.
+## [MODULE 6] Semantic Density (LOD & Clustering)
+*   **Goal**: Real-time geometric hysteresis and cluster health visualization.
+*   **Status**: COMPLETED (INV-22)
+*   **Verification**: Distant units merge into interactive clusters; Radar (Minimap) reflects global state.
 
-## [MODULE 4] Connection Synthesis (Graph DNA)
-*   **Goal**: Render the Bezier "Flow" between services.
-*   **Status**: COMPLETED
-*   **Verification**: Do lines correctly connect Gateway -> Service -> DB? Are arrowheads visible?
-*   **Code Boundary**: `inv08-routing`.
+## [MODULE 7] Mechanical Sympathy (Zero-Copy Sync)
+*   **Goal**: Off-thread telemetry simulation with SharedArrayBuffer.
+*   **Status**: COMPLETED (INV-13 / INV-19)
+*   **Verification**: 60FPS+ throughput under load; zero-serialization overhead between Worker and UI.
 
-## [MODULE 5] Magnetic Interactivity (The "Snap")
-*   **Goal**: High-precision handle snapping and interaction reveal.
-*   **Status**: IN PROGRESS
-*   **Verification**: Do connections snap magnetically? Do handles pulse on hover?
-*   **Code Boundary**: `inv17-dependency`.
+## [MODULE 8] The Historian (Time-Travel Engine)
+*   **Goal**: Ring-buffer history for temporal root-cause analysis.
+*   **Status**: COMPLETED (INV-07)
+*   **Verification**: 60s history playback; "LIVE" vs "PLAYBACK" modes in the status bar.
 
-## [MODULE 6] Semantic Density (LOD & Scaling)
-*   **Goal**: Semantic clustering for high-density observability.
+---
+
+## [MODULE 9] Search & Smooth Discovery (PENDING)
+*   **Goal**: Implement a search interface that "Jumps" the camera to the target unit.
 *   **Status**: PENDING
-*   **Verification**: Do hexagons represent "Cluster Health" at low zoom?
-*   **Code Boundary**: `scaling-inv22-lod`.
+*   **Verification**: Does searching for a unit trigger a smooth, eased camera transition to that node's coordinates?
+*   **Code Boundary**: `App.tsx` (Search UI) / `MasteryEngine.panToNode`.
 
-## [MODULE 7] Contextual Telemetry (The Control Interface)
-*   **Goal**: Add a side-panel for node-specific data (Latency, Error Rate, Logs).
+## [MODULE 10] Persistence Sovereignty (The Blueprint)
+*   **Goal**: Full-state serialization including mesh layout and historical snapshots.
 *   **Status**: PENDING
-*   **Verification**: Does selecting a node reveal its "Service Telemetry"?
-*   **Code Boundary**: `App.tsx` (Side-Panel Component).
-
-## [MODULE 8] Persistence Sovereignty (State Sync)
-*   **Goal**: Save and Load the topology state (JSON).
-*   **Status**: PENDING
-*   **Verification**: Can we "Export" a design and "Import" it back exactly?
+*   **Verification**: Can we "Export Blueprint" as a JSON and re-import it to see the exact state (including the history buffer)?
 *   **Code Boundary**: `MasteryEngine.serialize`.
-## [MODULE 9] Search & Discovery (The Finder)
-*   **Goal**: Implement a search interface to locate and "Jump-To" specific nodes.
-*   **Status**: PENDING
-*   **Verification**: Does searching for "Database 5" smoothly pan the viewport to that node?
-*   **Code Boundary**: `App.tsx` (Search Component) / `MasteryEngine.findNode`.
 
-## [MODULE 10] Multi-Layered Sovereignty (Groups & Minimap)
-*   **Goal**: Implement manual grouping (Namespaces) and a navigation Minimap.
+## [MODULE 11] Advanced Resilience Testing (Fault Injection)
+*   **Goal**: Multi-layered failure scenarios (Region-wide outages, DB Deadlocks).
 *   **Status**: PENDING
-*   **Verification**: Can we see the "Bird's Eye View" in the Minimap? Do group boxes move their children?
-*   **Code Boundary**: `inv10-groups` / `inv11-minimap`.
+*   **Verification**: Can we simulate a "Zone Failure" that triggers cascading back-pressure throughout the mesh?
+*   **Code Boundary**: `topology.worker.ts` (Fault Engine).
+
+## [MODULE 12] Dynamic Path Routing (Obstacle Avoidance)
+*   **Goal**: Intelligent edge routing that avoids overlapping with nodes.
+*   **Status**: PENDING
+*   **Verification**: Do connections "bend" around intermediate nodes instead of intersecting them?
+*   **Code Boundary**: `calculatePath` logic.

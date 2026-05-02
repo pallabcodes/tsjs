@@ -28,6 +28,15 @@ const calculatePath = (sourcePos: Point, targetPos: Point, sourceWidth: number, 
   const tX = targetPos.x;
   const tY = targetPos.y + (targetHeight / 2);
   const dx = tX - sX;
+  
+  // L7 Dynamic Path Routing (Module 12): Obstacle Avoidance for layer-skipping edges
+  if (dx > 1200) {
+    const midX = sX + dx / 2;
+    // Alternate arching up or down to spread lines
+    const arcHeight = targetIdx % 2 === 0 ? -600 : 600; 
+    return `M ${sX} ${sY} Q ${midX} ${sY + arcHeight}, ${tX} ${tY}`;
+  }
+
   const curvature = dx * 0.4;
   return `M ${sX} ${sY} C ${sX + curvature} ${sY}, ${tX - curvature} ${tY}, ${tX} ${tY}`;
 };
@@ -184,12 +193,7 @@ const MemoizedNode = React.memo(({ node, isSelected, zoom, onSelect, onInspect, 
   );
 });
 
-const ZONES = [
-  { id: 'Z01', name: 'INGRESS', x: 3800, nodeType: 'GATEWAY' },
-  { id: 'Z02', name: 'ROUTING', x: 4400, nodeType: 'LOAD_BALANCER' },
-  { id: 'Z03', name: 'SERVICES', x: 5000, nodeType: 'SERVICE' },
-  { id: 'Z04', name: 'PERSISTENCE', x: 5600, nodeType: 'DATABASE' }
-];
+const ZONES = MasteryEngine.ZONES;
 
 const Breadcrumbs = () => (
   <div className="flex items-center gap-1.5 text-[10px] font-mono text-white/30 uppercase tracking-tighter mt-0.5">
@@ -318,10 +322,50 @@ export default function App() {
   });
 
   const [telemetryTick, setTelemetryTick] = useState(0);
+  const [historyCount, setHistoryCount] = useState(0);
+  const [historyIndex, setHistoryIndex] = useState(-1);
+  const isHistoryMode = historyIndex !== -1 && historyIndex < historyCount - 1;
   const [dragTick, setDragTick] = useState(0);
   const [inspectorTab, setInspectorTab] = useState<'OVERVIEW' | 'METRICS' | 'CONTROLS'>('OVERVIEW');
   const [isSearchFocused, setIsSearchFocused] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchHighlightId, setSearchHighlightId] = useState<string | null>(null);
   const [stats, setStats] = useState(() => engine.getStats());
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const cameraAnimRef = useRef<number>(0);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleExport = () => {
+    const data = { layout: {} as Record<string, Point> };
+    engine.getNodes().forEach((n: Node) => { data.layout[n.id] = { x: n.position.x, y: n.position.y }; });
+    const blob = new Blob([JSON.stringify(data)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'infrastructure-blueprint.json';
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleImport = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      try {
+        const data = JSON.parse(ev.target?.result as string);
+        if (data.layout) {
+          engine.hydratePositions(data.layout);
+          setDragTick(t => t + 1);
+          recordMutation();
+        }
+      } catch (e) {
+        console.error("Import failed", e);
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = '';
+  };
 
   const containerRef = useRef<HTMLDivElement>(null);
   const worldRef = useRef<HTMLDivElement>(null);
@@ -344,21 +388,46 @@ export default function App() {
   const nextPos = useRef<Point | null>(null);
   const dragStartPos = useRef<Point>({ x: 0, y: 0 });
   const workerRef = useRef<Worker | null>(null);
+  const telemetryBuffer = useRef<Float32Array | null>(null);
 
   // L7 Worker Initialization
   useEffect(() => {
     const worker = new TopologyWorker();
     workerRef.current = worker;
 
+    const nodes = engine.getNodes();
+    const bufferSize = nodes.length * 5;
+    
+    // Attempt SharedArrayBuffer for Zero-Copy, fallback to standard ArrayBuffer if not isolated
+    let sab;
+    try {
+      sab = new SharedArrayBuffer(bufferSize * 4);
+    } catch (e) {
+      sab = new ArrayBuffer(bufferSize * 4);
+    }
+    
+    telemetryBuffer.current = new Float32Array(sab);
+
     worker.postMessage({ 
       type: 'INIT', 
-      payload: { nodes: engine.getNodes(), edges: engine.getEdges() } 
+      payload: { 
+        nodes, 
+        edges: engine.getEdges(),
+        buffer: sab 
+      } 
     });
 
     worker.onmessage = (e) => {
-      const { type, payload } = e.data;
-      if (type === 'TELEMETRY_UPDATE') {
-        engine.applyTelemetryDelta(payload);
+      const { type, historyCount, snapshot } = e.data;
+      if (type === 'TELEMETRY_TICK' && telemetryBuffer.current) {
+        setHistoryCount(historyCount);
+        if (historyIndex === -1 || historyIndex >= historyCount - 2) {
+          engine.updateFromBuffer(telemetryBuffer.current);
+          setTelemetryTick(t => t + 1);
+          setStats(engine.getStats());
+        }
+      } else if (type === 'HISTORY_SNAPSHOT' && snapshot) {
+        engine.updateFromBuffer(snapshot);
         setTelemetryTick(t => t + 1);
         setStats(engine.getStats());
       }
@@ -424,17 +493,90 @@ export default function App() {
     return () => el.removeEventListener('wheel', onWheel);
   }, []);
 
-  // L7 Keyboard Interactions: ESC to close Inspector
+  // L7 Keyboard Interactions: ESC to close Inspector, Cmd+K for Search
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
-        setInspectedId(null);
-        setSelectedId(null);
+        if (isSearchFocused) {
+          setIsSearchFocused(false);
+          setSearchQuery('');
+          searchInputRef.current?.blur();
+        } else {
+          setInspectedId(null);
+          setSelectedId(null);
+        }
+      }
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        searchInputRef.current?.focus();
       }
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, []);
+  }, [isSearchFocused]);
+
+  // L7 Eased Camera Engine (INV-02 Extension) — follows xyflow setCenter pattern
+  const panToNode = (nodeId: string) => {
+    const node = engine.getNodeById(nodeId);
+    if (!node) return;
+
+    const nodeW = node.data?.width || 280;
+    const nodeH = node.data?.height || 160;
+    const targetZoom = 0.8;
+    const cx = node.position.x + nodeW / 2;
+    const cy = node.position.y + nodeH / 2;
+
+    // xyflow pattern: viewport.x = screenWidth/2 - canvasX * zoom
+    const targetX = window.innerWidth / 2 - cx * targetZoom;
+    const targetY = window.innerHeight / 2 - cy * targetZoom;
+
+    // Spring-based interpolation via rAF
+    const start = viewportRef.current;
+    const startTime = performance.now();
+    const duration = 600; // ms
+
+    if (cameraAnimRef.current) cancelAnimationFrame(cameraAnimRef.current);
+
+    const animate = (now: number) => {
+      const elapsed = now - startTime;
+      const t = Math.min(elapsed / duration, 1);
+      // Cubic ease-out: 1 - (1-t)^3
+      const ease = 1 - Math.pow(1 - t, 3);
+
+      const v: Viewport = {
+        x: start.x + (targetX - start.x) * ease,
+        y: start.y + (targetY - start.y) * ease,
+        zoom: start.zoom + (targetZoom - start.zoom) * ease,
+      };
+
+      viewportRef.current = v;
+      updateWorldTransform();
+
+      if (t < 1) {
+        cameraAnimRef.current = requestAnimationFrame(animate);
+      } else {
+        cameraAnimRef.current = 0;
+        setViewport(v);
+      }
+    };
+    cameraAnimRef.current = requestAnimationFrame(animate);
+
+    // Highlight the node on arrival
+    setSelectedId(nodeId);
+    setSearchHighlightId(nodeId);
+    setTimeout(() => setSearchHighlightId(null), 2000);
+  };
+
+  // Search results (filtered)
+  const searchResults = useMemo(() => {
+    if (!searchQuery.trim()) return [];
+    const q = searchQuery.toLowerCase();
+    return engine.getNodes().filter(n =>
+      n.id.toLowerCase().includes(q) ||
+      (n.data?.label || '').toLowerCase().includes(q) ||
+      (n.data?.type || '').toLowerCase().includes(q)
+    ).slice(0, 8);
+  }, [searchQuery, engine, telemetryTick]);
 
   const handleMouseDown = (e: React.MouseEvent) => {
     if (e.button !== 0) return;
@@ -470,8 +612,15 @@ export default function App() {
     const v = viewportRef.current;
     if (draggedNodeId) {
       const point = project({ x: e.clientX, y: e.clientY }, v);
+      
+      // L7 Magnetic Architectural Gravity (INV-10)
+      const node = engine.getNodeById(draggedNodeId);
+      const snapX = node ? engine.getZoneXForType(node.data.type) : null;
+      const targetX = point.x - dragOffset.current.x;
+      const finalX = (snapX !== null && Math.abs(targetX - snapX) < 120) ? snapX : targetX;
+
       nextPos.current = {
-        x: Math.round((point.x - dragOffset.current.x) / 8) * 8,
+        x: Math.round(finalX / 8) * 8,
         y: Math.round((point.y - dragOffset.current.y) / 8) * 8
       };
       didDrag.current = true;
@@ -589,6 +738,19 @@ export default function App() {
       <div ref={worldRef} className={cn("absolute inset-0 will-change-transform", isPanning && "pointer-events-none")} style={{ transformOrigin: '0 0', transform: `translate3d(${viewport.x}px, ${viewport.y}px, 0) scale(${viewport.zoom})` }}>
         <div className="absolute inset-[-10000px] pointer-events-none opacity-[0.03]" style={{ backgroundImage: `linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px)`, backgroundSize: `100px 100px` }} />
         <div className="absolute inset-0 pointer-events-none overflow-hidden">
+          {/* L7 Magnetic Alignment Guide (INV-10) */}
+          {draggedNodeId && (() => {
+            const node = engine.getNodeById(draggedNodeId);
+            if (!node) return null;
+            const snapX = engine.getZoneXForType(node.data.type);
+            if (snapX !== null && Math.abs(node.position.x - snapX) < 1) {
+              return (
+                <div className="absolute top-[-10000px] bottom-[-10000px] w-px bg-blue-500/30 shadow-[0_0_15px_rgba(59,130,246,0.3)] animate-pulse" style={{ left: snapX + (node.data.width || 280) / 2 }} />
+              );
+            }
+            return null;
+          })()}
+
           {ZONES.map(zone => {
             const zh = zoneHealth[zone.nodeType] || { healthy: 0, degraded: 0, critical: 0, total: 0 };
             const dotColor = zh.critical > 0 ? '#f43f5e' : zh.degraded > 0 ? '#fbbf24' : '#10b981';
@@ -654,13 +816,77 @@ export default function App() {
       onMouseDown={handleMouseDown} onMouseMove={handleMouseMove} onMouseUp={handleMouseUp} onMouseLeave={handleMouseLeave} onClick={() => { setSelectedId(null); setInspectedId(null); }}>
       {canvasContent}
       <div className="absolute inset-0 pointer-events-none z-[9999] overflow-hidden">
-        <div className="absolute top-6 left-1/2 -translate-x-1/2 flex flex-col items-center gap-3 pointer-events-none w-full max-w-lg px-8">
-          <div className={cn("w-full glass-panel rounded-2xl px-5 py-2.5 flex items-center gap-4 shadow-2xl pointer-events-auto transition-all duration-500 relative overflow-hidden", isSearchFocused ? "border-blue-500/40 ring-2 ring-blue-500/5 scale-[1.01]" : "border-white/5")}>
-            <div className={cn("absolute inset-0 shimmer-active opacity-0 transition-opacity duration-700", isSearchFocused && "opacity-100")} />
-            <Search size={14} className={cn("transition-colors duration-500 shrink-0", isSearchFocused ? "text-blue-400" : "text-white/20")} strokeWidth={2.5} />
-            <input type="text" placeholder="Search Infrastructure DNA..." onFocus={() => setIsSearchFocused(true)} onBlur={() => setIsSearchFocused(false)} className="bg-transparent border-none outline-none text-[11px] text-white/80 w-full font-mono placeholder:text-white/10 tracking-tight relative z-10" />
+        <div className="absolute top-6 left-1/2 -translate-x-1/2 flex flex-col items-center gap-3 pointer-events-none w-full max-w-lg px-8 z-[300]">
+          <div className="w-full relative pointer-events-auto">
+            <div className={cn("w-full glass-panel rounded-2xl px-5 py-2.5 flex items-center gap-4 shadow-2xl transition-all duration-500 relative overflow-hidden", isSearchFocused ? "border-blue-500/40 ring-2 ring-blue-500/5 scale-[1.01] rounded-b-none" : "border-white/5")}>
+              <div className={cn("absolute inset-0 shimmer-active opacity-0 transition-opacity duration-700", isSearchFocused && "opacity-100")} />
+              <Search size={14} className={cn("transition-colors duration-500 shrink-0", isSearchFocused ? "text-blue-400" : "text-white/20")} strokeWidth={2.5} />
+              <input
+                ref={searchInputRef}
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search units... ⌘K"
+                onFocus={() => setIsSearchFocused(true)}
+                onBlur={() => setTimeout(() => { setIsSearchFocused(false); }, 200)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && searchResults.length > 0) {
+                    panToNode(searchResults[0].id);
+                    setSearchQuery('');
+                    setIsSearchFocused(false);
+                    searchInputRef.current?.blur();
+                  }
+                }}
+                className="bg-transparent border-none outline-none text-[11px] text-white/80 w-full font-mono placeholder:text-white/10 tracking-tight relative z-10"
+              />
+              {searchQuery && (
+                <button onClick={() => { setSearchQuery(''); searchInputRef.current?.focus(); }} className="text-white/20 hover:text-white/50 transition-colors z-10">
+                  <X size={12} />
+                </button>
+              )}
+              <span className="text-[7px] font-mono text-white/10 shrink-0 z-10">⌘K</span>
+            </div>
+
+            {/* Search Results Dropdown */}
+            {isSearchFocused && searchQuery.trim() && (
+              <div className="absolute top-full left-0 right-0 glass-panel rounded-b-2xl border-t-0 border-white/5 overflow-hidden shadow-2xl animate-in fade-in slide-in-from-top-1 duration-200">
+                {searchResults.length === 0 ? (
+                  <div className="px-5 py-4 text-[10px] font-mono text-white/20 text-center">No units match "{searchQuery}"</div>
+                ) : (
+                  <div className="max-h-64 overflow-y-auto">
+                    {searchResults.map((node, i) => (
+                      <button
+                        key={node.id}
+                        onMouseDown={(e) => { e.preventDefault(); panToNode(node.id); setSearchQuery(''); setIsSearchFocused(false); }}
+                        className={cn(
+                          "w-full px-5 py-3 flex items-center gap-3 text-left transition-all duration-150 border-b border-white/[0.03] last:border-b-0",
+                          i === 0 ? "bg-white/[0.04]" : "hover:bg-white/[0.03]"
+                        )}
+                      >
+                        <div className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: node.data?.color || '#3b82f6' }} />
+                        <div className="flex-1 min-w-0">
+                          <div className="text-[10px] font-black text-white/70 truncate uppercase tracking-wide">{node.data?.label || node.id}</div>
+                          <div className="text-[8px] font-mono text-white/20 uppercase tracking-widest">{node.data?.type} · {node.id}</div>
+                        </div>
+                        <div className={cn(
+                          "px-1.5 py-0.5 rounded text-[6px] font-black uppercase tracking-widest border",
+                          node.data?.status === 'CRITICAL' ? "text-rose-400 border-rose-500/20 bg-rose-500/10" :
+                          node.data?.status === 'DEGRADED' ? "text-amber-400 border-amber-500/20 bg-amber-500/10" :
+                          "text-emerald-400 border-emerald-500/20 bg-emerald-500/10"
+                        )}>{node.data?.status || 'HEALTHY'}</div>
+                        {i === 0 && <span className="text-[7px] text-white/10 font-mono">↵</span>}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
           <div className="flex items-center gap-1.5 pointer-events-auto">
+            <button onClick={handleExport} className="px-3 py-1 rounded-full border bg-white/5 border-white/5 text-white/20 hover:bg-white/10 hover:text-white/40 text-[7px] font-black tracking-[0.15em] uppercase transition-all duration-300">Export Blueprint</button>
+            <button onClick={() => fileInputRef.current?.click()} className="px-3 py-1 rounded-full border bg-white/5 border-white/5 text-white/20 hover:bg-white/10 hover:text-white/40 text-[7px] font-black tracking-[0.15em] uppercase transition-all duration-300">Import Blueprint</button>
+            <input type="file" ref={fileInputRef} className="hidden" accept=".json" onChange={handleImport} />
+            <div className="w-px h-3 bg-white/10 mx-2" />
             {['ALL', 'CRITICAL', 'DEGRADED', 'LATENCY'].map(f => (
               <button key={f} onClick={(e) => { e.stopPropagation(); setActiveFilter(f); }}
                 className={cn("px-3 py-1 rounded-full border text-[7px] font-black tracking-[0.15em] transition-all duration-300 uppercase",
@@ -739,6 +965,33 @@ export default function App() {
           </div>
           <div className="w-px h-3 bg-white/5" />
           <span className="text-[8px] font-mono text-white/15 tabular-nums">{stats?.totalNodes || 0} nodes · {stats?.totalEdges || 0} edges</span>
+          
+          {/* L7 Historian Timeline (INV-07) */}
+          <div className="flex-1 max-w-md mx-auto px-4 flex items-center gap-3">
+            <span className={cn("text-[8px] font-black tracking-widest", isHistoryMode ? "text-amber-500 animate-pulse" : "text-white/20")}>
+              {isHistoryMode ? 'PLAYBACK' : 'LIVE'}
+            </span>
+            <input 
+              type="range" 
+              min={0} 
+              max={Math.max(0, historyCount - 1)} 
+              value={historyIndex === -1 ? historyCount - 1 : historyIndex}
+              onChange={(e) => {
+                const idx = parseInt(e.target.value);
+                setHistoryIndex(idx);
+                workerRef.current?.postMessage({ type: 'GET_HISTORY', payload: { index: idx } });
+              }}
+              className="flex-1 h-1 bg-white/5 rounded-full appearance-none cursor-pointer accent-blue-500"
+            />
+            <button 
+              onClick={() => setHistoryIndex(-1)}
+              className={cn("text-[8px] font-black tracking-widest px-2 py-0.5 rounded border transition-all", 
+                isHistoryMode ? "border-amber-500/50 text-amber-500 hover:bg-amber-500/10" : "border-white/5 text-white/10")}
+            >
+              RESET
+            </button>
+          </div>
+
           <span className="ml-auto text-[8px] font-mono text-white/10 tabular-nums">{(viewport.zoom * 100).toFixed(0)}%</span>
         </div>
       </div>
@@ -833,13 +1086,24 @@ export default function App() {
                     Toggle Blueprint Mode
                   </button>
                   <button onClick={() => { 
-                    setViewport({ 
-                      x: window.innerWidth / 2 - WORLD_CENTER.x * getInitialZoom(),
-                      y: window.innerHeight / 2 - WORLD_CENTER.y * getInitialZoom(),
-                      zoom: getInitialZoom()
-                    });
+                    if (cameraAnimRef.current) {
+                      cancelAnimationFrame(cameraAnimRef.current);
+                      cameraAnimRef.current = 0;
+                    }
+                    const initialZ = getInitialZoom();
+                    const newV = { 
+                      x: window.innerWidth / 2 - WORLD_CENTER.x * initialZ,
+                      y: window.innerHeight / 2 - WORLD_CENTER.y * initialZ,
+                      zoom: initialZ
+                    };
+                    setViewport(newV);
+                    viewportRef.current = newV;
+                    updateWorldTransform();
+                    
                     engine.resetToGoldenLayout();
                     recordMutation();
+                    setDragTick(t => t + 1);
+                    setSearchHighlightId(null);
                   }}
                     className="w-full py-3 rounded-lg bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/20 text-[9px] font-black text-blue-400 uppercase tracking-widest transition-all">
                     Reset To Golden Layout
@@ -847,6 +1111,14 @@ export default function App() {
                   <button onClick={(e) => { e.stopPropagation(); workerRef.current?.postMessage({ type: 'INJECT_FAULT', payload: { id: selectedNode.id } }); }}
                     className="w-full py-3 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 text-[9px] font-black text-rose-400 uppercase tracking-widest transition-all">
                     Inject Fault (VPC Pressure)
+                  </button>
+                  <button onClick={(e) => { e.stopPropagation(); workerRef.current?.postMessage({ type: 'REGION_OUTAGE' }); }}
+                    className="w-full py-3 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 text-[9px] font-black text-rose-400 uppercase tracking-widest transition-all">
+                    Simulate Region Outage
+                  </button>
+                  <button onClick={(e) => { e.stopPropagation(); workerRef.current?.postMessage({ type: 'DB_DEADLOCK' }); }}
+                    className="w-full py-3 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/20 text-[9px] font-black text-amber-400 uppercase tracking-widest transition-all">
+                    Simulate DB Deadlock
                   </button>
                 </div>
                 <div className="p-4 rounded-xl bg-amber-500/5 border border-amber-500/10">
