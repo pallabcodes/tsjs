@@ -86,6 +86,11 @@ export const Timeline = () => {
     return () => cancelAnimationFrame(animId)
   }, [isPlaying, playbackSpeed, isReversing, loopMode, selectionRange, setCurrentTime, setIsPlaying, setIsReversing, setMeasuredFps])
 
+  // ─── Sync Sovereign Detections ─────────────────────────────────────────
+  useEffect(() => {
+    state.tickDetections(currentTime);
+  }, [currentTime]);
+
   // ─── Auto-scroll follow playhead (works during playback) ───────────────
   useEffect(() => {
     if (!scrollRef.current) return

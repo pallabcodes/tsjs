@@ -1,3 +1,4 @@
+import React from 'react';
 import { useMeshStore, cn, formatTime } from '@ostream/core';
 import { CameraFeed } from './CameraFeed';
 import {
@@ -7,10 +8,13 @@ import {
   ScanLine, ScanFace, Eye, EyeOff,
 } from 'lucide-react';
 import { FORENSIC_MOCK_DATA } from './Timeline/mockData';
+import { ForensicLoupe } from './ForensicLoupe';
+import { InferenceInspector } from './InferenceInspector';
 
 // ─── Mock Detection Data (shared with CameraFeed for sidebar display) ────────
 // In production these would come from the same inference pipeline.
 interface Detection {
+  id: string;
   timeStart: number;
   timeEnd: number;
   cls: string;
@@ -19,19 +23,19 @@ interface Detection {
 
 const MOCK_DETECTIONS: Record<string, Detection[]> = {
   'LOBBY_CAM_01': [
-    { timeStart: 100, timeEnd: 140, cls: 'person', confidence: 0.97 },
-    { timeStart: 100, timeEnd: 140, cls: 'person', confidence: 0.89 },
-    { timeStart: 500, timeEnd: 620, cls: 'person', confidence: 0.94 },
-    { timeStart: 1200, timeEnd: 1350, cls: 'bag', confidence: 0.72 },
-    { timeStart: 1500, timeEnd: 1550, cls: 'person', confidence: 0.96 },
-    { timeStart: 2400, timeEnd: 2500, cls: 'person', confidence: 0.91 },
+    { id: 'det-01', timeStart: 100, timeEnd: 140, cls: 'person', confidence: 0.97 },
+    { id: 'det-02', timeStart: 100, timeEnd: 140, cls: 'person', confidence: 0.89 },
+    { id: 'det-03', timeStart: 500, timeEnd: 620, cls: 'person', confidence: 0.94 },
+    { id: 'det-04', timeStart: 1200, timeEnd: 1350, cls: 'bag', confidence: 0.72 },
+    { id: 'det-05', timeStart: 1500, timeEnd: 1550, cls: 'person', confidence: 0.96 },
+    { id: 'det-06', timeStart: 2400, timeEnd: 2500, cls: 'person', confidence: 0.91 },
   ],
   'PARKING_CAM_03': [
-    { timeStart: 200, timeEnd: 350, cls: 'vehicle', confidence: 0.98 },
-    { timeStart: 200, timeEnd: 350, cls: 'vehicle', confidence: 0.95 },
-    { timeStart: 800, timeEnd: 950, cls: 'person', confidence: 0.88 },
-    { timeStart: 1500, timeEnd: 1650, cls: 'vehicle', confidence: 0.93 },
-    { timeStart: 2800, timeEnd: 2900, cls: 'person', confidence: 0.85 },
+    { id: 'det-07', timeStart: 200, timeEnd: 350, cls: 'vehicle', confidence: 0.98 },
+    { id: 'det-08', timeStart: 200, timeEnd: 350, cls: 'vehicle', confidence: 0.95 },
+    { id: 'det-09', timeStart: 800, timeEnd: 950, cls: 'person', confidence: 0.88 },
+    { id: 'det-10', timeStart: 1500, timeEnd: 1650, cls: 'vehicle', confidence: 0.93 },
+    { id: 'det-11', timeStart: 2800, timeEnd: 2900, cls: 'person', confidence: 0.85 },
   ],
 };
 
@@ -60,7 +64,20 @@ export const Viewport = () => {
     isLeftSidebarCollapsed, setIsLeftSidebarCollapsed,
     showOSD, setShowOSD,
     showBoundingBoxes, setShowBoundingBoxes,
+    isMagnifierActive, toggleMagnifier,
+    magnifierPos, magnifierCameraId,
+    setSelectedDetectionId,
   } = useMeshStore();
+
+  const [mouseGlobal, setMouseGlobal] = React.useState({ x: 0, y: 0 });
+
+  React.useEffect(() => {
+    const handleGlobalMouse = (e: MouseEvent) => {
+      setMouseGlobal({ x: e.clientX, y: e.clientY });
+    };
+    window.addEventListener('mousemove', handleGlobalMouse);
+    return () => window.removeEventListener('mousemove', handleGlobalMouse);
+  }, []);
 
   // ─── Derived data ─────────────────────────────────────────────────────────
 
@@ -70,12 +87,12 @@ export const Viewport = () => {
 
   // Events from all tracks near currentTime (for the event log)
   const recentEvents = FORENSIC_MOCK_DATA
-    .flatMap(track => track.events?.map(ts => ({
+    .flatMap(track => (track.events?.map(ts => ({
       type: track.type,
       label: track.label,
       ts,
       id: track.id,
-    })) ?? [])
+    })) ?? []))
     .filter(event => event.ts <= currentTime + 30 && event.ts >= currentTime - 120)
     .sort((a, b) => b.ts - a.ts);
 
@@ -248,6 +265,13 @@ export const Viewport = () => {
           {/* Display toggles */}
           <div className="flex items-center gap-px mr-3">
             <ToolbarBtn
+              active={isMagnifierActive}
+              onClick={() => toggleMagnifier()}
+              title={isMagnifierActive ? "Disable Magnifier" : "Enable Forensic Magnifier (Loupe)"}
+            >
+              <Eye size={12} className={cn(isMagnifierActive && "text-vms-accent animate-pulse")} />
+            </ToolbarBtn>
+            <ToolbarBtn
               active={showBoundingBoxes}
               onClick={() => setShowBoundingBoxes(!showBoundingBoxes)}
               title={showBoundingBoxes ? "Hide Detections" : "Show Detections"}
@@ -304,6 +328,9 @@ export const Viewport = () => {
         {/* ─── Analysis Sidebar ──────────────────────────────────────────── */}
         {!isPlayerSidebarCollapsed && (
           <div className="w-72 flex-shrink-0 border-l border-white/[0.06] bg-[#0a0a0a] flex flex-col overflow-hidden">
+            
+            {/* AI Reasoning (Explainable AI) */}
+            <InferenceInspector />
 
             {/* Section 1: Focused Camera Info */}
             <div className="p-3 border-b border-white/[0.06]">
@@ -350,7 +377,10 @@ export const Viewport = () => {
                     return (
                       <button
                         key={i}
-                        onClick={() => setCurrentTime(det.timeStart)}
+                        onClick={() => {
+                          setCurrentTime(det.timeStart);
+                          setSelectedDetectionId(det.id);
+                        }}
                         className={cn(
                           "w-full text-left px-2 py-1 border transition-colors flex items-center justify-between",
                           isActive
@@ -439,6 +469,34 @@ export const Viewport = () => {
           </div>
         )}
       </div>
+
+      {/* ─── Forensic Magnifier Overlay (Digital Loupe) ────────────────── */}
+      {isMagnifierActive && magnifierCameraId && (
+        <div 
+          className="fixed pointer-events-none z-[100] w-48 h-48 rounded-full border-2 border-vms-accent shadow-[0_0_30px_rgba(0,243,255,0.4)] overflow-hidden bg-black"
+          style={{ 
+            left: mouseGlobal.x - 96, 
+            top: mouseGlobal.y - 96 
+          }}
+        >
+          <div className="absolute inset-0 flex items-center justify-center">
+             {/* Crosshair */}
+             <div className="absolute inset-0 border border-vms-accent/20 z-10" />
+             <div className="w-4 h-px bg-vms-accent z-10" />
+             <div className="h-4 w-px bg-vms-accent z-10" />
+             
+             {/* Zoomed Content (High-Fidelity Engine) */}
+             <div className="absolute inset-0">
+                <ForensicLoupe id={magnifierCameraId} pos={magnifierPos} />
+             </div>
+
+             {/* Enhancement Badge */}
+             <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-black/80 border border-vms-accent/40 px-2 py-0.5 rounded text-[8px] font-black text-vms-accent uppercase tracking-widest z-20">
+                4.0x Zoom // RAW_SOURCE
+             </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

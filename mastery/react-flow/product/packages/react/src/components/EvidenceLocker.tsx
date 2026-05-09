@@ -1,4 +1,5 @@
-import { useMeshStore, formatTime } from '@ostream/core';
+import React from 'react';
+import { useMeshStore, formatTime, cn } from '@ostream/core';
 import { 
   FolderLock, 
   FileText, 
@@ -10,17 +11,45 @@ import {
   Share2,
   Lock,
   Box,
-  Fingerprint
+  Fingerprint,
+  ShieldCheck
 } from 'lucide-react';
 
-export const EvidenceLocker = () => {
-  const { evidence, removeEvidence } = useMeshStore();
+import { ForensicReport } from './ForensicReport';
 
-  // Mock cases for visual structure
-  const MOCK_CASES = [
-    { id: 'case-2026-001', name: 'Lobby Incident 05/09', itemCount: 3, created: Date.now() - 3600000, status: 'Open' },
-    { id: 'case-2026-002', name: 'Parking Lot Survey', itemCount: 12, created: Date.now() - 86400000, status: 'Closed' },
-  ];
+export const EvidenceLocker = () => {
+  const { 
+    evidence, 
+    removeEvidence, 
+    cases, 
+    activeCaseId, 
+    setActiveCase, 
+    addCase, 
+    addAuditLog
+  } = useMeshStore();
+
+  const [showReport, setShowReport] = React.useState(false);
+
+  const activeCase = cases.find(c => c.id === activeCaseId);
+  const activeEvidence = activeCaseId 
+    ? evidence.filter(e => activeCase?.evidenceIds.includes(e.id))
+    : evidence;
+
+  const handleNewCase = () => {
+    const title = prompt('Enter Case Title:');
+    const desc = prompt('Enter Case Description:');
+    if (title && desc) {
+      addCase(title, desc);
+      addAuditLog(`New case file initialized: ${title}`);
+    }
+  };
+
+  const handleGenerateReport = () => {
+    if (activeCaseId) {
+      setShowReport(true);
+      addAuditLog(`Forensic report generated for case: ${activeCase?.title}`);
+    }
+  };
 
   return (
     <div className="flex-1 flex flex-col bg-[#020202] text-white/90 font-mono">
@@ -33,10 +62,20 @@ export const EvidenceLocker = () => {
           </h1>
         </div>
         <div className="flex items-center gap-2">
-          <button className="h-8 px-4 bg-white/[0.05] border border-white/[0.1] text-[10px] font-bold uppercase tracking-widest hover:bg-white/10 transition-all flex items-center gap-2">
+          <button 
+            onClick={handleNewCase}
+            className="h-8 px-4 bg-white/[0.05] border border-white/[0.1] text-[10px] font-bold uppercase tracking-widest hover:bg-white/10 transition-all flex items-center gap-2"
+          >
             <Plus size={14} /> New Case File
           </button>
-          <button className="h-8 px-4 bg-vms-accent text-black font-bold text-[10px] uppercase tracking-widest hover:bg-white transition-all flex items-center gap-2">
+          <button 
+            onClick={handleGenerateReport}
+            disabled={!activeCaseId}
+            className={cn(
+              "h-8 px-4 font-bold text-[10px] uppercase tracking-widest transition-all flex items-center gap-2",
+              activeCaseId ? "bg-vms-accent text-black hover:bg-white" : "bg-white/5 text-white/20 cursor-not-allowed"
+            )}
+          >
             <FileText size={14} /> Generate PDF Report
           </button>
         </div>
@@ -45,22 +84,32 @@ export const EvidenceLocker = () => {
       <div className="flex-1 flex overflow-hidden">
         {/* Case List Sidebar */}
         <div className="w-80 border-r border-white/[0.05] bg-[#050505] flex flex-col">
-          <div className="p-4 border-b border-white/[0.05]">
+          <div className="p-4 border-b border-white/[0.05] flex items-center justify-between">
             <span className="text-[9px] font-bold text-white/20 uppercase tracking-widest">Active Case Files</span>
+            {activeCaseId && (
+              <button onClick={() => setActiveCase(null)} className="text-[8px] text-vms-accent uppercase hover:underline">Clear</button>
+            )}
           </div>
           <div className="flex-1 overflow-y-auto no-scrollbar">
-            {MOCK_CASES.map(caseFile => (
+            {cases.map(caseFile => (
               <div 
                 key={caseFile.id}
-                className="p-4 border-b border-white/[0.02] hover:bg-white/[0.02] cursor-pointer group transition-all"
+                onClick={() => setActiveCase(caseFile.id)}
+                className={cn(
+                  "p-4 border-b border-white/[0.02] hover:bg-white/[0.02] cursor-pointer group transition-all",
+                  activeCaseId === caseFile.id && "bg-vms-accent/[0.03] border-l-2 border-l-vms-accent"
+                )}
               >
                 <div className="flex items-center justify-between mb-1">
-                  <span className="text-[11px] font-bold text-white/80 group-hover:text-vms-accent transition-colors">{caseFile.name}</span>
+                  <span className={cn(
+                    "text-[11px] font-bold transition-colors",
+                    activeCaseId === caseFile.id ? "text-vms-accent" : "text-white/80 group-hover:text-vms-accent"
+                  )}>{caseFile.title}</span>
                   <span className="text-[8px] px-1.5 py-0.5 bg-white/5 border border-white/10 rounded-sm text-white/40 uppercase">{caseFile.status}</span>
                 </div>
                 <div className="flex items-center justify-between text-[9px] text-white/20">
-                  <span>ID: {caseFile.id}</span>
-                  <span>{caseFile.itemCount} Artifacts</span>
+                  <span className="truncate w-32">{caseFile.description}</span>
+                  <span>{caseFile.evidenceIds.length} Artifacts</span>
                 </div>
               </div>
             ))}
@@ -82,7 +131,25 @@ export const EvidenceLocker = () => {
 
         {/* Evidence Grid */}
         <div className="flex-1 flex flex-col p-6 bg-grid-pattern overflow-y-auto no-scrollbar">
-          {evidence.length === 0 ? (
+          {!activeCaseId ? (
+             <div className="mb-6 p-4 bg-vms-accent/5 border border-vms-accent/10 rounded-sm flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                   <ShieldCheck size={18} className="text-vms-accent" />
+                   <div>
+                      <h3 className="text-[11px] font-bold uppercase text-vms-accent">Master Vault View</h3>
+                      <p className="text-[9px] text-white/40 uppercase">Displaying all artifacts across active site perimeter</p>
+                   </div>
+                </div>
+                <span className="text-[10px] font-mono text-vms-accent/60">{evidence.length} TOTAL ITEMS</span>
+             </div>
+          ) : (
+             <div className="mb-6">
+                <h2 className="text-[16px] font-bold text-white/90">{activeCase?.title}</h2>
+                <p className="text-[10px] text-white/30 uppercase tracking-widest mt-1">{activeCase?.description}</p>
+             </div>
+          )}
+
+          {activeEvidence.length === 0 ? (
             <div className="flex-1 flex flex-col items-center justify-center text-white/10 gap-4 opacity-50">
               <Box size={64} strokeWidth={0.5} />
               <div className="flex flex-col items-center gap-1">
@@ -92,7 +159,7 @@ export const EvidenceLocker = () => {
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-              {evidence.map((item) => (
+              {activeEvidence.map((item) => (
                 <div key={item.id} className="bg-[#080808] border border-white/[0.05] flex flex-col group relative overflow-hidden">
                   {/* Thumbnail / Meta */}
                   <div className="h-44 bg-white/[0.02] flex items-center justify-center relative overflow-hidden">
@@ -101,9 +168,12 @@ export const EvidenceLocker = () => {
                     
                     {item.type === 'snapshot' ? <ImageIcon size={24} className="text-white/20" /> : <Video size={24} className="text-white/20" />}
                     
-                    <div className="absolute top-2 left-2 px-2 py-0.5 bg-black/60 border border-white/10 text-[9px] flex items-center gap-2">
-                       <Fingerprint size={10} className="text-vms-accent" />
-                       <span className="text-white/60 uppercase">SHA-256 Validated</span>
+                    <div className="absolute top-2 left-2 px-2 py-1 bg-black/80 backdrop-blur-md border border-white/10 text-[8px] flex flex-col gap-1">
+                       <div className="flex items-center gap-2">
+                          <Fingerprint size={10} className="text-vms-accent" />
+                          <span className="text-vms-accent font-bold uppercase">Integrity Verified</span>
+                       </div>
+                       <span className="text-[7px] text-white/30 font-mono truncate w-32">{item.hash}</span>
                     </div>
 
                     <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between">
@@ -138,6 +208,8 @@ export const EvidenceLocker = () => {
           )}
         </div>
       </div>
+
+      {showReport && <ForensicReport onClose={() => setShowReport(false)} />}
     </div>
   );
 };

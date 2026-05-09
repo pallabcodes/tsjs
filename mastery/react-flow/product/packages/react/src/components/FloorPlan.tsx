@@ -1,4 +1,4 @@
-import { useMeshStore, Device, cn } from '@ostream/core';
+import { useMeshStore, Device, Detection, cn } from '@ostream/core';
 import { 
   Navigation, 
   Map as MapIcon, 
@@ -9,7 +9,7 @@ import {
   Info,
   ShieldCheck
 } from 'lucide-react';
-import { useState, useRef } from 'react';
+import { useState, useRef, useMemo } from 'react';
 
 export const FloorPlan = () => {
   const { 
@@ -17,7 +17,9 @@ export const FloorPlan = () => {
     activeCameras, 
     setActiveCameras, 
     setFocusedCamera,
-    setActiveView 
+    setActiveView,
+    setActiveSite,
+    detections
   } = useMeshStore();
 
   const [zoom, setZoom] = useState(1);
@@ -37,6 +39,42 @@ export const FloorPlan = () => {
     setFocusedCamera(device.id);
     setActiveView('live');
   };
+
+  // ─── Projection Logic ────────────────────────────────────────────────────
+
+  const projectedObjects = useMemo(() => {
+    const objects: { det: Detection; x: number; y: number; camId: string }[] = [];
+    
+    devices.forEach(device => {
+      const activeDets = detections[device.id] || [];
+      if (device.x === undefined || device.y === undefined) return;
+
+      activeDets.forEach(det => {
+        // Basic Perspective Projection: 
+        // Map detX/detY from video to Floor Plan coordinates
+        // detX (0-1) -> maps to angle offset from camera center
+        // detY (0-1) -> maps to distance from camera (further down = further away)
+        
+        const camAngleRad = (device.angle || 0) * (Math.PI / 180);
+        const fovRad = (device.fov || 90) * (Math.PI / 180);
+        
+        // Relative angle within FOV
+        const relAngle = (det.x - 0.5) * fovRad;
+        const finalAngle = camAngleRad + relAngle;
+        
+        // Distance mapping (approximate forensic depth)
+        const distance = 50 + (det.y * 150); 
+        
+        if (device.x !== undefined && device.y !== undefined) {
+          const px = device.x * 1000 + Math.cos(finalAngle) * distance;
+          const py = device.y * 1000 + Math.sin(finalAngle) * distance;
+          objects.push({ det, x: px, y: py, camId: device.id });
+        }
+      });
+    });
+
+    return objects;
+  }, [devices, detections]);
 
   // ─── Render Helpers ──────────────────────────────────────────────────────
 
@@ -89,9 +127,17 @@ export const FloorPlan = () => {
       <div className="h-14 flex items-center justify-between px-6 border-b border-white/[0.05] bg-[#080808] z-10">
         <div className="flex items-center gap-3">
           <MapIcon size={18} className="text-vms-accent" />
-          <h1 className="text-[12px] font-bold uppercase tracking-widest">
-            Tactical Floor Plan <span className="text-white/20 ml-2 font-normal">Site: O_MESH_PRIMARY</span>
-          </h1>
+          <div className="flex flex-col">
+             <h1 className="text-[12px] font-bold uppercase tracking-widest">
+               Tactical Floor Plan <span className="text-white/20 ml-2 font-normal">Site: O_MESH_PRIMARY</span>
+             </h1>
+             <button 
+               onClick={() => setActiveSite('campus')}
+               className="text-[9px] text-vms-accent hover:text-white transition-colors uppercase font-bold text-left flex items-center gap-1 mt-0.5"
+             >
+               <Navigation size={10} className="rotate-[-45deg]" /> Zoom Out to Global Campus
+             </button>
+          </div>
         </div>
         <div className="flex items-center gap-4">
            <div className="flex items-center gap-2 px-3 py-1 bg-vms-emerald-500/10 border border-vms-emerald-500/20 rounded-full">
@@ -142,7 +188,29 @@ export const FloorPlan = () => {
               ))}
             </g>
 
-            {/* 3. Device Layer (Icons) */}
+            {/* 3. Projection Layer (Live Objects) */}
+            <g>
+              {projectedObjects.map((obj) => (
+                <g key={`${obj.camId}-${obj.det.id}`} transform={`translate(${obj.x}, ${obj.y})`} className="transition-transform duration-300">
+                   {/* Object Blip */}
+                   <circle r="6" className="fill-vms-accent animate-ping opacity-20" />
+                   <circle r="4" className={cn(
+                     "stroke-1",
+                     obj.det.cls === 'person' ? "fill-blue-500 stroke-blue-200" :
+                     obj.det.cls === 'vehicle' ? "fill-amber-500 stroke-amber-200" :
+                     "fill-red-500 stroke-red-200"
+                   )} />
+                   
+                   {/* Micro Classification Label */}
+                   <g transform="translate(8, -8)">
+                      <rect x="0" y="0" width="40" height="12" className="fill-black/80 stroke-white/10" />
+                      <text x="4" y="9" className="fill-white text-[8px] font-bold uppercase">{obj.det.cls}</text>
+                   </g>
+                </g>
+              ))}
+            </g>
+
+            {/* 4. Device Layer (Icons) */}
             <g>
               {devices.map(device => {
                 if (device.x === undefined || device.y === undefined) return null;
@@ -216,26 +284,26 @@ export const FloorPlan = () => {
                  <span className="text-[9px] font-bold text-white/90">{devices.length}</span>
               </div>
               <div className="flex items-center justify-between">
-                 <span className="text-[9px] text-white/60 uppercase">Active FOVs</span>
-                 <span className="text-[9px] font-bold text-vms-accent">{devices.filter(d => d.status === 'online').length}</span>
+                 <span className="text-[9px] text-white/60 uppercase">Live Tracks</span>
+                 <span className="text-[9px] font-bold text-vms-accent">{projectedObjects.length}</span>
               </div>
            </div>
            <div className="pt-2 mt-1 border-t border-white/5 flex flex-col gap-1.5">
               <div className="flex items-center gap-2">
-                 <div className="w-2 h-2 rounded-full bg-vms-accent shadow-[0_0_5px_rgba(0,243,255,0.8)]" />
-                 <span className="text-[8px] text-white/40 uppercase">Encrypted Stream</span>
+                 <div className="w-2 h-2 rounded-full bg-blue-500 shadow-[0_0_5px_rgba(59,130,246,0.8)]" />
+                 <span className="text-[8px] text-white/40 uppercase">Person Identified</span>
               </div>
               <div className="flex items-center gap-2">
-                 <div className="w-2 h-2 rounded-full bg-red-500 shadow-[0_0_5px_rgba(239,68,68,0.8)] animate-pulse" />
-                 <span className="text-[8px] text-white/40 uppercase">Motion Triggered</span>
+                 <div className="w-2 h-2 rounded-full bg-amber-500 shadow-[0_0_5px_rgba(245,158,11,0.8)]" />
+                 <span className="text-[8px] text-white/40 uppercase">Vehicle Detected</span>
               </div>
            </div>
         </div>
 
         {/* Footer Coordinate Ticker */}
         <div className="absolute bottom-6 left-6 px-4 py-2 bg-black/60 border border-white/5 font-mono">
-           <span className="text-[10px] text-vms-accent/60 tracking-widest">
-              RA: 12.421 // DEC: -0.124 // LAT: 37.7749 // LON: -122.4194
+           <span className="text-[10px] text-vms-accent/60 tracking-widest uppercase">
+              Projected Coordinate Engine Active // Tracking {projectedObjects.length} Entities
            </span>
         </div>
       </div>

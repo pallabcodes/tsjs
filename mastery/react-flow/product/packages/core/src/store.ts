@@ -57,6 +57,46 @@ export interface EvidenceItem {
   tags: string[];
   notes?: string;
   caseId?: string;
+  hash: string; // Forensic Chain of Custody
+}
+
+export interface Detection {
+  id: string;
+  cls: 'person' | 'vehicle' | 'bag';
+  x: number; y: number; w: number; h: number;
+  confidence: number;
+  attributes?: {
+    color?: string;
+    action?: string;
+    gear?: string[];
+  };
+}
+
+export interface SystemStats {
+  inferenceLatency: number;
+  storageThroughput: number;
+  networkJitter: number;
+  cpuLoad: number;
+  gpuLoad: number;
+  activeNodes: number;
+}
+
+export interface Incident {
+  id: string;
+  timestamp: number;
+  type: 'intrusion' | 'loitering' | 'package' | 'comms';
+  severity: 'critical' | 'warning' | 'info';
+  label: string;
+  camId: string;
+}
+
+export interface Case {
+  id: string;
+  title: string;
+  description: string;
+  createdAt: number;
+  evidenceIds: string[];
+  status: 'active' | 'archived' | 'exported';
 }
 
 // ─── State ───────────────────────────────────────────────────────────────────
@@ -64,12 +104,18 @@ export interface EvidenceItem {
 interface MeshState {
   // Navigation
   activeView: AppView;
+  activeSite: 'campus' | 'hq-primary';
   isNavCollapsed: boolean;
   isLeftSidebarCollapsed: boolean;
 
   // Inventory
   devices: Device[];
   evidence: EvidenceItem[];
+  cases: Case[];
+  activeCaseId: string | null;
+
+  // Sovereign Data Provider
+  detections: Record<string, Detection[]>; // CamId -> Detections
 
   // Playback
   activeTab: string;
@@ -122,12 +168,48 @@ interface MeshState {
   // ─── Actions ─────────────────────────────────────────────────────────────
 
   setActiveView: (view: AppView) => void;
+  setActiveSite: (site: 'campus' | 'hq-primary') => void;
   setIsNavCollapsed: (v: boolean) => void;
   setIsLeftSidebarCollapsed: (v: boolean) => void;
 
   setDevices: (devices: Device[]) => void;
-  addEvidence: (item: Omit<EvidenceItem, 'id'>) => void;
+  addEvidence: (item: Omit<EvidenceItem, 'id' | 'hash'>) => void;
   removeEvidence: (id: string) => void;
+  
+  // Case Management
+  addCase: (title: string, description: string) => void;
+  addEvidenceToCase: (evidenceId: string, caseId: string) => void;
+  setActiveCase: (caseId: string | null) => void;
+  exportCaseReport: (caseId: string) => void;
+
+  // Simulation Engine
+  tickDetections: (time: number) => void;
+  
+  // Semantic Search
+  searchSemantic: (query: string) => any[]; // Returns ranked results
+
+  // Incidents
+  incidents: Incident[];
+  addIncident: (incident: Omit<Incident, 'id' | 'timestamp'>) => void;
+
+  // Infrastructure
+  systemStats: SystemStats;
+  tickSystemStats: () => void;
+
+  // Forensic Tools
+  isMagnifierActive: boolean;
+  magnifierPos: { x: number; y: number };
+  magnifierCameraId: string | null;
+  toggleMagnifier: (active?: boolean) => void;
+  updateMagnifierPos: (x: number, y: number, camId: string | null) => void;
+
+  // Forensic Intelligence
+  selectedDetectionId: string | null;
+  setSelectedDetectionId: (id: string | null) => void;
+  
+  // Chain of Custody & Audit
+  auditLogs: { id: string; msg: string; ts: number }[];
+  addAuditLog: (msg: string) => void;
 
   setActiveTab: (tab: string) => void;
   setCurrentTime: (time: number | ((prev: number) => number)) => void;
@@ -194,6 +276,7 @@ export const useMeshStore = create<MeshState>()(
   subscribeWithSelector((set, get) => ({
     // Navigation
     activeView: 'live',
+    activeSite: 'hq-primary',
     isNavCollapsed: true,
     isLeftSidebarCollapsed: false,
 
@@ -206,6 +289,24 @@ export const useMeshStore = create<MeshState>()(
       { id: 'stream-05', label: 'LOADING_DOCK', status: 'error', type: 'camera', ip: '192.168.1.105', x: 0.5, y: 0.5, angle: 90, fov: 120 },
     ],
     evidence: [],
+    cases: [
+      { id: 'case-01', title: 'Lobby Incident 05/09', description: 'Suspected unauthorized access in Main Lobby', createdAt: Date.now(), evidenceIds: [], status: 'active' }
+    ],
+    activeCaseId: 'case-01',
+    detections: {},
+    incidents: [
+      { id: 'inc-01', timestamp: Date.now() - 300000, type: 'intrusion', severity: 'critical', label: 'Perimeter Breach: Zone 04', camId: 'stream-01' },
+      { id: 'inc-02', timestamp: Date.now() - 120000, type: 'comms', severity: 'info', label: 'Operator Alpha: Sector Clear', camId: 'stream-01' },
+    ],
+
+    addIncident: (inc) => {
+      const newInc = {
+        ...inc,
+        id: `inc-${Math.random().toString(36).substring(7)}`,
+        timestamp: Date.now()
+      };
+      set(state => ({ incidents: [newInc, ...state.incidents].slice(0, 50) }));
+    },
 
     // Playback
     activeTab: 'Live View',
@@ -257,17 +358,174 @@ export const useMeshStore = create<MeshState>()(
 
     // ─── Setters ───────────────────────────────────────────────────────────
 
-    setActiveView: (view) => set({ activeView: view }),
+    setActiveView: (view) => {
+      get().addAuditLog(`Tactical view transition: ${view.toUpperCase()}`);
+      set({ activeView: view });
+    },
+    setActiveSite: (site) => set({ activeSite: site }),
     setIsNavCollapsed: (isNavCollapsed) => set({ isNavCollapsed }),
     setIsLeftSidebarCollapsed: (isLeftSidebarCollapsed) => set({ isLeftSidebarCollapsed }),
 
     setDevices: (devices) => set({ devices }),
-    addEvidence: (item) => set((state) => ({
-      evidence: [...state.evidence, { ...item, id: `ev-${Date.now()}` }]
-    })),
+    
+    addEvidence: (item) => {
+      get().addAuditLog(`Evidence captured: ${item.type.toUpperCase()} from source ${item.camId}`);
+      set((state) => {
+        const id = `ev-${Date.now()}`;
+        const hash = Array.from({length: 64}, () => Math.floor(Math.random() * 16).toString(16)).join('');
+        const newItem = { ...item, id, hash };
+        const updatedCases = state.cases.map(c => 
+          c.id === state.activeCaseId ? { ...c, evidenceIds: [...c.evidenceIds, id] } : c
+        );
+        return {
+          evidence: [...state.evidence, newItem],
+          cases: updatedCases
+        };
+      });
+    },
+
     removeEvidence: (id) => set((state) => ({
-      evidence: state.evidence.filter(e => e.id !== id)
+      evidence: state.evidence.filter(e => e.id !== id),
+      cases: state.cases.map(c => ({ ...c, evidenceIds: c.evidenceIds.filter(eid => eid !== id) }))
     })),
+
+    addCase: (title, description) => set((state) => ({
+      cases: [...state.cases, { id: `case-${Date.now()}`, title, description, createdAt: Date.now(), evidenceIds: [], status: 'active' }]
+    })),
+
+    addEvidenceToCase: (evidenceId, caseId) => set((state) => ({
+      cases: state.cases.map(c => c.id === caseId ? { ...c, evidenceIds: Array.from(new Set([...c.evidenceIds, evidenceId])) } : c)
+    })),
+
+    setActiveCase: (caseId) => set({ activeCaseId: caseId }),
+
+    exportCaseReport: (caseId) => {
+      const state = get();
+      const targetCase = state.cases.find(c => c.id === caseId);
+      if (!targetCase) return;
+
+      const reportEvidence = state.evidence.filter(e => targetCase.evidenceIds.includes(e.id));
+      
+      const report = {
+        meta: {
+          reportId: `REP-${Math.random().toString(36).substring(7).toUpperCase()}`,
+          generatedAt: new Date().toISOString(),
+          validator: 'O_MESH_L7_SOVEREIGN_ENGINE',
+          integrityStatus: 'VALID'
+        },
+        case: targetCase,
+        evidence: reportEvidence.map(e => ({
+          id: e.id,
+          timestamp: e.timestamp,
+          cam: e.camLabel,
+          forensicHash: e.hash,
+          verification: 'VERIFIED_CHAIN_OF_CUSTODY'
+        }))
+      };
+
+      // In a real app, this would trigger a PDF generation or download
+      console.log('Forensic Report Generated:', report);
+      const blob = new Blob([JSON.stringify(report, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `forensic_report_${targetCase.title.replace(/\s+/g, '_')}.json`;
+      a.click();
+    },
+
+    tickDetections: (time) => {
+      // Sovereign Simulation Engine: Generates deterministic detections based on playback time
+      const simulation: Record<string, Detection[]> = {};
+      
+      // Lobby Simulation
+      if (time > 100 && time < 140) {
+        simulation['stream-01'] = [
+          { id: 'det-01', cls: 'person', x: 0.25, y: 0.3, w: 0.08, h: 0.25, confidence: 0.97, attributes: { color: 'red', gear: ['backpack'] } },
+          { id: 'det-02', cls: 'person', x: 0.6, y: 0.35, w: 0.06, h: 0.2, confidence: 0.89, attributes: { color: 'blue' } }
+        ];
+      } else if (time > 500 && time < 620) {
+        simulation['stream-01'] = [
+          { id: 'det-03', cls: 'person', x: 0.45, y: 0.5, w: 0.12, h: 0.3, confidence: 0.94, attributes: { gear: ['umbrella'] } }
+        ];
+      }
+
+      // Parking Simulation
+      if (time > 200 && time < 350) {
+        simulation['stream-02'] = [
+          { id: 'det-04', cls: 'vehicle', x: 0.15, y: 0.55, w: 0.2, h: 0.12, confidence: 0.98, attributes: { color: 'white' } },
+          { id: 'det-05', cls: 'vehicle', x: 0.5, y: 0.6, w: 0.18, h: 0.1, confidence: 0.95, attributes: { color: 'black' } }
+        ];
+      }
+
+      set({ detections: simulation });
+      get().tickSystemStats();
+    },
+
+    tickSystemStats: () => {
+      set((state) => ({
+        systemStats: {
+          ...state.systemStats,
+          inferenceLatency: 120 + Math.random() * 10,
+          storageThroughput: 840 + Math.random() * 40,
+          networkJitter: 10 + Math.random() * 5,
+          cpuLoad: 40 + Math.random() * 15,
+          gpuLoad: 65 + Math.random() * 10,
+        }
+      }));
+    },
+
+    searchSemantic: (query) => {
+      // Mock Semantic Matcher: In a real app, this would query a vector DB
+      const q = query.toLowerCase();
+      const results = [];
+
+      // Manual mock matching for demo
+      if (q.includes('person') || q.includes('red')) {
+        results.push({ time: 120, camId: 'stream-01', camLabel: 'LOBBY_CAM_01', score: 0.94, match: 'Person in red gear' });
+      }
+      if (q.includes('blue')) {
+        results.push({ time: 130, camId: 'stream-01', camLabel: 'LOBBY_CAM_01', score: 0.88, match: 'Person in blue clothing' });
+      }
+      if (q.includes('vehicle') || q.includes('white')) {
+        results.push({ time: 250, camId: 'stream-02', camLabel: 'PARKING_CAM_03', score: 0.98, match: 'White vehicle detected' });
+      }
+      
+      return results.sort((a, b) => b.score - a.score);
+    },
+
+    systemStats: {
+      inferenceLatency: 124,
+      storageThroughput: 850,
+      networkJitter: 12,
+      cpuLoad: 42,
+      gpuLoad: 68,
+      activeNodes: 5
+    },
+
+    isMagnifierActive: false,
+    magnifierPos: { x: 0, y: 0 },
+    magnifierCameraId: null,
+
+    selectedDetectionId: null,
+    setSelectedDetectionId: (id) => set({ selectedDetectionId: id }),
+
+    auditLogs: [
+      { id: '0', msg: 'Forensic environment initialized. Integrity verified.', ts: Date.now() }
+    ],
+    addAuditLog: (msg) => set((state) => ({
+      auditLogs: [{ id: Math.random().toString(36).substr(2, 9), msg, ts: Date.now() }, ...state.auditLogs].slice(0, 50)
+    })),
+
+    toggleMagnifier: (active) => set((state) => {
+      const newState = active !== undefined ? active : !state.isMagnifierActive;
+      get().addAuditLog(newState ? 'Forensic Magnifier enabled.' : 'Forensic Magnifier disabled.');
+      return { isMagnifierActive: newState };
+    }),
+    
+    updateMagnifierPos: (x, y, camId) => set({ 
+      magnifierPos: { x, y }, 
+      magnifierCameraId: camId 
+    }),
 
     setActiveTab: (tab) => set({ activeTab: tab }),
 

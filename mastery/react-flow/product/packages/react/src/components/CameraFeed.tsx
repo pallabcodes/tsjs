@@ -1,41 +1,13 @@
-import { useRef, useEffect, useState, useCallback, useMemo } from 'react';
+import { useRef, useEffect, useState, useCallback } from 'react';
 import { useMeshStore, cn } from '@ostream/core';
 import { Camera, Maximize, ZoomIn, ZoomOut, Crosshair, ChevronUp, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
-
-// ─── Mock ML Detection Data ────────────────────────────────────────────────────
-interface Detection {
-  timeStart: number;
-  timeEnd: number;
-  x: number; y: number; w: number; h: number;
-  cls: string;
-  confidence: number;
-}
-
-const MOCK_DETECTIONS: Record<string, Detection[]> = {
-  'LOBBY_CAM_01': [
-    { timeStart: 100, timeEnd: 140, x: 0.25, y: 0.3, w: 0.08, h: 0.25, cls: 'person', confidence: 0.97 },
-    { timeStart: 100, timeEnd: 140, x: 0.6, y: 0.35, w: 0.06, h: 0.2, cls: 'person', confidence: 0.89 },
-    { timeStart: 500, timeEnd: 620, x: 0.45, y: 0.5, w: 0.12, h: 0.3, cls: 'person', confidence: 0.94 },
-    { timeStart: 1200, timeEnd: 1350, x: 0.7, y: 0.6, w: 0.1, h: 0.15, cls: 'bag', confidence: 0.72 },
-    { timeStart: 1500, timeEnd: 1550, x: 0.3, y: 0.4, w: 0.07, h: 0.22, cls: 'person', confidence: 0.96 },
-    { timeStart: 2400, timeEnd: 2500, x: 0.5, y: 0.45, w: 0.09, h: 0.28, cls: 'person', confidence: 0.91 },
-  ],
-  'PARKING_CAM_03': [
-    { timeStart: 200, timeEnd: 350, x: 0.15, y: 0.55, w: 0.2, h: 0.12, cls: 'vehicle', confidence: 0.98 },
-    { timeStart: 200, timeEnd: 350, x: 0.5, y: 0.6, w: 0.18, h: 0.1, cls: 'vehicle', confidence: 0.95 },
-    { timeStart: 800, timeEnd: 950, x: 0.35, y: 0.3, w: 0.06, h: 0.2, cls: 'person', confidence: 0.88 },
-    { timeStart: 1500, timeEnd: 1650, x: 0.7, y: 0.5, w: 0.22, h: 0.14, cls: 'vehicle', confidence: 0.93 },
-    { timeStart: 2800, timeEnd: 2900, x: 0.4, y: 0.4, w: 0.07, h: 0.22, cls: 'person', confidence: 0.85 },
-  ],
-};
+import { FeedHUD } from './FeedHUD';
 
 const CLS_COLORS: Record<string, string> = {
   person: '#3b82f6',
   vehicle: '#f59e0b',
   bag: '#ef4444',
 };
-
-// ─── Component ──────────────────────────────────────────────────────────────────
 
 interface CameraFeedProps {
   id: string;
@@ -48,13 +20,38 @@ interface CameraFeedProps {
 export const CameraFeed = ({ id, label, isActive, onClick, className }: CameraFeedProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const { currentTime, isPlaying, showOSD, showBoundingBoxes, frameRate, addEvidence } = useMeshStore();
+  const { 
+    currentTime, 
+    isPlaying, 
+    showOSD, 
+    showBoundingBoxes, 
+    frameRate, 
+    addEvidence,
+    detections,
+    tickDetections,
+    isMagnifierActive,
+    updateMagnifierPos
+  } = useMeshStore();
 
   const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [showPTZ, setShowPTZ] = useState(false);
 
   // ─── Handlers ───────────────────────────────────────────────────────────
+
+  const handleMouseMove = useCallback((e: React.MouseEvent) => {
+    if (!isMagnifierActive || !containerRef.current) return;
+    const rect = containerRef.current.getBoundingClientRect();
+    const x = (e.clientX - rect.left) / rect.width;
+    const y = (e.clientY - rect.top) / rect.height;
+    updateMagnifierPos(x, y, id);
+  }, [id, isMagnifierActive, updateMagnifierPos]);
+
+  const handleMouseLeave = useCallback(() => {
+    if (isMagnifierActive) {
+      updateMagnifierPos(0, 0, null);
+    }
+  }, [isMagnifierActive, updateMagnifierPos]);
 
   const handleSnapshot = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
@@ -94,7 +91,7 @@ export const CameraFeed = ({ id, label, isActive, onClick, className }: CameraFe
     setPan({ x: 0, y: 0 });
   }, []);
 
-  // ─── Canvas Render Loop (Advanced L7 Engine) ────────────────────────────
+  // ─── Canvas Render Loop Engine ───────────────────────────────────────────
   
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -210,37 +207,12 @@ export const CameraFeed = ({ id, label, isActive, onClick, className }: CameraFe
       ctx.lineTo(w, scanY);
       ctx.stroke();
 
-      // ── 5. Live Exposure Histogram ──────────────────────────────────────
-      if (showOSD) {
-        const histW = 80;
-        const histH = 24;
-        const histX = 12;
-        const histY = h - histH - 12;
-
-        ctx.fillStyle = 'rgba(0,0,0,0.6)';
-        ctx.fillRect(histX, histY, histW, histH);
-        
-        ctx.strokeStyle = 'rgba(255,255,255,0.4)';
-        ctx.lineWidth = 1;
-        ctx.beginPath();
-        for(let i=0; i<histW; i+=2) {
-          // Fake histogram data oscillating
-          const val = (Math.sin(i * 0.1 + t * 2) * Math.cos(i * 0.05 - t) + 1) * 0.5;
-          const hVal = val * (histH - 4);
-          ctx.moveTo(histX + i, histY + histH);
-          ctx.lineTo(histX + i, histY + histH - hVal);
-        }
-        ctx.stroke();
-        
-        // Frame/Crosshair over histogram
-        ctx.strokeStyle = 'rgba(255,255,255,0.1)';
-        ctx.strokeRect(histX, histY, histW, histH);
-      }
-
-      // ── 6. ML Bounding Boxes (Forensic Brackets) ────────────────────────
+      // ── 6. ML Bounding Boxes (Sovereign Data Provider) ─────────────────
       if (showBoundingBoxes) {
-        const detections = MOCK_DETECTIONS[label] ?? [];
-        const active = detections.filter(d => t >= d.timeStart && t <= d.timeEnd);
+        // Sync simulation state for this frame
+        tickDetections(t);
+        
+        const active = detections[id] ?? [];
 
         for (const det of active) {
           const bx = det.x * w;
@@ -304,29 +276,18 @@ export const CameraFeed = ({ id, label, isActive, onClick, className }: CameraFe
     };
   }, [currentTime, isPlaying, showOSD, showBoundingBoxes, label, frameRate]);
 
-  // ─── Computed Telemetry Data ─────────────────────────────────────────────
-
-  const hours = Math.floor(currentTime / 3600);
-  const mins = Math.floor((currentTime % 3600) / 60);
-  const secs = Math.floor(currentTime % 60);
-  const ms = Math.floor((currentTime % 1) * 1000);
-  const timecode = `${String(hours).padStart(2,'0')}:${String(mins).padStart(2,'0')}:${String(secs).padStart(2,'0')}.${String(ms).padStart(3,'0')}`;
-
-  // Fake fluctuating telemetry for premium feel
-  const simulatedBitrate = useMemo(() => (4.2 + Math.sin(currentTime * 0.5) * 0.4).toFixed(1), [Math.floor(currentTime * 2)]);
-  const simulatedJitter = useMemo(() => (12 + Math.random() * 5).toFixed(0), [Math.floor(currentTime * 4)]);
-
   return (
     <div
       ref={containerRef}
       onClick={onClick}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
       className={cn(
         "relative w-full h-full overflow-hidden cursor-pointer group bg-[#030303]",
         isActive ? "ring-1 ring-inset ring-vms-accent" : "ring-1 ring-inset ring-white/[0.04]",
         className
       )}
     >
-      {/* ─── Advanced Canvas Engine ──────────────────────────────────────── */}
       <canvas
         ref={canvasRef}
         className="w-full h-full"
@@ -337,41 +298,9 @@ export const CameraFeed = ({ id, label, isActive, onClick, className }: CameraFe
         }}
       />
 
-      {/* ─── Premium OSD (Top Left/Right) ────────────────────────────────── */}
+      {/* ─── Tactical SVG HUD ─────────────────────────────────────────── */}
       {showOSD && (
-        <>
-          {/* Top Left: Chain of Custody (Condensed) */}
-          <div className="absolute top-1.5 left-1.5 flex flex-col pointer-events-none z-10">
-            <div className={cn(
-              "flex items-center gap-1 px-1.5 py-0.5 bg-black/60 backdrop-blur-md border border-white/10 rounded-sm shadow-lg transition-all",
-              !isActive && "opacity-60"
-            )}>
-              <div className={cn("w-1 h-1 rounded-full", isPlaying ? "bg-red-500 animate-pulse" : "bg-white/20")} />
-              <span className="text-[9px] font-mono font-bold text-white/90 tracking-tighter uppercase">
-                {label}
-              </span>
-            </div>
-            {isActive && (
-              <div className="px-1.5 py-0.5 bg-black/40 backdrop-blur-sm border border-white/5 border-t-0 rounded-b flex flex-col">
-                <span className="text-[8px] font-mono text-vms-emerald-400/80 leading-none">
-                  {timecode}
-                </span>
-              </div>
-            )}
-          </div>
-
-          {/* Top Right: Network Telemetry (Micro) */}
-          <div className="absolute top-1.5 right-1.5 flex flex-col items-end pointer-events-none z-10">
-            <div className={cn(
-              "px-1.5 py-0.5 bg-black/40 backdrop-blur-md border border-white/5 rounded-sm shadow-lg transition-opacity",
-              !isActive ? "opacity-0 group-hover:opacity-100" : "opacity-100"
-            )}>
-              <span className="text-[8px] font-mono text-white/40 tracking-tighter">
-                {simulatedBitrate}M • {simulatedJitter}ms
-              </span>
-            </div>
-          </div>
-        </>
+        <FeedHUD camId={id} label={label} isFocused={isActive} />
       )}
 
       {/* ─── Glassmorphic Floating Command Island (Bottom Center) ────────── */}

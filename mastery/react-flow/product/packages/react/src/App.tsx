@@ -4,12 +4,21 @@ import { Viewport } from './components/Viewport';
 import { NavRail } from './components/NavRail';
 import { DeviceTree } from './components/DeviceTree';
 import { FloorPlan } from './components/FloorPlan';
+import { CampusMap } from './components/CampusMap';
+import { IncidentFeed } from './components/IncidentFeed';
+import { AuditLogFooter } from './components/AuditLogFooter';
 import { SearchView } from './components/SearchView';
 import { EvidenceLocker } from './components/EvidenceLocker';
+import { SystemHealthView } from './components/SystemHealthView';
 import './index.css';
 
 function App() {
-  const { activeView, isLeftSidebarCollapsed } = useMeshStore();
+  const { 
+    activeView, 
+    activeSite,
+    isLeftSidebarCollapsed,
+    isPlayerSidebarCollapsed 
+  } = useMeshStore();
 
   const renderMainContent = () => {
     switch (activeView) {
@@ -24,6 +33,9 @@ function App() {
               <div className="flex-1 overflow-hidden relative flex flex-col">
                 <Viewport />
               </div>
+
+              {/* Real-time Incident Channel (Command & Control) */}
+              {!isPlayerSidebarCollapsed && <IncidentFeed />}
             </div>
 
             {/* Forensic Timeline Instrument */}
@@ -32,7 +44,7 @@ function App() {
         );
       
       case 'map':
-        return <FloorPlan />;
+        return activeSite === 'campus' ? <CampusMap /> : <FloorPlan />;
       
       case 'search':
         return <SearchView />;
@@ -41,11 +53,7 @@ function App() {
         return <EvidenceLocker />;
       
       case 'settings':
-        return (
-          <div className="flex-1 flex items-center justify-center bg-[#020202] text-white/20 font-mono text-[11px] uppercase tracking-[0.2em]">
-            System Configuration Engine - Access Denied (L7 Root Required)
-          </div>
-        );
+        return <SystemHealthView />;
 
       default:
         return null;
@@ -58,7 +66,10 @@ function App() {
       <NavRail />
 
       {/* 02. Dynamic Context Content */}
-      {renderMainContent()}
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+        {renderMainContent()}
+        <AuditLogFooter />
+      </div>
     </div>
   );
 }

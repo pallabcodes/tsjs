@@ -4,6 +4,15 @@
 @tailwind components;
 @tailwind utilities;
 
+@keyframes scan-y {
+  from { transform: translateY(-100%); }
+  to { transform: translateY(1000%); }
+}
+
+.animate-scan-y {
+  animation: scan-y 8s linear infinite;
+}
+
 @layer base {
   :root {
     --vms-bg: #030303;
@@ -37,7 +46,20 @@
     @apply font-mono tabular-nums text-sm;
     font-family: 'JetBrains Mono', monospace;
   }
+}
 
+@keyframes scanline {
+  0% { transform: translateY(0); opacity: 0; }
+  5% { opacity: 1; }
+  95% { opacity: 1; }
+  100% { transform: translateY(400px); opacity: 0; }
+}
+
+.animate-scanline {
+  animation: scanline 4s linear infinite;
+}
+
+@layer utilities {
   .no-scrollbar::-webkit-scrollbar {
     display: none;
   }
