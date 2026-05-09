@@ -1,0 +1,17 @@
+{
+  "name": "vms-observability-mesh",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:shell": "npm run dev -w packages/react",
+    "build": "npm run build --workspaces",
+    "lint": "npm run lint --workspaces",
+    "format": "prettier --write \"**/*.{ts,tsx,js,json,css,md}\"",
+    "test": "npm run test --workspaces"
+  },
+  "devDependencies": {
+    "prettier": "^3.8.3"
+  }
+}

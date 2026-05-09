@@ -1,0 +1,9 @@
+{
+  "name": "@ostream/policy",
+  "version": "1.0.0",
+  "private": true,
+  "description": "OStream Policy & Rules Engine (Java)",
+  "scripts": {
+    "lint": "echo no lint needed for java yet"
+  }
+}

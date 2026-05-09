@@ -1,0 +1,22 @@
+{
+  "name": "@ostream/config",
+  "version": "1.0.0",
+  "private": true,
+  "main": "index.js",
+  "scripts": {
+    "lint": "echo no lint needed for config"
+  },
+  "files": [
+    "eslint-preset.js",
+    "eslint-flat.js",
+    "prettier-preset.json"
+  ],
+  "dependencies": {
+    "@eslint/js": "^9.0.0",
+    "eslint-config-prettier": "^9.0.0",
+    "eslint-plugin-react-hooks": "^4.6.0",
+    "eslint-plugin-react-refresh": "^0.4.0",
+    "globals": "^15.0.0",
+    "typescript-eslint": "^8.0.0"
+  }
+}

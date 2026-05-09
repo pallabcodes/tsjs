@@ -1,0 +1,9 @@
+{
+  "name": "@ostream/media",
+  "version": "1.0.0",
+  "private": true,
+  "description": "OStream High-Performance Media Engine (C++)",
+  "scripts": {
+    "lint": "echo no lint needed for cpp yet"
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "name": "@ostream/telemetry",
+  "version": "1.0.0",
+  "private": true,
+  "description": "OStream High-Performance Telemetry Engine (Go)",
+  "scripts": {
+    "lint": "echo no lint needed for go yet"
+  }
+}

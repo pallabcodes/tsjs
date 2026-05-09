@@ -1,0 +1,58 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --vms-bg: #030303;
+    --vms-surface: #0a0c0e;
+    --vms-surface-elevated: #16191d;
+    --vms-border: #4b5563;
+    --vms-border-dim: rgba(255, 255, 255, 0.05);
+    
+    --vms-emerald-600: #059669;
+    --vms-emerald-400: #34d399;
+    --vms-blue-500: #3b82f6;
+    --vms-red-500: #ef4444;
+    
+    --vms-text-primary: #f9fafb;
+    --vms-text-secondary: #9ca3af;
+    --vms-text-tertiary: #4b5563;
+  }
+
+  body {
+    @apply bg-vms-bg text-vms-text-primary m-0 p-0 font-sans text-xs overflow-hidden antialiased;
+    font-family: 'Outfit', sans-serif;
+  }
+}
+
+@layer components {
+  .label-caps {
+    @apply text-[10px] font-semibold uppercase tracking-widest text-vms-text-secondary;
+  }
+
+  .mono-tabular {
+    @apply font-mono tabular-nums text-sm;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
+
+/* Custom Animations */
+@keyframes pulse-emerald {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(0.9); }
+}
+
+.animate-pulse-slow {
+  animation: pulse-emerald 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
