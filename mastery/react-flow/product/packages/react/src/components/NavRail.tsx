@@ -9,7 +9,8 @@ import {
   ChevronRight,
   ShieldAlert,
   Activity,
-  History
+  History,
+  Globe
 } from 'lucide-react';
 
 export const NavRail = () => {
@@ -25,6 +26,7 @@ export const NavRail = () => {
     { view: 'map', icon: MapIcon, label: 'Tactical Map' },
     { view: 'search', icon: Search, label: 'Search & Query' },
     { view: 'locker', icon: FolderLock, label: 'Evidence Locker' },
+    { view: 'gmaps', icon: Globe, label: 'Sovereign Sat-Link' },
     { view: 'settings', icon: Settings, label: 'System Settings' },
   ];
 

@@ -78,3 +78,13 @@
 .animate-pulse-slow {
   animation: pulse-emerald 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
+
+/* Custom Leaflet Tooltip Overrides */
+.custom-leaflet-tooltip {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+.custom-leaflet-tooltip::before {
+  display: none !important;
+}

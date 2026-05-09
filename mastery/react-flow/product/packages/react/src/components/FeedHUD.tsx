@@ -16,28 +16,36 @@ export const FeedHUD = ({ camId, label, isFocused }: FeedHUDProps) => {
       "absolute inset-0 pointer-events-none transition-opacity duration-500",
       isFocused ? "opacity-100" : "opacity-40 group-hover:opacity-80"
     )}>
-      {/* ─── Corner Brackets (SVG) ────────────────────────────────────────── */}
-      <svg className="absolute inset-0 w-full h-full">
+      {/* ─── Corner Brackets (HTML/SVG) ────────────────────────────────────── */}
+      <div className={cn(
+        "absolute inset-0 transition-colors duration-300 pointer-events-none z-10",
+        isFocused ? "text-vms-accent" : "text-white/20"
+      )} style={{ filter: 'url(#hud-glow)' }}>
+        {/* Top Left */}
+        <svg className="absolute top-3 left-3 w-8 h-8 overflow-visible">
+          <path d="M 0 32 V 0 H 32" fill="none" stroke="currentColor" strokeWidth="1.5" />
+        </svg>
+        {/* Top Right */}
+        <svg className="absolute top-3 right-3 w-8 h-8 overflow-visible">
+          <path d="M 0 0 H 32 V 32" fill="none" stroke="currentColor" strokeWidth="1.5" />
+        </svg>
+        {/* Bottom Left */}
+        <svg className="absolute bottom-3 left-3 w-8 h-8 overflow-visible">
+          <path d="M 0 0 V 32 H 32" fill="none" stroke="currentColor" strokeWidth="1.5" />
+        </svg>
+        {/* Bottom Right */}
+        <svg className="absolute bottom-3 right-3 w-8 h-8 overflow-visible">
+          <path d="M 0 32 H 32 V 0" fill="none" stroke="currentColor" strokeWidth="1.5" />
+        </svg>
+      </div>
+
+      <svg className="absolute inset-0 w-full h-full pointer-events-none z-0">
         <defs>
           <filter id="hud-glow">
             <feGaussianBlur stdDeviation="2" result="blur" />
             <feComposite in="SourceGraphic" in2="blur" operator="over" />
           </filter>
         </defs>
-
-        <g className={cn(
-          "transition-colors duration-300",
-          isFocused ? "text-vms-accent" : "text-white/20"
-        )} style={{ filter: 'url(#hud-glow)' }}>
-          {/* Top Left */}
-          <path d="M 12 40 V 12 H 40" fill="none" stroke="currentColor" strokeWidth="1.5" />
-          {/* Top Right */}
-          <path d="M calc(100% - 40) 12 H calc(100% - 12) V 40" fill="none" stroke="currentColor" strokeWidth="1.5" />
-          {/* Bottom Left */}
-          <path d="M 12 calc(100% - 40) V calc(100% - 12) H 40" fill="none" stroke="currentColor" strokeWidth="1.5" />
-          {/* Bottom Right */}
-          <path d="M calc(100% - 40) calc(100% - 12) V calc(100% - 40) M calc(100% - 40) calc(100% - 12) H calc(100% - 12)" fill="none" stroke="currentColor" strokeWidth="1.5" />
-        </g>
 
         {/* ─── Scanning Line ──────────────────────────────────────────────── */}
         {isFocused && (

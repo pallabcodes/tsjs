@@ -12,6 +12,8 @@ import { EvidenceLocker } from './components/EvidenceLocker';
 import { SystemHealthView } from './components/SystemHealthView';
 import './index.css';
 
+import SovereignSatLink from './components/SovereignSatLink';
+
 function App() {
   const { 
     activeView, 
@@ -51,6 +53,9 @@ function App() {
       
       case 'locker':
         return <EvidenceLocker />;
+      
+      case 'gmaps':
+        return <SovereignSatLink />;
       
       case 'settings':
         return <SystemHealthView />;

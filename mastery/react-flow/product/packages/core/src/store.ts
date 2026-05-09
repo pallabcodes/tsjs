@@ -22,7 +22,7 @@ export type ExportFormat = 'json' | 'csv' | 'clipboard';
 
 export type GridMode = '1x1' | '2x2' | '3x3' | 'hero';
 
-export type AppView = 'live' | 'map' | 'search' | 'locker' | 'settings';
+export type AppView = 'live' | 'map' | 'search' | 'locker' | 'settings' | 'gmaps';
 
 export interface TrackMeta {
   id: string;
