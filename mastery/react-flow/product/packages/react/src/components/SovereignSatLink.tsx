@@ -17,16 +17,36 @@ const isPointInPolygon = (point: {lat: number, lng: number}, vs: {lat: number, l
   return inside;
 };
 
-// Premium Brand-Aligned Zinc Standard Mode
+// Sovereign Forensic Design System (SFDS) Tokens
+const SFDS = {
+  colors: {
+    base: '#09090b',
+    primary: '#6366f1', // Intelligence Indigo
+    anomaly: '#ef4444', // Forensic Red
+    history: '#f59e0b', // Tactical Amber
+    silver: '#f8fafc',
+    zinc800: '#27272a',
+  },
+  classes: {
+    primaryText: 'text-indigo-400',
+    primaryBg: 'bg-indigo-500',
+    primaryShadow: 'shadow-[0_0_20px_rgba(99,102,241,0.3)]',
+    historyText: 'text-amber-500',
+    historyBg: 'bg-amber-500',
+    anomalyText: 'text-red-500',
+    anomalyBg: 'bg-red-500',
+  }
+};
+
 const zincStandardStyles: google.maps.MapTypeStyle[] = [
-  { elementType: "geometry", stylers: [{ color: "#09090b" }] },
-  { elementType: "labels.text.stroke", stylers: [{ color: "#09090b" }] },
+  { elementType: "geometry", stylers: [{ color: SFDS.colors.base }] },
+  { elementType: "labels.text.stroke", stylers: [{ color: SFDS.colors.base }] },
   { elementType: "labels.text.fill", stylers: [{ color: "#71717a" }] },
   { featureType: "administrative.locality", elementType: "labels.text.fill", stylers: [{ color: "#a1a1aa" }] },
   { featureType: "poi", stylers: [{ visibility: "off" }] },
   { featureType: "transit", stylers: [{ visibility: "off" }] },
   { featureType: "road", elementType: "geometry", stylers: [{ color: "#18181b" }] },
-  { featureType: "road", elementType: "geometry.stroke", stylers: [{ color: "#27272a" }] },
+  { featureType: "road", elementType: "geometry.stroke", stylers: [{ color: SFDS.colors.zinc800 }] },
   { featureType: "water", elementType: "geometry", stylers: [{ color: "#000000" }] },
 ];
 

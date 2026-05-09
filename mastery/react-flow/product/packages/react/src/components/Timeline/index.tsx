@@ -211,7 +211,7 @@ export const Timeline = () => {
 
   if (isTimelineCollapsed) {
     return (
-      <footer className="relative z-[100] border-t border-vms-border-dim bg-vms-surface shadow-2xl">
+      <footer className="relative z-[100] border-t border-zinc-800 bg-zinc-950 shadow-2xl">
         <TimelineControls />
       </footer>
     )
@@ -221,7 +221,7 @@ export const Timeline = () => {
     <footer
       ref={containerRef}
       className={cn(
-        "relative z-[100] flex flex-col border-t border-vms-border-dim bg-vms-surface shadow-2xl",
+        "relative z-[100] flex flex-col border-t border-zinc-800 bg-zinc-950 shadow-2xl",
         isTimelineFullscreen && "fixed inset-0 z-[999]"
       )}
       style={isTimelineFullscreen ? undefined : { height: timelineHeight }}
@@ -231,7 +231,7 @@ export const Timeline = () => {
       {/* Resize handle (top edge) */}
       {!isTimelineFullscreen && (
         <div
-          className="absolute top-0 left-0 right-0 h-1 cursor-row-resize z-[101] hover:bg-vms-accent/20 transition-colors"
+          className="absolute top-0 left-0 right-0 h-1 cursor-row-resize z-[101] hover:bg-indigo-400/20 transition-colors"
           onMouseDown={handleTimelineResize}
         />
       )}
@@ -297,13 +297,13 @@ export const Timeline = () => {
             )}
             style={{
               transform: `translateX(${(currentTime / 60) * scale}px)`,
-              boxShadow: `0 0 ${isDraggingPlayhead ? 20 : 12}px var(--vms-emerald-600)`,
-              backgroundColor: 'var(--vms-emerald-600)',
+              boxShadow: `0 0 ${isDraggingPlayhead ? 20 : 12}px #6366f1`,
+              backgroundColor: '#6366f1',
               transition: isDraggingPlayhead ? 'none' : 'transform 0.06s linear',
             }}
           >
             {/* Playhead handle */}
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-3 h-5 bg-vms-emerald-600 rounded-b-sm pointer-events-auto cursor-col-resize" />
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-3 h-5 bg-indigo-500 rounded-b-sm pointer-events-auto cursor-col-resize" />
           </div>
 
           {/* Selection Overlay with resize handles */}
@@ -313,22 +313,22 @@ export const Timeline = () => {
 
             return (
               <div
-                className="absolute bottom-0 top-0 z-20 border-x border-vms-blue-500 bg-vms-blue-500/8 pointer-events-none"
+                className="absolute bottom-0 top-0 z-20 border-x border-zinc-400 bg-zinc-400/8 pointer-events-none"
                 style={{ left, width }}
               >
                 {/* Left resize handle */}
                 <div
-                  className="absolute top-0 bottom-0 -left-1 w-2 cursor-col-resize pointer-events-auto hover:bg-vms-blue-500/30 transition-colors z-30"
+                  className="absolute top-0 bottom-0 -left-1 w-2 cursor-col-resize pointer-events-auto hover:bg-zinc-400/30 transition-colors z-30"
                   onMouseDown={(e) => handleSelectionEdgeDrag('start', e)}
                 />
                 {/* Right resize handle */}
                 <div
-                  className="absolute top-0 bottom-0 -right-1 w-2 cursor-col-resize pointer-events-auto hover:bg-vms-blue-500/30 transition-colors z-30"
+                  className="absolute top-0 bottom-0 -right-1 w-2 cursor-col-resize pointer-events-auto hover:bg-zinc-400/30 transition-colors z-30"
                   onMouseDown={(e) => handleSelectionEdgeDrag('end', e)}
                 />
                 {/* Selection duration label */}
                 {width > 40 && (
-                  <div className="absolute top-1 left-1/2 -translate-x-1/2 bg-vms-blue-500/80 px-1.5 py-0.5 rounded text-[7px] font-bold text-white mono-tabular whitespace-nowrap pointer-events-none">
+                  <div className="absolute top-1 left-1/2 -translate-x-1/2 bg-zinc-400/80 px-1.5 py-0.5 rounded text-[7px] font-bold text-white mono-tabular whitespace-nowrap pointer-events-none">
                     {formatTime(Math.abs(selectionRange[1] - selectionRange[0]), true)}
                   </div>
                 )}

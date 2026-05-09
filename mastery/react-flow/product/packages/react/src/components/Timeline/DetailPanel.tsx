@@ -10,13 +10,13 @@ export const DetailPanel = () => {
   const end = start + duration;
 
   const colorMap: Record<string, string> = {
-    emerald: 'text-vms-emerald-400 border-vms-emerald-600/40',
-    blue: 'text-vms-blue-500 border-vms-blue-500/40',
-    red: 'text-vms-red-500 border-vms-red-500/40',
+    emerald: 'text-indigo-400 border-indigo-500/40',
+    blue: 'text-zinc-400 border-zinc-400/40',
+    red: 'text-red-500 border-red-500/40',
   };
 
   return (
-    <div className="absolute right-0 top-0 bottom-0 w-64 bg-vms-surface-elevated border-l border-white/10 z-[150] flex flex-col shadow-2xl">
+    <div className="absolute right-0 top-0 bottom-0 w-64 bg-zinc-900 border-l border-white/10 z-[150] flex flex-col shadow-2xl">
       {/* Header */}
       <div className="flex items-center justify-between px-3 py-2 border-b border-white/5">
         <div className="flex items-center gap-2">
@@ -54,7 +54,7 @@ export const DetailPanel = () => {
           </div>
           <div className="flex justify-between items-center">
             <span className="text-[7px] uppercase opacity-40">Duration</span>
-            <span className="mono-tabular text-[10px] font-bold text-vms-emerald-400">{formatTime(duration, true)}</span>
+            <span className="mono-tabular text-[10px] font-bold text-indigo-400">{formatTime(duration, true)}</span>
           </div>
           <div className="flex justify-between items-center">
             <span className="text-[7px] uppercase opacity-40">Frames</span>
@@ -72,7 +72,7 @@ export const DetailPanel = () => {
             onClick={() => {
               useMeshStore.getState().setSelectionRange([start, start + duration]);
             }}
-            className="flex-1 flex items-center justify-center gap-1 px-2 py-1.5 bg-vms-accent/10 text-vms-accent text-[8px] font-bold rounded border border-vms-accent/20 hover:bg-vms-accent/20 transition-colors"
+            className="flex-1 flex items-center justify-center gap-1 px-2 py-1.5 bg-indigo-400/10 text-indigo-400 text-[8px] font-bold rounded border border-indigo-400/20 hover:bg-indigo-400/20 transition-colors"
           >
             Select Range
           </button>

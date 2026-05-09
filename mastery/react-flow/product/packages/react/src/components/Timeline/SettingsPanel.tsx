@@ -13,11 +13,11 @@ export const SettingsPanel = () => {
   if (!showSettings) return null;
 
   return (
-    <div className="absolute right-10 top-11 z-[200] w-56 bg-vms-surface-elevated border border-white/10 rounded-lg shadow-2xl">
+    <div className="absolute right-10 top-11 z-[200] w-56 bg-zinc-900 border border-white/10 rounded-lg shadow-2xl">
       {/* Header */}
       <div className="flex items-center justify-between px-3 py-2 border-b border-white/5">
         <div className="flex items-center gap-2">
-          <Monitor size={11} className="text-vms-accent" />
+          <Monitor size={11} className="text-indigo-400" />
           <span className="text-[9px] font-bold text-white uppercase tracking-wider">Settings</span>
         </div>
         <button onClick={() => setShowSettings(false)} className="w-5 h-5 flex items-center justify-center rounded hover:bg-white/10">
@@ -37,8 +37,8 @@ export const SettingsPanel = () => {
                 className={cn(
                   "flex-1 py-1 text-[9px] font-bold rounded border transition-all",
                   frameRate === fps
-                    ? "bg-vms-accent/20 text-vms-accent border-vms-accent/30"
-                    : "bg-vms-bg text-white/40 border-white/5 hover:text-white"
+                    ? "bg-indigo-400/20 text-indigo-400 border-indigo-400/30"
+                    : "bg-zinc-950 text-white/40 border-white/5 hover:text-white"
                 )}
               >
                 {fps}
@@ -58,8 +58,8 @@ export const SettingsPanel = () => {
                 className={cn(
                   "flex-1 py-1 text-[9px] font-bold rounded border transition-all capitalize",
                   timeFormat === fmt
-                    ? "bg-vms-accent/20 text-vms-accent border-vms-accent/30"
-                    : "bg-vms-bg text-white/40 border-white/5 hover:text-white"
+                    ? "bg-indigo-400/20 text-indigo-400 border-indigo-400/30"
+                    : "bg-zinc-950 text-white/40 border-white/5 hover:text-white"
                 )}
               >
                 {fmt}
@@ -79,8 +79,8 @@ export const SettingsPanel = () => {
                 className={cn(
                   "flex-1 py-1 text-[9px] font-bold rounded border transition-all capitalize",
                   loopMode === mode
-                    ? "bg-vms-accent/20 text-vms-accent border-vms-accent/30"
-                    : "bg-vms-bg text-white/40 border-white/5 hover:text-white"
+                    ? "bg-indigo-400/20 text-indigo-400 border-indigo-400/30"
+                    : "bg-zinc-950 text-white/40 border-white/5 hover:text-white"
                 )}
               >
                 {mode}
@@ -96,7 +96,7 @@ export const SettingsPanel = () => {
             onClick={() => setShowMinimap(!showMinimap)}
             className={cn(
               "w-8 h-4 rounded-full relative transition-colors",
-              showMinimap ? "bg-vms-accent" : "bg-white/10"
+              showMinimap ? "bg-indigo-400" : "bg-white/10"
             )}
           >
             <div className={cn(

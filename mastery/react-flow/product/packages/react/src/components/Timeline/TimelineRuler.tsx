@@ -25,7 +25,7 @@ export const TimelineRuler = () => {
 
   return (
     <div
-      className="h-9 bg-vms-surface border-b border-vms-border-dim/20 relative sticky top-0 z-40"
+      className="h-9 bg-zinc-950 border-b border-zinc-800/20 relative sticky top-0 z-40"
       style={{ width: totalWidth + 400 }}
     >
       {/* SVG Tick marks */}
@@ -76,7 +76,7 @@ export const TimelineRuler = () => {
             <div className="w-0 h-0 border-l-[5px] border-l-transparent border-r-[5px] border-r-transparent border-t-[7px] border-t-amber-400" />
             <div className="absolute top-[7px] left-1/2 -translate-x-1/2 w-px h-[29px] bg-amber-400/40" />
             {/* Tooltip on hover */}
-            <div className="absolute top-[-20px] left-1/2 -translate-x-1/2 hidden group-hover:block whitespace-nowrap bg-vms-surface-elevated border border-white/10 rounded px-1.5 py-0.5 shadow-lg z-50">
+            <div className="absolute top-[-20px] left-1/2 -translate-x-1/2 hidden group-hover:block whitespace-nowrap bg-zinc-900 border border-white/10 rounded px-1.5 py-0.5 shadow-lg z-50">
               <span className="text-[8px] font-bold text-amber-400 mono-tabular">{bm.label}</span>
             </div>
           </div>
@@ -87,9 +87,9 @@ export const TimelineRuler = () => {
       {annotations.map((ann) => {
         const x = (ann.time / 60) * scale;
         const colors: Record<string, string> = {
-          emerald: 'bg-vms-emerald-600 border-vms-emerald-600',
-          red: 'bg-vms-red-500 border-vms-red-500',
-          blue: 'bg-vms-blue-500 border-vms-blue-500',
+          emerald: 'bg-indigo-500 border-indigo-500',
+          red: 'bg-red-500 border-red-500',
+          blue: 'bg-zinc-400 border-zinc-400',
           amber: 'bg-amber-400 border-amber-400',
         };
         return (
@@ -103,7 +103,7 @@ export const TimelineRuler = () => {
             }}
           >
             <div className={cn('w-2 h-2 rounded-full', colors[ann.color])} />
-            <div className="absolute bottom-[10px] left-1/2 -translate-x-1/2 hidden group-hover:block whitespace-nowrap bg-vms-surface-elevated border border-white/10 rounded px-1.5 py-0.5 shadow-lg z-50">
+            <div className="absolute bottom-[10px] left-1/2 -translate-x-1/2 hidden group-hover:block whitespace-nowrap bg-zinc-900 border border-white/10 rounded px-1.5 py-0.5 shadow-lg z-50">
               <span className="text-[8px] font-bold text-white mono-tabular">{ann.title}</span>
             </div>
           </div>

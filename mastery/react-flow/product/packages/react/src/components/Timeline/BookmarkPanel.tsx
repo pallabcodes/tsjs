@@ -9,7 +9,7 @@ export const BookmarkPanel = () => {
   const sorted = [...bookmarks].sort((a, b) => a.time - b.time);
 
   return (
-    <div className="absolute right-0 top-0 bottom-0 w-56 bg-vms-surface-elevated border-l border-white/10 z-[150] flex flex-col shadow-2xl">
+    <div className="absolute right-0 top-0 bottom-0 w-56 bg-zinc-900 border-l border-white/10 z-[150] flex flex-col shadow-2xl">
       {/* Header */}
       <div className="flex items-center justify-between px-3 py-2 border-b border-white/5">
         <div className="flex items-center gap-2">
@@ -51,7 +51,7 @@ export const BookmarkPanel = () => {
                 }}
                 className="w-5 h-5 flex items-center justify-center rounded hover:bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity"
               >
-                <Trash2 size={10} className="text-vms-red-500" />
+                <Trash2 size={10} className="text-red-500" />
               </button>
               <ChevronRight size={10} className="opacity-20" />
             </div>

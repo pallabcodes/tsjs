@@ -44,13 +44,13 @@ export const TimelineControls = () => {
   const LoopIcon = loopMode === 'selection' ? Repeat1 : Repeat;
 
   return (
-    <div className="h-10 bg-vms-surface border-b border-vms-border-dim flex items-center justify-between px-3 z-50 select-none">
+    <div className="h-10 bg-zinc-950 border-b border-zinc-800 flex items-center justify-between px-3 z-50 select-none">
       {/* ─── Left: Playback Controls ─── */}
       <div className="flex items-center gap-0.5">
         {/* Jump to start */}
         <button
           onClick={jumpToStart}
-          className="w-7 h-7 flex items-center justify-center rounded hover:bg-white/5 transition-colors text-vms-text-secondary"
+          className="w-7 h-7 flex items-center justify-center rounded hover:bg-white/5 transition-colors text-zinc-500"
           aria-label="Jump to start"
           title="Jump to start (Home)"
         >
@@ -60,7 +60,7 @@ export const TimelineControls = () => {
         {/* Frame step back */}
         <button
           onClick={() => frameStep(-1)}
-          className="w-7 h-7 flex items-center justify-center rounded hover:bg-white/5 transition-colors text-vms-text-secondary"
+          className="w-7 h-7 flex items-center justify-center rounded hover:bg-white/5 transition-colors text-zinc-500"
           aria-label="Frame step backward"
           title="Previous frame (,)"
         >
@@ -75,7 +75,7 @@ export const TimelineControls = () => {
           }}
           className={cn(
             "w-7 h-7 flex items-center justify-center rounded hover:bg-white/5 transition-colors",
-            isReversing && isPlaying ? "text-vms-accent" : "text-vms-text-secondary"
+            isReversing && isPlaying ? "text-indigo-400" : "text-zinc-500"
           )}
           aria-label="Reverse playback"
           title="Reverse (J)"
@@ -99,7 +99,7 @@ export const TimelineControls = () => {
         {/* Frame step forward */}
         <button
           onClick={() => frameStep(1)}
-          className="w-7 h-7 flex items-center justify-center rounded hover:bg-white/5 transition-colors text-vms-text-secondary"
+          className="w-7 h-7 flex items-center justify-center rounded hover:bg-white/5 transition-colors text-zinc-500"
           aria-label="Frame step forward"
           title="Next frame (.)"
         >
@@ -109,7 +109,7 @@ export const TimelineControls = () => {
         {/* Jump to end */}
         <button
           onClick={jumpToEnd}
-          className="w-7 h-7 flex items-center justify-center rounded hover:bg-white/5 transition-colors text-vms-text-secondary"
+          className="w-7 h-7 flex items-center justify-center rounded hover:bg-white/5 transition-colors text-zinc-500"
           aria-label="Jump to end"
           title="Jump to end (End)"
         >
@@ -119,7 +119,7 @@ export const TimelineControls = () => {
         {/* Reset */}
         <button
           onClick={jumpToStart}
-          className="w-7 h-7 flex items-center justify-center rounded hover:bg-white/5 transition-colors text-vms-text-secondary ml-1"
+          className="w-7 h-7 flex items-center justify-center rounded hover:bg-white/5 transition-colors text-zinc-500 ml-1"
           aria-label="Reset to start"
           title="Reset (R)"
         >
@@ -132,12 +132,12 @@ export const TimelineControls = () => {
         {/* Time Readout */}
         <button
           onClick={() => setShowGoToTime(!showGoToTime)}
-          className="flex items-center gap-2 px-2 py-0.5 bg-vms-bg rounded border border-vms-border-dim/20 hover:border-vms-accent/30 transition-colors relative"
+          className="flex items-center gap-2 px-2 py-0.5 bg-zinc-950 rounded border border-zinc-800/20 hover:border-indigo-400/30 transition-colors relative"
           title="Click to go to time (type HH:MM:SS)"
           aria-label="Current time / Go to time"
         >
           {isReversing && isPlaying && (
-            <span className="text-[8px] font-bold text-vms-accent">◀</span>
+            <span className="text-[8px] font-bold text-indigo-400">◀</span>
           )}
           <span className="mono-tabular text-sm font-bold text-white leading-none">
             {formatTime(currentTime)}
@@ -149,8 +149,8 @@ export const TimelineControls = () => {
 
         {/* Go-to-time popover */}
         {showGoToTime && (
-          <div className="absolute top-11 left-48 z-[200] bg-vms-surface-elevated border border-white/10 rounded-lg shadow-2xl p-3 flex gap-2 items-center">
-            <Clock size={12} className="text-vms-text-secondary" />
+          <div className="absolute top-11 left-48 z-[200] bg-zinc-900 border border-white/10 rounded-lg shadow-2xl p-3 flex gap-2 items-center">
+            <Clock size={12} className="text-zinc-500" />
             <input
               ref={goToRef}
               autoFocus
@@ -161,11 +161,11 @@ export const TimelineControls = () => {
                 if (e.key === 'Escape') setShowGoToTime(false);
               }}
               placeholder="HH:MM:SS"
-              className="bg-vms-bg border border-vms-border-dim/30 rounded px-2 py-1 text-xs mono-tabular text-white w-24 focus:outline-none focus:border-vms-accent/50"
+              className="bg-zinc-950 border border-zinc-800/30 rounded px-2 py-1 text-xs mono-tabular text-white w-24 focus:outline-none focus:border-indigo-400/50"
             />
             <button
               onClick={handleGoToTime}
-              className="px-2 py-1 bg-vms-accent/20 text-vms-accent text-[9px] font-bold rounded hover:bg-vms-accent/30"
+              className="px-2 py-1 bg-indigo-400/20 text-indigo-400 text-[9px] font-bold rounded hover:bg-indigo-400/30"
             >
               GO
             </button>
@@ -176,14 +176,14 @@ export const TimelineControls = () => {
         <div className="h-5 w-px bg-white/10 mx-1.5" />
 
         {/* Speed Toggles */}
-        <div className="flex items-center bg-vms-bg rounded border border-vms-border-dim/20 h-7 overflow-hidden">
+        <div className="flex items-center bg-zinc-950 rounded border border-zinc-800/20 h-7 overflow-hidden">
           {[0.25, 0.5, 1, 1.5, 2, 4].map(speed => (
             <button
               key={speed}
               onClick={() => setPlaybackSpeed(speed)}
               className={cn(
-                "px-1.5 h-full text-[9px] font-bold transition-all border-r border-vms-border-dim/10 last:border-r-0",
-                playbackSpeed === speed ? "bg-white/10 text-white" : "text-vms-text-secondary hover:text-white"
+                "px-1.5 h-full text-[9px] font-bold transition-all border-r border-zinc-800/10 last:border-r-0",
+                playbackSpeed === speed ? "bg-white/10 text-white" : "text-zinc-500 hover:text-white"
               )}
               aria-label={`Set playback speed to ${speed}x`}
             >
@@ -201,7 +201,7 @@ export const TimelineControls = () => {
           }}
           className={cn(
             "w-7 h-7 flex items-center justify-center rounded hover:bg-white/5 transition-colors ml-1",
-            loopMode !== 'off' ? "text-vms-accent" : "text-vms-text-secondary"
+            loopMode !== 'off' ? "text-indigo-400" : "text-zinc-500"
           )}
           aria-label={`Loop: ${loopMode}`}
           title={`Loop: ${loopMode} (Q)`}
@@ -213,13 +213,13 @@ export const TimelineControls = () => {
       {/* ─── Right: View Controls ─── */}
       <div className="flex items-center gap-1.5">
         {/* Zoom level */}
-        <span className="mono-tabular text-[9px] font-bold text-vms-text-secondary opacity-60 mr-1">{zoomPercent}%</span>
+        <span className="mono-tabular text-[9px] font-bold text-zinc-500 opacity-60 mr-1">{zoomPercent}%</span>
 
         {/* Zoom Engine */}
-        <div className="flex items-center bg-vms-bg rounded border border-vms-border-dim/20 h-7 overflow-hidden">
+        <div className="flex items-center bg-zinc-950 rounded border border-zinc-800/20 h-7 overflow-hidden">
           <button
             onClick={() => setScale(Math.max(20, scale / 1.25))}
-            className="w-7 h-full flex items-center justify-center hover:bg-white/5 transition-colors border-r border-vms-border-dim/10 group"
+            className="w-7 h-full flex items-center justify-center hover:bg-white/5 transition-colors border-r border-zinc-800/10 group"
             aria-label="Zoom out"
           >
             <ZoomOut size={13} className="group-active:scale-90 transition-transform" />
@@ -228,17 +228,17 @@ export const TimelineControls = () => {
           <div className="px-2.5 flex items-center gap-1.5 h-full bg-white/[0.02]">
             <div className="relative">
               <Search size={10} className="opacity-40" />
-              <div className="absolute -top-0.5 -right-0.5 w-1 h-1 bg-vms-accent rounded-full animate-pulse" />
+              <div className="absolute -top-0.5 -right-0.5 w-1 h-1 bg-indigo-400 rounded-full animate-pulse" />
             </div>
             <div className="flex flex-col leading-none">
               <span className="mono-tabular text-[8px] font-bold text-white/80 tracking-tighter">SYNC_L7</span>
-              <span className="text-[6px] font-medium text-vms-accent opacity-60">ACTIVE</span>
+              <span className="text-[6px] font-medium text-indigo-400 opacity-60">ACTIVE</span>
             </div>
           </div>
 
           <button
             onClick={() => setScale(Math.min(12000, scale * 1.25))}
-            className="w-7 h-full flex items-center justify-center hover:bg-white/5 transition-colors border-l border-vms-border-dim/10 group"
+            className="w-7 h-full flex items-center justify-center hover:bg-white/5 transition-colors border-l border-zinc-800/10 group"
             aria-label="Zoom in"
           >
             <ZoomIn size={13} className="group-active:scale-110 transition-transform" />
@@ -248,7 +248,7 @@ export const TimelineControls = () => {
         {/* Zoom to fit */}
         <button
           onClick={() => zoomToFit(TIMELINE_DURATION)}
-          className="w-7 h-7 flex items-center justify-center rounded hover:bg-white/5 text-vms-text-secondary"
+          className="w-7 h-7 flex items-center justify-center rounded hover:bg-white/5 text-zinc-500"
           aria-label="Zoom to fit"
           title="Zoom to fit (Cmd+0)"
         >
@@ -259,7 +259,7 @@ export const TimelineControls = () => {
         {selectionRange && (
           <button
             onClick={zoomToSelection}
-            className="px-2 h-7 flex items-center justify-center rounded hover:bg-white/5 text-vms-accent text-[8px] font-bold border border-vms-accent/20"
+            className="px-2 h-7 flex items-center justify-center rounded hover:bg-white/5 text-indigo-400 text-[8px] font-bold border border-indigo-400/20"
             aria-label="Zoom to selection"
           >
             FIT SEL
@@ -272,7 +272,7 @@ export const TimelineControls = () => {
         {/* Time format toggle */}
         <button
           onClick={() => setTimeFormat(timeFormat === 'absolute' ? 'relative' : 'absolute')}
-          className="w-7 h-7 flex items-center justify-center rounded hover:bg-white/5 text-vms-text-secondary"
+          className="w-7 h-7 flex items-center justify-center rounded hover:bg-white/5 text-zinc-500"
           aria-label={`Time format: ${timeFormat}`}
           title={`Time format: ${timeFormat}`}
         >
@@ -284,7 +284,7 @@ export const TimelineControls = () => {
           onClick={() => setShowMinimap(!showMinimap)}
           className={cn(
             "w-7 h-7 flex items-center justify-center rounded hover:bg-white/5 transition-colors",
-            showMinimap ? "text-vms-accent" : "text-vms-text-secondary"
+            showMinimap ? "text-indigo-400" : "text-zinc-500"
           )}
           aria-label="Toggle minimap"
           title="Toggle minimap"
@@ -297,7 +297,7 @@ export const TimelineControls = () => {
           onClick={() => setShowSettings(!showSettings)}
           className={cn(
             "w-7 h-7 flex items-center justify-center rounded hover:bg-white/5 transition-colors",
-            showSettings ? "text-vms-accent" : "text-vms-text-secondary"
+            showSettings ? "text-indigo-400" : "text-zinc-500"
           )}
           aria-label="Settings"
           title="Settings"
@@ -309,7 +309,7 @@ export const TimelineControls = () => {
         {!isTimelineCollapsed && (
           <button
             onClick={() => setIsTimelineFullscreen(!isTimelineFullscreen)}
-            className="w-7 h-7 flex items-center justify-center rounded hover:bg-white/5 text-vms-text-secondary"
+            className="w-7 h-7 flex items-center justify-center rounded hover:bg-white/5 text-zinc-500"
             aria-label={isTimelineFullscreen ? "Exit fullscreen" : "Fullscreen"}
             title={isTimelineFullscreen ? "Exit fullscreen" : "Fullscreen"}
           >
@@ -322,7 +322,7 @@ export const TimelineControls = () => {
           onClick={() => setIsTimelineCollapsed(!isTimelineCollapsed)}
           className={cn(
             "w-7 h-7 flex items-center justify-center rounded hover:bg-white/5 transition-colors ml-1 border-l border-white/10 pl-1",
-            isTimelineCollapsed ? "text-vms-accent" : "text-vms-text-secondary"
+            isTimelineCollapsed ? "text-indigo-400" : "text-zinc-500"
           )}
           aria-label={isTimelineCollapsed ? "Expand Timeline" : "Collapse Timeline"}
           title={isTimelineCollapsed ? "Expand Timeline" : "Collapse Timeline"}

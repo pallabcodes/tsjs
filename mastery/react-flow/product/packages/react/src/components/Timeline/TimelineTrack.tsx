@@ -56,9 +56,9 @@ export const TimelineTrack = ({
   };
 
   const colorClasses = {
-    emerald: 'bg-vms-emerald-600/20 border-vms-emerald-600/40 text-vms-emerald-400',
-    blue: 'bg-vms-blue-500/20 border-vms-blue-500/40 text-vms-blue-500',
-    red: 'bg-vms-red-500/20 border-vms-red-500/40 text-vms-red-500',
+    emerald: 'bg-indigo-500/20 border-indigo-500/40 text-indigo-400',
+    blue: 'bg-zinc-400/20 border-zinc-400/40 text-zinc-400',
+    red: 'bg-red-500/20 border-red-500/40 text-red-500',
   };
 
   const handleSpanClick = (span: { start: number; duration: number }) => {
@@ -103,7 +103,7 @@ export const TimelineTrack = ({
       onDragEnd={() => onDragEnd?.()}
     >
       {/* Label Sidebar */}
-      <div className="absolute left-0 top-0 bottom-0 w-48 bg-vms-surface border-r border-white/5 z-20 flex items-center px-2 gap-2">
+      <div className="absolute left-0 top-0 bottom-0 w-48 bg-zinc-950 border-r border-white/5 z-20 flex items-center px-2 gap-2">
         {/* Drag handle */}
         <div className="cursor-grab opacity-0 group-hover:opacity-30 transition-opacity">
           <GripVertical size={12} />
@@ -128,7 +128,7 @@ export const TimelineTrack = ({
             aria-label={trackMeta.muted ? "Unmute track" : "Mute track"}
             title={trackMeta.muted ? "Unmute" : "Mute"}
           >
-            {trackMeta.muted ? <VolumeX size={10} className="text-vms-red-500" /> : <Volume2 size={10} className="text-vms-text-secondary" />}
+            {trackMeta.muted ? <VolumeX size={10} className="text-red-500" /> : <Volume2 size={10} className="text-zinc-500" />}
           </button>
           <button
             onClick={(e) => { e.stopPropagation(); toggleTrackSolo(id); }}
@@ -144,14 +144,14 @@ export const TimelineTrack = ({
             aria-label="Hide track"
             title="Hide track"
           >
-            <EyeOff size={10} className="text-vms-text-secondary" />
+            <EyeOff size={10} className="text-zinc-500" />
           </button>
         </div>
       </div>
 
       {/* Selection highlight */}
       {isSelected && (
-        <div className="absolute left-0 top-0 bottom-0 w-1 bg-vms-accent z-30" />
+        <div className="absolute left-0 top-0 bottom-0 w-1 bg-indigo-400 z-30" />
       )}
 
       {/* Track Content */}
@@ -222,13 +222,13 @@ export const TimelineTrack = ({
           >
             <div className={cn(
               "absolute top-0 bottom-0 w-px",
-              color === 'red' ? "bg-vms-red-500/60" : color === 'emerald' ? "bg-vms-emerald-600/40" : "bg-vms-blue-500/40"
+              color === 'red' ? "bg-red-500/60" : color === 'emerald' ? "bg-indigo-500/40" : "bg-zinc-400/40"
             )} />
             <div className={cn(
               "absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-2 h-2 rounded-full transition-transform group-hover/event:scale-150",
-              color === 'red' ? "bg-vms-red-500 shadow-[0_0_6px_rgba(239,68,68,0.8)]" :
-              color === 'emerald' ? "bg-vms-emerald-600 shadow-[0_0_6px_rgba(16,185,129,0.6)]" :
-              "bg-vms-blue-500 shadow-[0_0_6px_rgba(59,130,246,0.6)]"
+              color === 'red' ? "bg-red-500 shadow-[0_0_6px_rgba(239,68,68,0.8)]" :
+              color === 'emerald' ? "bg-indigo-500 shadow-[0_0_6px_rgba(16,185,129,0.6)]" :
+              "bg-zinc-400 shadow-[0_0_6px_rgba(59,130,246,0.6)]"
             )} />
           </div>
         ))}
@@ -252,7 +252,7 @@ export const TimelineTrack = ({
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 8 }}
-            className="fixed bottom-32 left-1/2 -translate-x-1/2 bg-vms-surface-elevated border border-white/10 p-3 rounded-lg shadow-2xl z-[200] min-w-[200px]"
+            className="fixed bottom-32 left-1/2 -translate-x-1/2 bg-zinc-900 border border-white/10 p-3 rounded-lg shadow-2xl z-[200] min-w-[200px]"
           >
             <div className="flex items-center gap-2 mb-2 pb-2 border-b border-white/5">
               <div className={cn("w-2 h-2 rounded-full", `bg-vms-${color === 'emerald' ? 'emerald-600' : color === 'blue' ? 'blue-500' : 'red-500'}`)} />
@@ -266,7 +266,7 @@ export const TimelineTrack = ({
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-[7px] opacity-40 uppercase">Duration</span>
-                <span className="mono-tabular text-[10px] font-bold text-vms-emerald-400">{formatTime(hoveredSpan.duration)}</span>
+                <span className="mono-tabular text-[10px] font-bold text-indigo-400">{formatTime(hoveredSpan.duration)}</span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-[7px] opacity-40 uppercase">End</span>
@@ -283,7 +283,7 @@ export const TimelineTrack = ({
         ref={resizeRef}
         className={cn(
           "absolute left-0 right-0 bottom-0 h-1 cursor-row-resize z-30 transition-colors",
-          isResizing ? "bg-vms-accent/40" : "hover:bg-white/10"
+          isResizing ? "bg-indigo-400/40" : "hover:bg-white/10"
         )}
         onMouseDown={handleResizeStart}
       />

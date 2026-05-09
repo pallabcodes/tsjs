@@ -42,18 +42,18 @@ export const TimelineStatusBar = () => {
   };
 
   return (
-    <div className="flex h-6 items-center justify-between border-t border-vms-border-dim bg-vms-surface px-4 select-none">
+    <div className="flex h-6 items-center justify-between border-t border-zinc-800 bg-zinc-950 px-4 select-none">
       {/* Left: Status indicators */}
       <div className="flex items-center gap-4">
         {/* Live indicator */}
         <div className="flex items-center gap-1.5">
           <div className={cn(
             "h-1.5 w-1.5 rounded-full",
-            isPlaying ? "bg-vms-emerald-600 animate-pulse" : "bg-white/20"
+            isPlaying ? "bg-indigo-500 animate-pulse" : "bg-white/20"
           )} />
           <span className={cn(
             "label-caps font-black text-[7px] tracking-[0.15em]",
-            isPlaying ? "text-vms-emerald-600" : "text-white/30"
+            isPlaying ? "text-indigo-500" : "text-white/30"
           )}>
             {isPlaying ? (isReversing ? 'REVERSE' : 'PLAYING') : 'PAUSED'}
           </span>
@@ -69,12 +69,12 @@ export const TimelineStatusBar = () => {
 
         {/* Speed */}
         {playbackSpeed !== 1 && (
-          <span className="text-[8px] font-bold text-vms-accent mono-tabular">{playbackSpeed}x</span>
+          <span className="text-[8px] font-bold text-indigo-400 mono-tabular">{playbackSpeed}x</span>
         )}
 
         {/* Loop */}
         {loopMode !== 'off' && (
-          <span className="text-[7px] font-bold text-vms-accent uppercase">LOOP:{loopMode}</span>
+          <span className="text-[7px] font-bold text-indigo-400 uppercase">LOOP:{loopMode}</span>
         )}
 
         {/* Frame rate */}
@@ -106,38 +106,38 @@ export const TimelineStatusBar = () => {
       {/* Right: Selection info + Export */}
       <div className="flex items-center gap-3">
         {exportFeedback && (
-          <span className="text-[8px] font-bold text-vms-emerald-400 animate-pulse">{exportFeedback}</span>
+          <span className="text-[8px] font-bold text-indigo-400 animate-pulse">{exportFeedback}</span>
         )}
 
         {selectionRange && (
-          <div className="flex items-center gap-2 rounded border border-vms-blue-500/20 bg-vms-blue-500/10 px-2 py-0.5">
-            <span className="text-[7px] text-vms-blue-500 uppercase font-bold">Sel</span>
+          <div className="flex items-center gap-2 rounded border border-zinc-400/20 bg-zinc-400/10 px-2 py-0.5">
+            <span className="text-[7px] text-zinc-400 uppercase font-bold">Sel</span>
             <span className="mono-tabular font-bold text-white text-[9px]">
               {formatTime(Math.min(...selectionRange))} → {formatTime(Math.max(...selectionRange))}
             </span>
-            <span className="mono-tabular text-[8px] text-vms-blue-500">
+            <span className="mono-tabular text-[8px] text-zinc-400">
               ({formatTime(Math.abs(selectionRange[1] - selectionRange[0]))})
             </span>
 
             {/* Export buttons */}
-            <div className="flex items-center gap-0.5 ml-1 border-l border-vms-blue-500/20 pl-1.5">
+            <div className="flex items-center gap-0.5 ml-1 border-l border-zinc-400/20 pl-1.5">
               <button
                 onClick={() => handleExport('clipboard')}
-                className="w-5 h-5 flex items-center justify-center rounded hover:bg-white/10 text-vms-blue-500"
+                className="w-5 h-5 flex items-center justify-center rounded hover:bg-white/10 text-zinc-400"
                 title="Copy to clipboard"
               >
                 <Copy size={10} />
               </button>
               <button
                 onClick={() => handleExport('json')}
-                className="w-5 h-5 flex items-center justify-center rounded hover:bg-white/10 text-vms-blue-500"
+                className="w-5 h-5 flex items-center justify-center rounded hover:bg-white/10 text-zinc-400"
                 title="Export JSON"
               >
                 <FileJson size={10} />
               </button>
               <button
                 onClick={() => handleExport('csv')}
-                className="w-5 h-5 flex items-center justify-center rounded hover:bg-white/10 text-vms-blue-500"
+                className="w-5 h-5 flex items-center justify-center rounded hover:bg-white/10 text-zinc-400"
                 title="Export CSV"
               >
                 <FileSpreadsheet size={10} />
