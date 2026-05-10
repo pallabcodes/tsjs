@@ -161,9 +161,16 @@ export const TimelineControls = () => {
           {isReversing && isPlaying && (
             <span className="text-[8px] font-bold text-indigo-400">◀</span>
           )}
-          <span className="mono-tabular text-sm font-bold text-white leading-none">
-            {formatTime(currentTime)}
-          </span>
+          <div className="flex flex-col items-start gap-0.5">
+            <span className="mono-tabular text-sm font-bold text-white leading-none">
+              {formatTime(currentTime)}
+            </span>
+            {showForensicDetails && (
+              <span className="mono-tabular text-[8px] font-bold text-indigo-400/80 leading-none tracking-tighter">
+                FRAME {Math.floor(currentTime * 30).toLocaleString()}
+              </span>
+            )}
+          </div>
           <span className="text-[8px] font-bold opacity-25 text-white mono-tabular uppercase tracking-wider">
             {timeFormat === 'absolute' ? 'UTC-7' : 'REL'}
           </span>

@@ -19,7 +19,7 @@ export const Timeline = () => {
     selectionRange, setSelectionRange,
     loopMode, isTimelineCollapsed, isTimelineFullscreen,
     timelineHeight, setTimelineHeight,
-    showMinimap,
+    showMinimap, bookmarks, ghostTime, setGhostTime, showForensicDetails,
     setMeasuredFps, trackMeta, isDraggingPlayhead, setIsDraggingPlayhead,
   } = state
 
@@ -124,9 +124,31 @@ export const Timeline = () => {
     return Math.max(0, Math.min(TIMELINE_DURATION, (x / scale) * 60))
   }, [scale])
 
+  const getSnappedTime = useCallback((time: number) => {
+    const snapThreshold = 5 / (scale / 60); // 5 pixel snapping window in seconds
+    const snapPoints = [
+      ...bookmarks.map(b => b.time),
+      ...(selectionRange || []),
+      // Simulated I-frames every 1s (Forensic GOP)
+      ...Array.from({ length: Math.ceil(TIMELINE_DURATION) }, (_, i) => i) // Integer seconds
+    ];
+
+    const nearest = snapPoints.reduce((prev, curr) => {
+      return Math.abs(curr - time) < Math.abs(prev - time) ? curr : prev;
+    }, time);
+
+    return Math.abs(nearest - time) < snapThreshold ? nearest : time;
+  }, [bookmarks, selectionRange, scale]);
+
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
     if (!scrollRef.current) return
     const time = getTimeFromX(e.clientX)
+
+    if (e.altKey && showForensicDetails) {
+      // Drop/Clear Ghost Playhead for A/B Comparison
+      setGhostTime(ghostTime === null ? time : null);
+      return;
+    }
 
     if (e.shiftKey) {
       // Selection mode
@@ -144,12 +166,13 @@ export const Timeline = () => {
       window.addEventListener('mouseup', onUp)
     } else {
       // Seek + drag scrub
-      setCurrentTime(time)
+      setCurrentTime(getSnappedTime(time))
       setIsDraggingPlayhead(true)
 
       const onMove = (me: MouseEvent) => {
         const t = getTimeFromX(me.clientX)
-        setCurrentTime(t)
+        // Apply magnetic snapping
+        setCurrentTime(getSnappedTime(t))
       }
       const onUp = () => {
         setIsDraggingPlayhead(false)
@@ -159,7 +182,7 @@ export const Timeline = () => {
       window.addEventListener('mousemove', onMove)
       window.addEventListener('mouseup', onUp)
     }
-  }, [getTimeFromX, setCurrentTime, setSelectionRange, setIsDraggingPlayhead])
+  }, [getTimeFromX, setCurrentTime, setSelectionRange, setIsDraggingPlayhead, getSnappedTime])
 
   // ─── Selection resize handles ──────────────────────────────────────────
   const handleSelectionEdgeDrag = useCallback((edge: 'start' | 'end', e: React.MouseEvent) => {
@@ -288,6 +311,25 @@ export const Timeline = () => {
               )
             })}
           </div>
+
+          {/* Ghost Playhead (A/B Comparison) */}
+          {showForensicDetails && ghostTime !== null && (
+            <div
+              className="absolute top-0 bottom-0 w-[2px] bg-white/10 z-[45] pointer-events-none"
+              style={{
+                transform: `translateX(${(ghostTime / 60) * scale}px)`,
+                borderLeft: '1px dashed rgba(255,255,255,0.4)'
+              }}
+            >
+              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-2 h-3 bg-zinc-400 rounded-b-sm" />
+              <div className="absolute top-4 left-4 bg-zinc-800/90 text-[7px] px-1 py-0.5 rounded border border-white/10 text-zinc-400 mono-tabular">
+                REF_A: {formatTime(ghostTime)}
+              </div>
+              <div className="absolute top-10 left-4 bg-indigo-500 text-[8px] px-1.5 py-0.5 rounded shadow-lg text-white font-black mono-tabular border border-white/20 z-50">
+                Δ {formatTime(Math.abs(currentTime - ghostTime))}
+              </div>
+            </div>
+          )}
 
           {/* Playhead Layer */}
           <div

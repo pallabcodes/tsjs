@@ -34,6 +34,8 @@ export const TimelineTrack = ({
   const setDetailPanelData = store.setDetailPanelData;
   const annotations = store.annotations;
   const showForensicDetails = store.showForensicDetails;
+  const setScale = store.setScale;
+  const setCurrentTime = store.setCurrentTime;
 
   const [hoveredSpan, setHoveredSpan] = useState<any>(null);
   const resizeRef = useRef<HTMLDivElement>(null);
@@ -261,16 +263,118 @@ export const TimelineTrack = ({
             </div>
           );
         })}
-        {trackAnnotations.map((ann) => (
-          <div
-            key={ann.id}
-            className="absolute bottom-1 z-20"
-            style={{ left: (ann.time / 60) * scale, transform: 'translateX(-50%)' }}
-          >
-            <div className="w-1.5 h-1.5 rounded-full bg-amber-400 shadow-[0_0_4px_rgba(251,191,36,0.6)]" />
-          </div>
-        ))}
+        {trackAnnotations.map((ann) => {
+          const x = (ann.time / 60) * scale;
+          const width = ann.duration ? (ann.duration / 60) * scale : 6;
+          
+          return (
+            <div
+              key={ann.id}
+              className={cn(
+                "absolute bottom-1.5 z-20 transition-all cursor-zoom-in",
+                ann.duration ? "h-4 top-2 opacity-30 rounded-sm border border-white/20" : "w-1.5 h-1.5 rounded-full"
+              )}
+              onDoubleClick={() => {
+                if (ann.duration) {
+                  const targetScale = Math.min(30000, (60 / ann.duration) * 800);
+                  setScale(targetScale);
+                  setCurrentTime(ann.time + ann.duration / 2);
+                }
+              }}
+              style={{ 
+                left: x, 
+                width: ann.duration ? width : undefined,
+                backgroundColor: ann.color === 'emerald' ? '#10b981' : ann.color === 'red' ? '#ef4444' : ann.color === 'amber' ? '#fbbf24' : '#94a3b8'
+              }}
+            >
+              {!ann.duration && <div className="w-1.5 h-1.5 rounded-full bg-inherit shadow-[0_0_4px_rgba(251,191,36,0.6)]" />}
+              {ann.duration && width > 40 && (
+                <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[7px] font-black text-white whitespace-nowrap uppercase tracking-widest drop-shadow-md">
+                  {ann.title}
+                </span>
+              )}
+            </div>
+          );
+        })}
       </div>
+
+      {/* Forensic Integrity Ribbon (Chain of Custody) with Pulse Alerts */}
+      {showForensicDetails && type === 'stream' && (
+        <div className="absolute top-0 left-48 right-0 h-px z-[40] flex">
+           <div className="h-full bg-emerald-500" style={{ flex: '0 0 65%' }} />
+           <div className="h-full bg-red-500 animate-pulse-red shadow-[0_0_8px_rgba(239,68,68,0.5)]" style={{ flex: '0 0 3%' }} />
+           <div className="h-full bg-emerald-500" style={{ flex: '0 0 32%' }} />
+        </div>
+      )}
+
+      {/* Forensic Telemetry, Motion & Audio Ribbons */}
+      {showForensicDetails && type === 'stream' && (
+        <div className="absolute bottom-0 left-48 right-0 h-[8px] border-t border-zinc-800/30 overflow-hidden pointer-events-none bg-zinc-950/40 flex flex-col justify-end">
+          {/* Audio Micro-Waveform (Simulated Peaks) */}
+          <div 
+            className="h-[2px] w-full opacity-50 mb-[1px] animate-signal-flow"
+            style={{
+              background: `repeating-linear-gradient(90deg, 
+                transparent 0px, 
+                transparent 2px, 
+                rgba(168, 85, 247, 0.6) 2px, 
+                rgba(168, 85, 247, 0.6) 3px,
+                transparent 3px,
+                transparent 5px,
+                rgba(168, 85, 247, 0.8) 5px,
+                rgba(168, 85, 247, 0.8) 7px
+              )`,
+              backgroundSize: '100px 100%'
+            }}
+          />
+          {/* Motion Density Layer (Activity Spikes) */}
+          <div 
+            className="h-[2px] w-full opacity-40 mb-[1px]"
+            style={{
+              background: `repeating-linear-gradient(90deg, 
+                transparent 0px, 
+                transparent 40px, 
+                #fbbf24 40px, 
+                #fbbf24 42px,
+                transparent 42px,
+                transparent 120px,
+                #fbbf24 120px,
+                #fbbf24 125px
+              )`
+            }}
+          />
+          {/* GOP Architecture Layer (FFmpeg-grade I/P/B visualization) */}
+          <div 
+            className="h-[2px] w-full opacity-30 mb-[1px]"
+            style={{
+              background: `repeating-linear-gradient(90deg, 
+                #ffffff 0px, 
+                #ffffff 2px,
+                transparent 2px,
+                transparent 30px,
+                rgba(255,255,255,0.4) 30px,
+                rgba(255,255,255,0.4) 31px,
+                transparent 31px,
+                transparent 60px
+              )`
+            }}
+          />
+          {/* Stream Health / Frame Timing Layer */}
+          <div 
+            className="h-[2px] w-full opacity-60 animate-signal-flow"
+            style={{
+              background: `repeating-linear-gradient(90deg, 
+                rgba(99, 102, 241, 0.3) 0px, 
+                rgba(99, 102, 241, 0.3) 10px,
+                transparent 10px,
+                transparent 12px
+              )`,
+              backgroundSize: '100px 100%'
+            }}
+          />
+        </div>
+      )}
+
 
       {/* Tooltip */}
       <AnimatePresence>

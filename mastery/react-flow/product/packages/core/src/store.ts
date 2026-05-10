@@ -7,7 +7,9 @@ import { INITIAL_SCALE, DEFAULT_FRAME_RATE, DEFAULT_TRACK_HEIGHT, MIN_TRACK_HEIG
 export interface Annotation {
   id: string;
   time: number;
+  duration?: number; // Added for Range Annotations (Forensic Spans)
   title: string;
+  description?: string;
   color: 'emerald' | 'red' | 'blue' | 'amber';
 }
 
@@ -165,6 +167,7 @@ interface MeshState {
   showOSD: boolean;
   showBoundingBoxes: boolean;
   showForensicDetails: boolean;
+  ghostTime: number | null;
 
   // ─── Actions ─────────────────────────────────────────────────────────────
 
@@ -228,6 +231,7 @@ interface MeshState {
   setShowOSD: (show: boolean) => void;
   setShowBoundingBoxes: (show: boolean) => void;
   setShowForensicDetails: (show: boolean) => void;
+  setGhostTime: (v: number | null) => void;
 
   setSelectionRange: (range: [number, number] | null) => void;
   setIsSelectionMode: (mode: boolean) => void;
@@ -244,6 +248,7 @@ interface MeshState {
   setTrackHeight: (id: string, height: number) => void;
 
   addAnnotation: (annotation: Omit<Annotation, 'id'>) => void;
+  updateAnnotation: (id: string, updates: Partial<Annotation>) => void;
   removeAnnotation: (id: string) => void;
   addBookmark: (time: number, label?: string) => void;
   removeBookmark: (id: string) => void;
@@ -346,7 +351,10 @@ export const useMeshStore = create<MeshState>()(
     trackOrder: [],
 
     // Annotations & Bookmarks
-    annotations: [],
+    annotations: [
+      { id: 'ann-1', time: 1300, duration: 400, title: 'SUSPECT_DETECTION', color: 'amber' },
+      { id: 'ann-2', time: 2500, title: 'PERIMETER_BREACH', color: 'red' },
+    ],
     bookmarks: [],
 
     // Telemetry
@@ -360,6 +368,7 @@ export const useMeshStore = create<MeshState>()(
     showOSD: true,
     showBoundingBoxes: true,
     showForensicDetails: true,
+    ghostTime: null,
 
     // ─── Setters ───────────────────────────────────────────────────────────
 
@@ -557,6 +566,7 @@ export const useMeshStore = create<MeshState>()(
     setShowOSD: (show) => set({ showOSD: show }),
     setShowBoundingBoxes: (show) => set({ showBoundingBoxes: show }),
     setShowForensicDetails: (show) => set({ showForensicDetails: show }),
+    setGhostTime: (v) => set({ ghostTime: v }),
 
     setSelectionRange: (range) => set({ selectionRange: range }),
     setIsSelectionMode: (isSelectionMode) => set({ isSelectionMode }),
@@ -606,18 +616,15 @@ export const useMeshStore = create<MeshState>()(
         return { trackMeta: { ...state.trackMeta, [id]: { ...existing, height: clamped } } };
       }),
 
-    addAnnotation: (annotation) =>
-      set((state) => ({
-        annotations: [
-          ...state.annotations,
-          { ...annotation, id: `ann-${Date.now()}-${Math.random().toString(36).slice(2)}` },
-        ],
-      })),
-
-    removeAnnotation: (id) =>
-      set((state) => ({
-        annotations: state.annotations.filter((a) => a.id !== id),
-      })),
+    addAnnotation: (ann) => set((state) => ({
+      annotations: [...state.annotations, { ...ann, id: Math.random().toString(36).substr(2, 9) }]
+    })),
+    updateAnnotation: (id, updates) => set((state) => ({
+      annotations: state.annotations.map(a => a.id === id ? { ...a, ...updates } : a)
+    })),
+    removeAnnotation: (id) => set((state) => ({
+      annotations: state.annotations.filter((a) => a.id !== id)
+    })),
 
     addBookmark: (time, label) =>
       set((state) => ({

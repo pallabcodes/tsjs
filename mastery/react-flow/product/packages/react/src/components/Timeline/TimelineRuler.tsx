@@ -5,6 +5,8 @@ export const TimelineRuler = () => {
   const bookmarks = useMeshStore(state => state.bookmarks);
   const annotations = useMeshStore(state => state.annotations);
   const setCurrentTime = useMeshStore(state => state.setCurrentTime);
+  const currentTime = useMeshStore(state => state.currentTime);
+  const isDraggingPlayhead = useMeshStore(state => state.isDraggingPlayhead);
   const showForensicDetails = useMeshStore(state => state.showForensicDetails);
   const totalWidth = (TIMELINE_DURATION / 60) * scale;
 
@@ -140,6 +142,56 @@ export const TimelineRuler = () => {
           </div>
         );
       })}
+      {/* Inertial Shuttle Magnifier (Forensic LOD) */}
+      {showForensicDetails && isDraggingPlayhead && (
+        <div 
+          className="absolute top-0 bottom-0 z-[60] pointer-events-none overflow-visible"
+          style={{ left: (currentTime / 60) * scale, transform: 'translateX(-50%)' }}
+        >
+          {/* Magnified Lens Container */}
+          <div className="absolute -top-1 w-40 h-12 bg-zinc-900 border-x border-t border-indigo-500/50 rounded-t shadow-[0_-10px_30px_rgba(99,102,241,0.2)] flex flex-col items-center">
+              <div className="flex flex-col items-center mt-1">
+                <div className="text-[7px] font-black text-indigo-400 tracking-tighter uppercase">Scrub Magnifier</div>
+                <div className="text-[9px] font-mono font-bold text-white/80 bg-indigo-500/20 px-2 rounded border border-indigo-500/30">
+                  sha256: {Math.abs(Math.sin(currentTime * 1000)).toString(16).substring(2, 10)}
+                </div>
+              </div>
+              <div className="relative w-full h-full mt-0.5 overflow-hidden">
+                 <svg width="160" height="100%" className="absolute left-1/2 -translate-x-1/2 overflow-visible">
+                   {(() => {
+                     const magScale = Math.max(scale * 4, 30000); 
+                     const localTicks = [];
+                     const range = 0.5; 
+                     const start = Math.max(0, currentTime - range);
+                     const end = Math.min(TIMELINE_DURATION, currentTime + range);
+                     const interval = 1 / frameRate;
+                     for (let t = start; t <= end; t += interval) {
+                       localTicks.push(t);
+                     }
+                     return localTicks.map((t, i) => {
+                       const dx = (t - currentTime) / 60 * magScale;
+                       const isSec = Math.abs(t % 1) < 0.001;
+                       return (
+                         <g key={`mag-${i}`} transform={`translate(${dx}, 0)`}>
+                           <line y1="0" y2="20" stroke={isSec ? '#6366f1' : 'rgba(255,255,255,0.3)'} strokeWidth={isSec ? 1.5 : 0.5} />
+                           {isSec && (
+                             <text y="30" fontSize="8" fill="#6366f1" textAnchor="middle" className="mono-tabular font-bold">
+                               {formatTime(t)}
+                             </text>
+                           )}
+                         </g>
+                       );
+                     });
+                   })()}
+                 </svg>
+                {/* Precision Crosshair */}
+                <div className="absolute inset-0 flex justify-center pointer-events-none">
+                  <div className="w-px h-full bg-white z-10 shadow-[0_0_10px_white]" />
+                </div>
+             </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

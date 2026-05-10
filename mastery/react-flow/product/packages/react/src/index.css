@@ -79,12 +79,18 @@
   animation: pulse-emerald 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
-/* Custom Leaflet Tooltip Overrides */
-.custom-leaflet-tooltip {
-  background: transparent !important;
-  border: none !important;
-  box-shadow: none !important;
+@keyframes pulse-red {
+  0%, 100% { opacity: 0.8; }
+  50% { opacity: 0.3; }
 }
-.custom-leaflet-tooltip::before {
-  display: none !important;
+.animate-pulse-red {
+  animation: pulse-red 0.8s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes signal-flow {
+  from { background-position: 0 0; }
+  to { background-position: 100px 0; }
+}
+.animate-signal-flow {
+  animation: signal-flow 2s linear infinite;
 }
