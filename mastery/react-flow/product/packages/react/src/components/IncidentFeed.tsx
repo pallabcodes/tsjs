@@ -33,11 +33,11 @@ export const IncidentFeed = () => {
     <div className="w-80 border-l border-white/[0.05] bg-[#050505] flex flex-col overflow-hidden">
       <div className="h-12 flex items-center justify-between px-4 border-b border-white/[0.05] bg-[#080808]">
         <div className="flex items-center gap-2">
-           <ActivityIcon size={14} className="text-vms-accent" />
+           <ActivityIcon size={14} className="text-indigo-500" />
            <span className="text-[10px] font-bold uppercase tracking-widest">Incident Channel</span>
         </div>
         <div className="flex items-center gap-2">
-           <div className="w-2 h-2 rounded-full bg-vms-emerald-500 animate-pulse" />
+           <div className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse" />
            <span className="text-[9px] text-white/30 uppercase font-bold">Live</span>
         </div>
       </div>
@@ -54,7 +54,7 @@ export const IncidentFeed = () => {
                  "p-1.5 rounded bg-black/40 border",
                  inc.severity === 'critical' ? "text-red-500 border-red-500/20" : 
                  inc.severity === 'warning' ? "text-amber-500 border-amber-500/20" : 
-                 "text-vms-accent border-vms-accent/20"
+                 "text-indigo-500 border-indigo-500/20"
                )}>
                   {getIcon(inc.type)}
                </div>
@@ -68,8 +68,8 @@ export const IncidentFeed = () => {
                <div className="flex items-center justify-between">
                   <span className="text-[9px] text-white/20 uppercase tracking-tighter font-mono">{inc.camId}</span>
                   <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                     <span className="text-[8px] text-vms-accent font-bold uppercase">Investigate</span>
-                     <ArrowRight size={10} className="text-vms-accent" />
+                     <span className="text-[8px] text-indigo-500 font-bold uppercase">Investigate</span>
+                     <ArrowRight size={10} className="text-indigo-500" />
                   </div>
                </div>
             </div>
@@ -84,8 +84,8 @@ export const IncidentFeed = () => {
             <span className="text-[9px] text-white/60 font-mono">03 PENDING</span>
          </div>
          <div className="flex gap-1">
-            <div className="flex-1 h-1 bg-vms-emerald-500/20 rounded-full overflow-hidden">
-               <div className="h-full bg-vms-emerald-500 w-[60%]" />
+            <div className="flex-1 h-1 bg-indigo-500/20 rounded-full overflow-hidden">
+               <div className="h-full bg-indigo-500 w-[60%]" />
             </div>
             <div className="flex-1 h-1 bg-red-500/20 rounded-full overflow-hidden">
                <div className="h-full bg-red-500 w-[20%]" />

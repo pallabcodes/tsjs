@@ -4,7 +4,7 @@ import { Camera, Maximize, ZoomIn, ZoomOut, Crosshair, ChevronUp, ChevronDown, C
 import { FeedHUD } from './FeedHUD';
 
 const CLS_COLORS: Record<string, string> = {
-  person: '#3b82f6',
+  person: '#6366f1',
   vehicle: '#f59e0b',
   bag: '#ef4444',
 };
@@ -178,7 +178,7 @@ export const CameraFeed = ({ id, label, isActive, onClick, className }: CameraFe
       }
 
       // ── 3. Simulated Feature Extraction Points (Moving Dots) ────────────
-      ctx.fillStyle = 'rgba(59, 130, 246, 0.6)'; // Accent blue
+      ctx.fillStyle = 'rgba(99, 102, 241, 0.6)'; // Accent indigo
       for(let i=0; i<15; i++) {
         const px = ((i * 123 + t * 20) % 1000) / 1000 * w;
         const py = horizonY + (((i * 321 - t * 10) % 1000 + 1000) % 1000) / 1000 * (h - horizonY);
@@ -196,12 +196,12 @@ export const CameraFeed = ({ id, label, isActive, onClick, className }: CameraFe
       const scanY = horizonY + scanCycle * (h - horizonY);
       
       const scanGrad = ctx.createLinearGradient(0, scanY - 20, 0, scanY);
-      scanGrad.addColorStop(0, 'rgba(59, 130, 246, 0)');
-      scanGrad.addColorStop(1, 'rgba(59, 130, 246, 0.15)');
+      scanGrad.addColorStop(0, 'rgba(99, 102, 241, 0)');
+      scanGrad.addColorStop(1, 'rgba(99, 102, 241, 0.15)');
       ctx.fillStyle = scanGrad;
       ctx.fillRect(0, scanY - 20, w, 20);
       
-      ctx.strokeStyle = 'rgba(59, 130, 246, 0.4)';
+      ctx.strokeStyle = 'rgba(99, 102, 241, 0.4)';
       ctx.beginPath();
       ctx.moveTo(0, scanY);
       ctx.lineTo(w, scanY);
@@ -219,7 +219,7 @@ export const CameraFeed = ({ id, label, isActive, onClick, className }: CameraFe
           const by = det.y * h;
           const bw = det.w * w;
           const bh = det.h * h;
-          const color = CLS_COLORS[det.cls] ?? '#3b82f6';
+          const color = CLS_COLORS[det.cls] ?? '#6366f1';
 
           // Box Lines (very subtle)
           ctx.strokeStyle = color;
@@ -284,7 +284,7 @@ export const CameraFeed = ({ id, label, isActive, onClick, className }: CameraFe
       onMouseLeave={handleMouseLeave}
       className={cn(
         "relative w-full h-full overflow-hidden cursor-pointer group bg-[#030303]",
-        isActive ? "ring-1 ring-inset ring-vms-accent" : "ring-1 ring-inset ring-white/[0.04]",
+        isActive ? "ring-1 ring-inset ring-indigo-500" : "ring-1 ring-inset ring-white/[0.04]",
         className
       )}
     >
@@ -318,7 +318,7 @@ export const CameraFeed = ({ id, label, isActive, onClick, className }: CameraFe
           <button onClick={handleFullscreen} className="p-2 hover:bg-white/10 rounded-md text-white/70 hover:text-white transition-all" title="Focus Mode">
             <Maximize size={14} />
           </button>
-          <button onClick={(e) => { e.stopPropagation(); setShowPTZ(!showPTZ); }} className={cn("p-2 rounded-md transition-all", showPTZ ? "bg-vms-accent/20 text-vms-accent" : "hover:bg-white/10 text-white/70 hover:text-white")} title="PTZ Overrides">
+          <button onClick={(e) => { e.stopPropagation(); setShowPTZ(!showPTZ); }} className={cn("p-2 rounded-md transition-all", showPTZ ? "bg-indigo-500/20 text-indigo-500" : "hover:bg-white/10 text-white/70 hover:text-white")} title="PTZ Overrides">
             <Crosshair size={14} />
           </button>
         </div>
@@ -338,7 +338,7 @@ export const CameraFeed = ({ id, label, isActive, onClick, className }: CameraFe
                 <button onClick={(e) => { e.stopPropagation(); setPan(p => ({...p, y: p.y + 40})) }} className="p-0.5 hover:bg-white/20 rounded-sm text-white/70 hover:text-white"><ChevronUp size={10} /></button>
                 <div />
                 <button onClick={(e) => { e.stopPropagation(); setPan(p => ({...p, x: p.x + 40})) }} className="p-0.5 hover:bg-white/20 rounded-sm text-white/70 hover:text-white"><ChevronLeft size={10} /></button>
-                <button onClick={resetPTZ} className="p-0.5 hover:bg-vms-accent/20 rounded-sm text-vms-accent"><div className="w-1.5 h-1.5 bg-current rounded-full mx-auto" /></button>
+                <button onClick={resetPTZ} className="p-0.5 hover:bg-indigo-500/20 rounded-sm text-indigo-500"><div className="w-1.5 h-1.5 bg-current rounded-full mx-auto" /></button>
                 <button onClick={(e) => { e.stopPropagation(); setPan(p => ({...p, x: p.x - 40})) }} className="p-0.5 hover:bg-white/20 rounded-sm text-white/70 hover:text-white"><ChevronRight size={10} /></button>
                 <div />
                 <button onClick={(e) => { e.stopPropagation(); setPan(p => ({...p, y: p.y - 40})) }} className="p-0.5 hover:bg-white/20 rounded-sm text-white/70 hover:text-white"><ChevronDown size={10} /></button>
@@ -350,7 +350,7 @@ export const CameraFeed = ({ id, label, isActive, onClick, className }: CameraFe
               </button>
 
               <div className="w-8 text-center ml-1">
-                <span className="text-[9px] font-mono font-bold text-vms-accent">{zoom.toFixed(1)}x</span>
+                <span className="text-[9px] font-mono font-bold text-indigo-500">{zoom.toFixed(1)}x</span>
               </div>
             </div>
           </>
@@ -359,7 +359,7 @@ export const CameraFeed = ({ id, label, isActive, onClick, className }: CameraFe
 
       {/* ─── Active Indicator Bar ──────────────────────────────────────────── */}
       {isActive && (
-        <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-vms-accent to-transparent opacity-80" />
+        <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-indigo-500 to-transparent opacity-80" />
       )}
     </div>
   );

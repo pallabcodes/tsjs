@@ -164,6 +164,7 @@ interface MeshState {
   isPlayerSidebarCollapsed: boolean; // This is the RIGHT sidebar
   showOSD: boolean;
   showBoundingBoxes: boolean;
+  showForensicDetails: boolean;
 
   // ─── Actions ─────────────────────────────────────────────────────────────
 
@@ -226,6 +227,7 @@ interface MeshState {
   setIsPlayerSidebarCollapsed: (collapsed: boolean) => void;
   setShowOSD: (show: boolean) => void;
   setShowBoundingBoxes: (show: boolean) => void;
+  setShowForensicDetails: (show: boolean) => void;
 
   setSelectionRange: (range: [number, number] | null) => void;
   setIsSelectionMode: (mode: boolean) => void;
@@ -261,6 +263,8 @@ interface MeshState {
   frameStep: (direction: 1 | -1) => void;
   jumpToStart: () => void;
   jumpToEnd: () => void;
+  jumpToNextKeyframe: () => void;
+  jumpToPrevKeyframe: () => void;
   jumpToNextBookmark: () => void;
   jumpToPrevBookmark: () => void;
   jumpToNextEvent: (events: number[]) => void;
@@ -355,6 +359,7 @@ export const useMeshStore = create<MeshState>()(
     isPlayerSidebarCollapsed: true,
     showOSD: true,
     showBoundingBoxes: true,
+    showForensicDetails: true,
 
     // ─── Setters ───────────────────────────────────────────────────────────
 
@@ -551,6 +556,7 @@ export const useMeshStore = create<MeshState>()(
     setIsPlayerSidebarCollapsed: (collapsed) => set({ isPlayerSidebarCollapsed: collapsed }),
     setShowOSD: (show) => set({ showOSD: show }),
     setShowBoundingBoxes: (show) => set({ showBoundingBoxes: show }),
+    setShowForensicDetails: (show) => set({ showForensicDetails: show }),
 
     setSelectionRange: (range) => set({ selectionRange: range }),
     setIsSelectionMode: (isSelectionMode) => set({ isSelectionMode }),
@@ -660,6 +666,16 @@ export const useMeshStore = create<MeshState>()(
     jumpToStop: () => set({ isPlaying: false }),
     jumpToEnd: () => {
       set({ currentTime: TIMELINE_DURATION });
+    },
+    jumpToNextKeyframe: () => {
+      const { currentTime } = get();
+      const nextSec = Math.floor(currentTime) + 1;
+      set({ currentTime: Math.min(TIMELINE_DURATION, nextSec) });
+    },
+    jumpToPrevKeyframe: () => {
+      const { currentTime } = get();
+      const prevSec = Math.ceil(currentTime) - 1;
+      set({ currentTime: Math.max(0, prevSec) });
     },
 
     jumpToNextBookmark: () => {

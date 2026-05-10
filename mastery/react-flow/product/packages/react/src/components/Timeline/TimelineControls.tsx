@@ -3,7 +3,8 @@ import {
   Play, Pause, RotateCcw, ZoomIn, ZoomOut, Settings, Maximize,
   Search, SkipBack, SkipForward, ChevronFirst, ChevronLast,
   Repeat, Repeat1, ArrowLeftRight, Rewind, Clock, Minimize,
-  ChevronDown, PanelBottomClose, PanelBottomOpen
+  ChevronDown, PanelBottomClose, PanelBottomOpen,
+  ChevronsLeft, ChevronsRight, Fingerprint
 } from 'lucide-react';
 import { useMeshStore, formatTime, cn, TIMELINE_DURATION } from '@ostream/core';
 
@@ -14,12 +15,13 @@ export const TimelineControls = () => {
     scale, setScale, playbackSpeed, setPlaybackSpeed,
     isReversing, setIsReversing,
     loopMode, setLoopMode,
-    frameStep, jumpToStart, jumpToEnd,
+    frameStep, jumpToStart, jumpToEnd, jumpToNextKeyframe, jumpToPrevKeyframe,
     timeFormat, setTimeFormat,
     isTimelineFullscreen, setIsTimelineFullscreen,
     isTimelineCollapsed, setIsTimelineCollapsed,
     showSettings, setShowSettings, showMinimap, setShowMinimap,
     selectionRange, zoomToFit, zoomToSelection,
+    showForensicDetails, setShowForensicDetails,
   } = state;
 
   const [showGoToTime, setShowGoToTime] = useState(false);
@@ -56,6 +58,17 @@ export const TimelineControls = () => {
         >
           <ChevronFirst size={14} />
         </button>
+
+        {/* Jump to Prev I-Frame */}
+        {showForensicDetails && (
+          <button
+            onClick={jumpToPrevKeyframe}
+            className="w-7 h-7 flex items-center justify-center rounded hover:bg-white/5 transition-colors text-indigo-500/60 hover:text-indigo-400"
+            title="Jump to Prev I-Frame (Keyframe)"
+          >
+            <ChevronsLeft size={14} />
+          </button>
+        )}
 
         {/* Frame step back */}
         <button
@@ -97,6 +110,15 @@ export const TimelineControls = () => {
         </button>
 
         {/* Frame step forward */}
+        {showForensicDetails && (
+          <button
+            onClick={jumpToNextKeyframe}
+            className="w-7 h-7 flex items-center justify-center rounded hover:bg-white/5 transition-colors text-indigo-500/60 hover:text-indigo-400"
+            title="Jump to Next I-Frame (Keyframe)"
+          >
+            <ChevronsRight size={14} />
+          </button>
+        )}
         <button
           onClick={() => frameStep(1)}
           className="w-7 h-7 flex items-center justify-center rounded hover:bg-white/5 transition-colors text-zinc-500"
@@ -225,14 +247,10 @@ export const TimelineControls = () => {
             <ZoomOut size={13} className="group-active:scale-90 transition-transform" />
           </button>
 
-          <div className="px-2.5 flex items-center gap-1.5 h-full bg-white/[0.02]">
+          <div className="px-1.5 flex items-center justify-center h-full bg-white/[0.02]">
             <div className="relative">
-              <Search size={10} className="opacity-40" />
+              <Search size={11} className="opacity-40" />
               <div className="absolute -top-0.5 -right-0.5 w-1 h-1 bg-indigo-400 rounded-full animate-pulse" />
-            </div>
-            <div className="flex flex-col leading-none">
-              <span className="mono-tabular text-[8px] font-bold text-white/80 tracking-tighter">SYNC_L7</span>
-              <span className="text-[6px] font-medium text-indigo-400 opacity-60">ACTIVE</span>
             </div>
           </div>
 
@@ -290,6 +308,18 @@ export const TimelineControls = () => {
           title="Toggle minimap"
         >
           <ChevronDown size={13} />
+        </button>
+
+        {/* Tactical Overlay Toggle */}
+        <button
+          onClick={() => setShowForensicDetails(!showForensicDetails)}
+          className={cn(
+            "w-7 h-7 flex items-center justify-center rounded transition-colors mr-0.5",
+            showForensicDetails ? "bg-indigo-500/15 text-indigo-400" : "text-zinc-500 hover:bg-white/5"
+          )}
+          title={showForensicDetails ? "Disable Forensic Overlay" : "Enable Forensic Overlay"}
+        >
+          <Fingerprint size={14} />
         </button>
 
         {/* Settings */}

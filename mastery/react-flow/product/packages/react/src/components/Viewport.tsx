@@ -40,13 +40,13 @@ const MOCK_DETECTIONS: Record<string, Detection[]> = {
 };
 
 const CLS_COLORS: Record<string, string> = {
-  person: 'text-blue-400',
+  person: 'text-indigo-400',
   vehicle: 'text-amber-400',
   bag: 'text-red-400',
 };
 
 const CLS_BG: Record<string, string> = {
-  person: 'bg-blue-500/10 border-blue-500/20',
+  person: 'bg-indigo-500/10 border-indigo-500/20',
   vehicle: 'bg-amber-500/10 border-amber-500/20',
   bag: 'bg-red-500/10 border-red-500/20',
 };
@@ -226,7 +226,7 @@ export const Viewport = () => {
       className={cn(
         "w-7 h-7 flex items-center justify-center transition-colors",
         active
-          ? "bg-vms-accent/15 text-vms-accent"
+          ? "bg-indigo-500/15 text-indigo-500"
           : "text-white/35 hover:bg-white/[0.06] hover:text-white/70"
       )}
       title={title}
@@ -269,7 +269,7 @@ export const Viewport = () => {
               onClick={() => toggleMagnifier()}
               title={isMagnifierActive ? "Disable Magnifier" : "Enable Forensic Magnifier (Loupe)"}
             >
-              <Eye size={12} className={cn(isMagnifierActive && "text-vms-accent animate-pulse")} />
+              <Eye size={12} className={cn(isMagnifierActive && "text-indigo-500 animate-pulse")} />
             </ToolbarBtn>
             <ToolbarBtn
               active={showBoundingBoxes}
@@ -362,7 +362,7 @@ export const Viewport = () => {
                 <span className="text-[8px] font-mono text-white/30 tracking-widest uppercase">
                   Detections
                 </span>
-                <span className="text-[9px] font-mono text-vms-accent">
+                <span className="text-[9px] font-mono text-indigo-500">
                   {focusedDetections.length} active
                 </span>
               </div>
@@ -436,7 +436,7 @@ export const Viewport = () => {
                           isNow
                             ? event.type === 'anomaly'
                               ? "bg-red-500/10 border-red-500/20"
-                              : "bg-vms-accent/10 border-vms-accent/20"
+                              : "bg-indigo-500/10 border-indigo-500/20"
                             : "bg-white/[0.02] border-white/[0.04] hover:bg-white/[0.04]",
                           Math.abs(delta) > 60 && "opacity-40"
                         )}
@@ -444,7 +444,7 @@ export const Viewport = () => {
                         <div className="flex flex-col gap-0.5">
                           <span className={cn(
                             "text-[9px] font-mono font-semibold",
-                            event.type === 'anomaly' ? "text-red-400" : "text-vms-accent"
+                            event.type === 'anomaly' ? "text-red-400" : "text-indigo-500"
                           )}>
                             {event.type === 'anomaly' ? 'ANOMALY' : 'EVENT'}
                           </span>
@@ -473,7 +473,7 @@ export const Viewport = () => {
       {/* ─── Forensic Magnifier Overlay (Digital Loupe) ────────────────── */}
       {isMagnifierActive && magnifierCameraId && (
         <div 
-          className="fixed pointer-events-none z-[100] w-48 h-48 rounded-full border-2 border-vms-accent shadow-[0_0_30px_rgba(0,243,255,0.4)] overflow-hidden bg-black"
+          className="fixed pointer-events-none z-[100] w-48 h-48 rounded-full border-2 border-indigo-500 shadow-[0_0_30px_rgba(99,102,241,0.4)] overflow-hidden bg-black"
           style={{ 
             left: mouseGlobal.x - 96, 
             top: mouseGlobal.y - 96 
@@ -481,9 +481,9 @@ export const Viewport = () => {
         >
           <div className="absolute inset-0 flex items-center justify-center">
              {/* Crosshair */}
-             <div className="absolute inset-0 border border-vms-accent/20 z-10" />
-             <div className="w-4 h-px bg-vms-accent z-10" />
-             <div className="h-4 w-px bg-vms-accent z-10" />
+             <div className="absolute inset-0 border border-indigo-500/20 z-10" />
+             <div className="w-4 h-px bg-indigo-500 z-10" />
+             <div className="h-4 w-px bg-indigo-500 z-10" />
              
              {/* Zoomed Content (High-Fidelity Engine) */}
              <div className="absolute inset-0">
@@ -491,7 +491,7 @@ export const Viewport = () => {
              </div>
 
              {/* Enhancement Badge */}
-             <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-black/80 border border-vms-accent/40 px-2 py-0.5 rounded text-[8px] font-black text-vms-accent uppercase tracking-widest z-20">
+             <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-black/80 border border-indigo-500/40 px-2 py-0.5 rounded text-[8px] font-black text-indigo-500 uppercase tracking-widest z-20">
                 4.0x Zoom // RAW_SOURCE
              </div>
           </div>

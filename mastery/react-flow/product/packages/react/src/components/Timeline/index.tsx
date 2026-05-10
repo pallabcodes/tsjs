@@ -313,9 +313,13 @@ export const Timeline = () => {
 
             return (
               <div
-                className="absolute bottom-0 top-0 z-20 border-x border-zinc-400 bg-zinc-400/8 pointer-events-none"
+                className="absolute bottom-0 top-0 z-20 border-x border-zinc-400/40 bg-zinc-400/10 pointer-events-none shadow-[inset_0_0_20px_rgba(255,255,255,0.02)]"
                 style={{ left, width }}
               >
+                {/* Tactical Brackets */}
+                <div className="absolute top-0 bottom-0 left-0 w-1 border-l-2 border-y-2 border-zinc-400" />
+                <div className="absolute top-0 bottom-0 right-0 w-1 border-r-2 border-y-2 border-zinc-400" />
+
                 {/* Left resize handle */}
                 <div
                   className="absolute top-0 bottom-0 -left-1 w-2 cursor-col-resize pointer-events-auto hover:bg-zinc-400/30 transition-colors z-30"
@@ -326,10 +330,23 @@ export const Timeline = () => {
                   className="absolute top-0 bottom-0 -right-1 w-2 cursor-col-resize pointer-events-auto hover:bg-zinc-400/30 transition-colors z-30"
                   onMouseDown={(e) => handleSelectionEdgeDrag('end', e)}
                 />
+
+                {/* Tactical Edge Labels */}
+                {width > 120 && (
+                  <>
+                    <div className="absolute -top-5 left-0 -translate-x-1/2 bg-zinc-800 text-[6px] px-1 py-0.5 rounded border border-zinc-700 text-zinc-400 font-mono tracking-tighter">
+                      IN: {formatTime(Math.min(selectionRange[0], selectionRange[1]))}
+                    </div>
+                    <div className="absolute -top-5 right-0 translate-x-1/2 bg-zinc-800 text-[6px] px-1 py-0.5 rounded border border-zinc-700 text-zinc-400 font-mono tracking-tighter">
+                      OUT: {formatTime(Math.max(selectionRange[0], selectionRange[1]))}
+                    </div>
+                  </>
+                )}
+
                 {/* Selection duration label */}
                 {width > 40 && (
-                  <div className="absolute top-1 left-1/2 -translate-x-1/2 bg-zinc-400/80 px-1.5 py-0.5 rounded text-[7px] font-bold text-white mono-tabular whitespace-nowrap pointer-events-none">
-                    {formatTime(Math.abs(selectionRange[1] - selectionRange[0]), true)}
+                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-zinc-950/80 border border-zinc-400/20 px-2 py-0.5 rounded text-[8px] font-black text-indigo-400 mono-tabular whitespace-nowrap pointer-events-none shadow-xl">
+                    DELTA: {formatTime(Math.abs(selectionRange[1] - selectionRange[0]), true)}
                   </div>
                 )}
               </div>

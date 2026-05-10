@@ -33,6 +33,7 @@ export const TimelineTrack = ({
   const setShowDetailPanel = store.setShowDetailPanel;
   const setDetailPanelData = store.setDetailPanelData;
   const annotations = store.annotations;
+  const showForensicDetails = store.showForensicDetails;
 
   const [hoveredSpan, setHoveredSpan] = useState<any>(null);
   const resizeRef = useRef<HTMLDivElement>(null);
@@ -233,7 +234,33 @@ export const TimelineTrack = ({
           </div>
         ))}
 
-        {/* Annotation dots on track */}
+        {/* Forensic GOP (I/P Frame) Visualization */}
+        {showForensicDetails && scale > 10000 && type === 'stream' && spans?.map(([start, duration], i) => {
+          const frameRate = useMeshStore.getState().frameRate;
+          const frameInterval = 1 / frameRate;
+          const frameTicks = [];
+          for (let t = start; t < start + duration; t += frameInterval) {
+            frameTicks.push(t);
+          }
+          return (
+            <div key={`gop-${i}`} className="absolute top-0 bottom-0 pointer-events-none opacity-40">
+              {frameTicks.map((t, idx) => {
+                const x = (t / 60) * scale;
+                const isKeyframe = Math.floor(t) === t; // Simplified: I-frame every 1s
+                return (
+                  <div
+                    key={idx}
+                    className={cn(
+                      "absolute top-0 bottom-0 w-px",
+                      isKeyframe ? "bg-indigo-500 w-[1.5px]" : "bg-zinc-700"
+                    )}
+                    style={{ left: x }}
+                  />
+                );
+              })}
+            </div>
+          );
+        })}
         {trackAnnotations.map((ann) => (
           <div
             key={ann.id}
@@ -255,7 +282,10 @@ export const TimelineTrack = ({
             className="fixed bottom-32 left-1/2 -translate-x-1/2 bg-zinc-900 border border-white/10 p-3 rounded-lg shadow-2xl z-[200] min-w-[200px]"
           >
             <div className="flex items-center gap-2 mb-2 pb-2 border-b border-white/5">
-              <div className={cn("w-2 h-2 rounded-full", `bg-vms-${color === 'emerald' ? 'emerald-600' : color === 'blue' ? 'blue-500' : 'red-500'}`)} />
+              <div className={cn(
+                "w-2 h-2 rounded-full",
+                color === 'emerald' ? 'bg-indigo-500' : color === 'blue' ? 'bg-zinc-400' : 'bg-red-500'
+              )} />
               <span className="text-[9px] font-bold text-white">{label}</span>
               <span className="text-[7px] opacity-40 ml-auto">{type}</span>
             </div>

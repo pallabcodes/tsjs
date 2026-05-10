@@ -7,7 +7,7 @@ interface ForensicLoupeProps {
 }
 
 const CLS_COLORS: Record<string, string> = {
-  person: '#3b82f6',
+  person: '#6366f1',
   vehicle: '#f59e0b',
   bag: '#ef4444',
 };
@@ -56,7 +56,7 @@ export const ForensicLoupe = ({ id, pos }: ForensicLoupeProps) => {
         const by = det.y * h;
         const bw = det.w * w;
         const bh = det.h * h;
-        const color = CLS_COLORS[det.cls] ?? '#3b82f6';
+        const color = CLS_COLORS[det.cls] ?? '#6366f1';
 
         ctx.strokeStyle = color;
         ctx.lineWidth = 1;
@@ -70,9 +70,31 @@ export const ForensicLoupe = ({ id, pos }: ForensicLoupeProps) => {
 
       ctx.restore();
 
-      // 5. Sharpening Filter Overlay (Simulated)
-      ctx.fillStyle = 'rgba(0, 243, 255, 0.05)';
-      ctx.fillRect(0, 0, w, h);
+      // 5. Tactical Overlays (Crosshairs)
+      ctx.strokeStyle = '#6366f1'; // Intelligence Indigo
+      ctx.lineWidth = 0.5;
+      ctx.beginPath(); ctx.moveTo(w/2 - 10, h/2); ctx.lineTo(w/2 + 10, h/2); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(w/2, h/2 - 10); ctx.lineTo(w/2, h/2 + 10); ctx.stroke();
+
+      // Corner Brackets
+      const bLen = 15;
+      ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(0, bLen); ctx.lineTo(0, 0); ctx.lineTo(bLen, 0); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(w - bLen, 0); ctx.lineTo(w, 0); ctx.lineTo(w, bLen); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(0, h - bLen); ctx.lineTo(0, h); ctx.lineTo(bLen, h); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(w - bLen, h); ctx.lineTo(w, h); ctx.lineTo(w, h - bLen); ctx.stroke();
+
+      // 6. "ENHANCE" Status Ticker
+      ctx.fillStyle = '#6366f1';
+      ctx.font = 'bold 9px monospace';
+      ctx.fillText('ENHANCE_ENGINE: 4.0x', 8, h - 8);
+      
+      // Scanning Pulse
+      const pulse = (Date.now() / 1000) % 2;
+      ctx.globalAlpha = Math.max(0, 1 - pulse);
+      ctx.strokeStyle = '#6366f1';
+      ctx.strokeRect(0, 0, w, h);
+      ctx.globalAlpha = 1.0;
 
       animId = requestAnimationFrame(render);
     };

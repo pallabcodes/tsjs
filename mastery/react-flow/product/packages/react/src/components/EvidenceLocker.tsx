@@ -56,7 +56,7 @@ export const EvidenceLocker = () => {
       {/* Header */}
       <div className="h-14 flex items-center justify-between px-6 border-b border-white/[0.05] bg-[#080808]">
         <div className="flex items-center gap-3">
-          <FolderLock size={18} className="text-vms-accent" />
+          <FolderLock size={18} className="text-indigo-500" />
           <h1 className="text-[12px] font-bold uppercase tracking-widest">
             Evidence Custody Manager <span className="text-white/20 ml-2 font-normal">Vault: SECURE_01</span>
           </h1>
@@ -73,7 +73,7 @@ export const EvidenceLocker = () => {
             disabled={!activeCaseId}
             className={cn(
               "h-8 px-4 font-bold text-[10px] uppercase tracking-widest transition-all flex items-center gap-2",
-              activeCaseId ? "bg-vms-accent text-black hover:bg-white" : "bg-white/5 text-white/20 cursor-not-allowed"
+              activeCaseId ? "bg-indigo-500 text-black hover:bg-white" : "bg-white/5 text-white/20 cursor-not-allowed"
             )}
           >
             <FileText size={14} /> Generate PDF Report
@@ -87,7 +87,7 @@ export const EvidenceLocker = () => {
           <div className="p-4 border-b border-white/[0.05] flex items-center justify-between">
             <span className="text-[9px] font-bold text-white/20 uppercase tracking-widest">Active Case Files</span>
             {activeCaseId && (
-              <button onClick={() => setActiveCase(null)} className="text-[8px] text-vms-accent uppercase hover:underline">Clear</button>
+              <button onClick={() => setActiveCase(null)} className="text-[8px] text-indigo-500 uppercase hover:underline">Clear</button>
             )}
           </div>
           <div className="flex-1 overflow-y-auto no-scrollbar">
@@ -97,13 +97,13 @@ export const EvidenceLocker = () => {
                 onClick={() => setActiveCase(caseFile.id)}
                 className={cn(
                   "p-4 border-b border-white/[0.02] hover:bg-white/[0.02] cursor-pointer group transition-all",
-                  activeCaseId === caseFile.id && "bg-vms-accent/[0.03] border-l-2 border-l-vms-accent"
+                  activeCaseId === caseFile.id && "bg-indigo-500/[0.03] border-l-2 border-l-indigo-500"
                 )}
               >
                 <div className="flex items-center justify-between mb-1">
                   <span className={cn(
                     "text-[11px] font-bold transition-colors",
-                    activeCaseId === caseFile.id ? "text-vms-accent" : "text-white/80 group-hover:text-vms-accent"
+                    activeCaseId === caseFile.id ? "text-indigo-500" : "text-white/80 group-hover:text-indigo-500"
                   )}>{caseFile.title}</span>
                   <span className="text-[8px] px-1.5 py-0.5 bg-white/5 border border-white/10 rounded-sm text-white/40 uppercase">{caseFile.status}</span>
                 </div>
@@ -119,10 +119,10 @@ export const EvidenceLocker = () => {
              <div className="flex flex-col gap-3">
                 <div className="flex items-center justify-between text-[10px] text-white/30 font-bold uppercase">
                    <span>Storage Integrity</span>
-                   <span className="text-vms-emerald-500">OPTIMAL</span>
+                   <span className="text-indigo-500">OPTIMAL</span>
                 </div>
                 <div className="h-1 bg-white/5 rounded-full overflow-hidden">
-                   <div className="h-full bg-vms-accent w-[42%]" />
+                   <div className="h-full bg-indigo-500 w-[42%]" />
                 </div>
                 <span className="text-[9px] text-white/20 uppercase tracking-tighter">4.2 GB / 10 GB SECURE VAULT</span>
              </div>
@@ -132,15 +132,15 @@ export const EvidenceLocker = () => {
         {/* Evidence Grid */}
         <div className="flex-1 flex flex-col p-6 bg-grid-pattern overflow-y-auto no-scrollbar">
           {!activeCaseId ? (
-             <div className="mb-6 p-4 bg-vms-accent/5 border border-vms-accent/10 rounded-sm flex items-center justify-between">
+             <div className="mb-6 p-4 bg-indigo-500/5 border border-indigo-500/10 rounded-sm flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                   <ShieldCheck size={18} className="text-vms-accent" />
+                   <ShieldCheck size={18} className="text-indigo-500" />
                    <div>
-                      <h3 className="text-[11px] font-bold uppercase text-vms-accent">Master Vault View</h3>
+                      <h3 className="text-[11px] font-bold uppercase text-indigo-500">Master Vault View</h3>
                       <p className="text-[9px] text-white/40 uppercase">Displaying all artifacts across active site perimeter</p>
                    </div>
                 </div>
-                <span className="text-[10px] font-mono text-vms-accent/60">{evidence.length} TOTAL ITEMS</span>
+                <span className="text-[10px] font-mono text-indigo-500/60">{evidence.length} TOTAL ITEMS</span>
              </div>
           ) : (
              <div className="mb-6">
@@ -170,8 +170,8 @@ export const EvidenceLocker = () => {
                     
                     <div className="absolute top-2 left-2 px-2 py-1 bg-black/80 backdrop-blur-md border border-white/10 text-[8px] flex flex-col gap-1">
                        <div className="flex items-center gap-2">
-                          <Fingerprint size={10} className="text-vms-accent" />
-                          <span className="text-vms-accent font-bold uppercase">Integrity Verified</span>
+                          <Fingerprint size={10} className="text-indigo-500" />
+                          <span className="text-indigo-500 font-bold uppercase">Integrity Verified</span>
                        </div>
                        <span className="text-[7px] text-white/30 font-mono truncate w-32">{item.hash}</span>
                     </div>
@@ -200,7 +200,7 @@ export const EvidenceLocker = () => {
                   
                   {/* Security Overlay */}
                   <div className="absolute top-0 right-0 p-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                     <Lock size={14} className="text-vms-accent" />
+                     <Lock size={14} className="text-indigo-500" />
                   </div>
                 </div>
               ))}

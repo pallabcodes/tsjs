@@ -39,12 +39,12 @@ export const NavRail = () => {
     >
       {/* Brand / Logo Area */}
       <div className="h-14 flex items-center px-4 border-b border-white/[0.05]">
-        <div className="w-6 h-6 bg-vms-accent rounded-sm flex items-center justify-center flex-shrink-0">
+        <div className="w-6 h-6 bg-indigo-500 rounded-sm flex items-center justify-center flex-shrink-0">
           <ShieldAlert size={14} className="text-black" />
         </div>
         {!isNavCollapsed && (
           <span className="ml-3 font-mono text-xs font-bold tracking-tighter uppercase text-white/90">
-            MESH_OS <span className="text-vms-accent">L7</span>
+            MESH_OS <span className="text-indigo-500">L7</span>
           </span>
         )}
       </div>
@@ -58,7 +58,7 @@ export const NavRail = () => {
             className={cn(
               "h-10 flex items-center px-4 transition-colors relative group",
               activeView === item.view 
-                ? "text-vms-accent bg-vms-accent/5" 
+                ? "text-indigo-500 bg-indigo-500/5" 
                 : "text-white/40 hover:text-white/70 hover:bg-white/[0.02]"
             )}
             title={isNavCollapsed ? item.label : undefined}
@@ -70,7 +70,7 @@ export const NavRail = () => {
               </span>
             )}
             {activeView === item.view && (
-              <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-vms-accent" />
+              <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-indigo-500" />
             )}
           </button>
         ))}
@@ -79,10 +79,10 @@ export const NavRail = () => {
       {/* Footer / System Status */}
       <div className="p-3 border-t border-white/[0.05] flex flex-col gap-3">
         <div className={cn("flex flex-col gap-2", isNavCollapsed && "items-center")}>
-          <button className="text-white/30 hover:text-vms-accent transition-colors">
+          <button className="text-white/30 hover:text-indigo-500 transition-colors">
             <Activity size={16} />
           </button>
-          <button className="text-white/30 hover:text-vms-accent transition-colors">
+          <button className="text-white/30 hover:text-indigo-500 transition-colors">
             <History size={16} />
           </button>
         </div>

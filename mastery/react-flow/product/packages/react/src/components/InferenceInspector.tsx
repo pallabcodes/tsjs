@@ -18,20 +18,20 @@ export const InferenceInspector = () => {
       </div>
       <div className="h-1 bg-white/[0.04] rounded-full overflow-hidden">
         <div 
-          className="h-full bg-vms-accent shadow-[0_0_8px_rgba(0,243,255,0.5)] transition-all duration-1000" 
+          className="h-full bg-indigo-500 shadow-[0_0_8px_rgba(0,243,255,0.5)] transition-all duration-1000" 
           style={{ width: `${confidence * 100}%` }} 
         />
       </div>
       <div className="text-right">
-        <span className="text-[8px] font-mono text-vms-accent/60">CONFIDENCE: {(confidence * 100).toFixed(1)}%</span>
+        <span className="text-[8px] font-mono text-indigo-500/60">CONFIDENCE: {(confidence * 100).toFixed(1)}%</span>
       </div>
     </div>
   );
 
   return (
-    <div className="p-3 bg-vms-accent/5 border-b border-vms-accent/20 animate-in fade-in slide-in-from-top-2 duration-300">
+    <div className="p-3 bg-indigo-500/5 border-b border-indigo-500/20 animate-in fade-in slide-in-from-top-2 duration-300">
       <div className="flex items-center gap-2 mb-3">
-        <BrainCircuit size={14} className="text-vms-accent" />
+        <BrainCircuit size={14} className="text-indigo-500" />
         <span className="text-[10px] font-mono font-bold text-white/90 uppercase tracking-widest">
           AI_Reasoning_Inspector
         </span>
@@ -75,7 +75,7 @@ export const InferenceInspector = () => {
             <Fingerprint size={10} className="text-white/20" />
             <span className="text-[8px] font-mono text-white/20 uppercase">Vector_ID: {det.id}</span>
           </div>
-          <AlertCircle size={10} className="text-vms-accent/40" />
+          <AlertCircle size={10} className="text-indigo-500/40" />
         </div>
       </div>
     </div>

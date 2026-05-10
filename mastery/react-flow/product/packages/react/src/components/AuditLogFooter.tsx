@@ -15,7 +15,7 @@ export const AuditLogFooter = () => {
   return (
     <div className="h-7 bg-[#050505] border-t border-white/[0.04] flex items-center px-3 gap-4 overflow-hidden select-none">
       <div className="flex items-center gap-1.5 flex-shrink-0">
-        <Terminal size={10} className="text-vms-accent" />
+        <Terminal size={10} className="text-indigo-500" />
         <span className="text-[8px] font-mono font-bold text-white/40 uppercase tracking-widest">
           Audit_Trail
         </span>
@@ -43,12 +43,12 @@ export const AuditLogFooter = () => {
 
       <div className="flex items-center gap-3 flex-shrink-0">
         <div className="flex items-center gap-1">
-          <ShieldCheck size={10} className="text-vms-emerald-400" />
-          <span className="text-[8px] font-mono text-vms-emerald-400/60 uppercase">Encrypted_Link</span>
+          <ShieldCheck size={10} className="text-indigo-400" />
+          <span className="text-[8px] font-mono text-indigo-400/60 uppercase">Encrypted_Link</span>
         </div>
         <div className="flex items-center gap-1">
-          <Activity size={10} className="text-vms-accent" />
-          <span className="text-[8px] font-mono text-vms-accent/60 uppercase">Sync_Active</span>
+          <Activity size={10} className="text-indigo-500" />
+          <span className="text-[8px] font-mono text-indigo-500/60 uppercase">Sync_Active</span>
         </div>
       </div>
     </div>

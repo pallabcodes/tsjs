@@ -105,7 +105,7 @@ export const FloorPlan = () => {
           className={cn(
             "transition-all duration-500",
             device.status === 'online'
-              ? "fill-vms-accent/10 stroke-vms-accent/30"
+              ? "fill-indigo-500/10 stroke-indigo-500/30"
               : "fill-white/5 stroke-white/10"
           )}
           style={{
@@ -115,7 +115,7 @@ export const FloorPlan = () => {
         />
         {/* Pulsing Core for Active Detection */}
         {device.status === 'online' && (
-          <circle r="4" fill="currentColor" className="text-vms-accent animate-pulse" />
+          <circle r="4" fill="currentColor" className="text-indigo-500 animate-pulse" />
         )}
       </g>
     );
@@ -126,23 +126,23 @@ export const FloorPlan = () => {
       {/* Header */}
       <div className="h-14 flex items-center justify-between px-6 border-b border-white/[0.05] bg-[#080808] z-10">
         <div className="flex items-center gap-3">
-          <MapIcon size={18} className="text-vms-accent" />
+          <MapIcon size={18} className="text-indigo-500" />
           <div className="flex flex-col">
             <h1 className="text-[12px] font-bold uppercase tracking-widest">
               Tactical Floor Plan <span className="text-white/20 ml-2 font-normal">Site: O_MESH_PRIMARY</span>
             </h1>
             <button
               onClick={() => setActiveSite('campus')}
-              className="text-[9px] text-vms-accent hover:text-white transition-colors uppercase font-bold text-left flex items-center gap-1 mt-0.5"
+              className="text-[9px] text-indigo-500 hover:text-white transition-colors uppercase font-bold text-left flex items-center gap-1 mt-0.5"
             >
               <Navigation size={10} className="rotate-[-45deg]" /> Zoom Out to Global Campus
             </button>
           </div>
         </div>
         <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2 px-3 py-1 bg-vms-emerald-500/10 border border-vms-emerald-500/20 rounded-full">
-            <ShieldCheck size={12} className="text-vms-emerald-500" />
-            <span className="text-[9px] text-vms-emerald-400 font-bold uppercase">Zone Perimeter Secure</span>
+          <div className="flex items-center gap-2 px-3 py-1 bg-indigo-500/10 border border-indigo-500/20 rounded-full">
+            <ShieldCheck size={12} className="text-indigo-500" />
+            <span className="text-[9px] text-indigo-400 font-bold uppercase">Zone Perimeter Secure</span>
           </div>
           <div className="w-px h-6 bg-white/10" />
           <div className="flex items-center gap-1">
@@ -171,7 +171,7 @@ export const FloorPlan = () => {
               
               {/* Heatmap Gradients */}
               <radialGradient id="heat-lobby" cx="275" cy="225" r="150" gradientUnits="userSpaceOnUse">
-                <stop offset="0%" stopColor="rgba(0, 243, 255, 0.15)" />
+                <stop offset="0%" stopColor="rgba(99, 102, 241, 0.15)" />
                 <stop offset="100%" stopColor="transparent" />
               </radialGradient>
               <radialGradient id="heat-server" cx="175" cy="675" r="120" gradientUnits="userSpaceOnUse">
@@ -220,12 +220,12 @@ export const FloorPlan = () => {
                 {/* Laser Glow Path */}
                 <path 
                   d="M 50 500 L 300 500 L 300 675 L 175 675" 
-                  className="fill-none stroke-vms-accent/40 stroke-[6px]"
+                  className="fill-none stroke-indigo-500/40 stroke-[6px]"
                   style={{ filter: 'blur(8px)' }}
                 />
                 <path 
                   d="M 50 500 L 300 500 L 300 675 L 175 675" 
-                  className="fill-none stroke-vms-accent stroke-[2px]"
+                  className="fill-none stroke-indigo-500 stroke-[2px]"
                   strokeDasharray="12 8"
                 >
                    <animate attributeName="stroke-dashoffset" from="200" to="0" dur="3s" repeatCount="indefinite" />
@@ -233,8 +233,8 @@ export const FloorPlan = () => {
                 
                 {/* Tactical Node Point */}
                 <circle cx="50" cy="500" r="4" fill="#00f3ff" />
-                <rect x="60" y="485" width="140" height="20" className="fill-black/90 stroke-vms-accent/30" />
-                <text x="70" y="499" className="fill-vms-accent text-[9px] font-black uppercase tracking-tighter">INTERVENTION_ROUTE_ACTIVE</text>
+                <rect x="60" y="485" width="140" height="20" className="fill-black/90 stroke-indigo-500/30" />
+                <text x="70" y="499" className="fill-indigo-500 text-[9px] font-black uppercase tracking-tighter">INTERVENTION_ROUTE_ACTIVE</text>
               </g>
             )}
 
@@ -279,7 +279,7 @@ export const FloorPlan = () => {
               {projectedObjects.map((obj) => (
                 <g key={`${obj.camId}-${obj.det.id}`} transform={`translate(${obj.x}, ${obj.y})`} className="transition-transform duration-300">
                   {/* Object Blip */}
-                  <circle r="6" className="fill-vms-accent animate-ping opacity-20" />
+                  <circle r="6" className="fill-indigo-500 animate-ping opacity-20" />
                   <circle r="4" className={cn(
                     "stroke-1",
                     obj.det.cls === 'person' ? "fill-blue-500 stroke-blue-200" :
@@ -320,7 +320,7 @@ export const FloorPlan = () => {
                       className={cn(
                         "transition-all stroke-2",
                         device.status === 'online'
-                          ? "fill-black stroke-vms-accent shadow-[0_0_15px_rgba(0,243,255,0.5)]"
+                          ? "fill-black stroke-indigo-500 shadow-[0_0_15px_rgba(0,243,255,0.5)]"
                           : "fill-black stroke-white/20"
                       )}
                     />
@@ -329,14 +329,14 @@ export const FloorPlan = () => {
                     <path
                       d="M -4 0 L 0 -8 L 4 0 Z"
                       transform={`rotate(${device.angle || 0}) translate(0, -12)`}
-                      className={device.status === 'online' ? "fill-vms-accent" : "fill-white/20"}
+                      className={device.status === 'online' ? "fill-indigo-500" : "fill-white/20"}
                     />
 
                     {/* Label (Condensed) */}
                     {isHovered && (
                       <g transform="translate(18, 0)">
                         <rect x="0" y="-12" width="120" height="24" className="fill-black/80 stroke-white/10" />
-                        <text x="8" y="4" className="fill-vms-accent text-[10px] font-bold uppercase tracking-widest">{device.label}</text>
+                        <text x="8" y="4" className="fill-indigo-500 text-[10px] font-bold uppercase tracking-widest">{device.label}</text>
                       </g>
                     )}
                   </g>
@@ -348,13 +348,13 @@ export const FloorPlan = () => {
 
         {/* HUD Overlay Controls */}
         <div className="absolute bottom-6 right-6 flex flex-col gap-2">
-          <button onClick={() => setZoom(z => Math.min(z + 0.2, 3))} className="w-10 h-10 bg-[#0a0a0a]/80 backdrop-blur-md border border-white/10 flex items-center justify-center text-white/60 hover:text-vms-accent transition-all">
+          <button onClick={() => setZoom(z => Math.min(z + 0.2, 3))} className="w-10 h-10 bg-[#0a0a0a]/80 backdrop-blur-md border border-white/10 flex items-center justify-center text-white/60 hover:text-indigo-500 transition-all">
             <ZoomIn size={18} />
           </button>
-          <button onClick={() => setZoom(z => Math.max(z - 0.2, 0.5))} className="w-10 h-10 bg-[#0a0a0a]/80 backdrop-blur-md border border-white/10 flex items-center justify-center text-white/60 hover:text-vms-accent transition-all">
+          <button onClick={() => setZoom(z => Math.max(z - 0.2, 0.5))} className="w-10 h-10 bg-[#0a0a0a]/80 backdrop-blur-md border border-white/10 flex items-center justify-center text-white/60 hover:text-indigo-500 transition-all">
             <ZoomOut size={18} />
           </button>
-          <button onClick={() => { setZoom(1); setOffset({ x: 0, y: 0 }); }} className="w-10 h-10 bg-[#0a0a0a]/80 backdrop-blur-md border border-white/10 flex items-center justify-center text-white/60 hover:text-vms-accent transition-all">
+          <button onClick={() => { setZoom(1); setOffset({ x: 0, y: 0 }); }} className="w-10 h-10 bg-[#0a0a0a]/80 backdrop-blur-md border border-white/10 flex items-center justify-center text-white/60 hover:text-indigo-500 transition-all">
             <Crosshair size={18} />
           </button>
         </div>
@@ -371,7 +371,7 @@ export const FloorPlan = () => {
             </div>
             <div className="flex items-center justify-between">
               <span className="text-[9px] text-white/60 uppercase">Live Tracks</span>
-              <span className="text-[9px] font-bold text-vms-accent">{projectedObjects.length}</span>
+              <span className="text-[9px] font-bold text-indigo-500">{projectedObjects.length}</span>
             </div>
           </div>
           <div className="pt-2 mt-1 border-t border-white/5 flex flex-col gap-1.5">
@@ -388,7 +388,7 @@ export const FloorPlan = () => {
 
         {/* Footer Coordinate Ticker */}
         <div className="absolute bottom-6 left-6 px-4 py-2 bg-black/60 border border-white/5 font-mono">
-          <span className="text-[10px] text-vms-accent/60 tracking-widest uppercase">
+          <span className="text-[10px] text-indigo-500/60 tracking-widest uppercase">
             Projected Coordinate Engine Active // Tracking {projectedObjects.length} Entities
           </span>
         </div>

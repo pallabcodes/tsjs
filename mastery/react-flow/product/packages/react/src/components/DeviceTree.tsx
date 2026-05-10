@@ -27,7 +27,7 @@ export const DeviceTree = () => {
 
   const StatusIcon = ({ status }: { status: Device['status'] }) => {
     switch (status) {
-      case 'online': return <Circle size={8} className="fill-vms-emerald-500 text-vms-emerald-500/20" />;
+      case 'online': return <Circle size={8} className="fill-indigo-500 text-indigo-500/20" />;
       case 'offline': return <Circle size={8} className="fill-white/20 text-white/5" />;
       case 'error': return <AlertTriangle size={10} className="text-red-500" />;
       default: return null;
@@ -73,13 +73,13 @@ export const DeviceTree = () => {
       {/* Search Bar */}
       <div className="p-2">
         <div className="relative group">
-          <Search size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-vms-accent transition-colors" />
+          <Search size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-indigo-500 transition-colors" />
           <input 
             type="text"
             placeholder="Search devices..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full bg-white/[0.03] border border-white/[0.05] rounded-sm py-1.5 pl-8 pr-2 text-[11px] font-mono text-white/80 placeholder:text-white/10 focus:outline-none focus:border-vms-accent/50 focus:bg-white/[0.05] transition-all"
+            className="w-full bg-white/[0.03] border border-white/[0.05] rounded-sm py-1.5 pl-8 pr-2 text-[11px] font-mono text-white/80 placeholder:text-white/10 focus:outline-none focus:border-indigo-500/50 focus:bg-white/[0.05] transition-all"
           />
         </div>
       </div>
@@ -106,9 +106,9 @@ export const DeviceTree = () => {
                 className={cn(
                   "group h-10 flex items-center px-4 cursor-pointer transition-all border-l-2",
                   isFocused 
-                    ? "bg-vms-accent/10 border-vms-accent text-white" 
+                    ? "bg-indigo-500/10 border-indigo-500 text-white" 
                     : isActive 
-                      ? "bg-white/[0.03] border-vms-accent/30 text-white/80" 
+                      ? "bg-white/[0.03] border-indigo-500/30 text-white/80" 
                       : "border-transparent text-white/40 hover:bg-white/[0.02] hover:text-white/70"
                 )}
               >
@@ -144,7 +144,7 @@ export const DeviceTree = () => {
         <div className="flex items-center justify-between text-[9px] font-mono text-white/20">
           <span>Total: {devices.length}</span>
           <span className="flex items-center gap-1">
-            <span className="w-1.5 h-1.5 rounded-full bg-vms-emerald-500" />
+            <span className="w-1.5 h-1.5 rounded-full bg-indigo-500" />
             {devices.filter(d => d.status === 'online').length} Live
           </span>
         </div>

@@ -5,23 +5,41 @@ export const TimelineRuler = () => {
   const bookmarks = useMeshStore(state => state.bookmarks);
   const annotations = useMeshStore(state => state.annotations);
   const setCurrentTime = useMeshStore(state => state.setCurrentTime);
+  const showForensicDetails = useMeshStore(state => state.showForensicDetails);
   const totalWidth = (TIMELINE_DURATION / 60) * scale;
 
   // Dynamic LOD tick intervals based on zoom level
-  let interval = 60;
-  if (scale > 1000) interval = 1;
-  else if (scale > 500) interval = 5;
-  else if (scale > 200) interval = 10;
-  else if (scale > 100) interval = 30;
-
-  // Sub-second for deep zoom
-  if (scale > 3000) interval = 0.5;
-  if (scale > 6000) interval = 0.1;
-
+  // ─── Forensic Frame Logic ──────────────────────────────────────────────
+  const frameRate = useMeshStore.getState().frameRate;
+  const isFrameLevel = scale > 8000;
+  
   const ticks: number[] = [];
-  for (let t = 0; t <= TIMELINE_DURATION; t += interval) {
-    ticks.push(t);
+  if (isFrameLevel && showForensicDetails) {
+    // Render individual frames
+    const frameInterval = 1 / frameRate;
+    for (let t = 0; t <= TIMELINE_DURATION; t += frameInterval) {
+      ticks.push(t);
+    }
+  } else {
+    let interval = 60;
+    if (scale > 1000) interval = 1;
+    else if (scale > 500) interval = 5;
+    else if (scale > 200) interval = 10;
+    else if (scale > 100) interval = 30;
+    
+    // Sub-second for deep zoom
+    if (scale > 3000) interval = 0.5;
+    if (scale > 6000) interval = 0.1;
+
+    for (let t = 0; t <= TIMELINE_DURATION; t += interval) {
+      ticks.push(t);
+    }
   }
+
+  // ─── Pixel-Perfect Label Density Logic ───────────────────────────────
+  const minLabelSpacing = 80; // Minimum pixels between labels
+  const baseIntervals = [1/frameRate, 0.1, 0.5, 1, 2, 5, 10, 30, 60, 120, 300, 600];
+  const labelInterval = baseIntervals.find(inv => (inv / 60) * scale >= minLabelSpacing) || 600;
 
   return (
     <div
@@ -32,16 +50,18 @@ export const TimelineRuler = () => {
       <svg width="100%" height="100%" className="overflow-visible pointer-events-none">
         {ticks.map((time, i) => {
           const x = (time / 60) * scale;
-          const isMajor = time % 60 === 0 || (interval < 1 && (time * 10) % 10 === 0);
-          const isMinor = !isMajor && time % 1 === 0;
+          
+          // Use a small epsilon for float modulo
+          const isMajor = Math.abs(time % labelInterval) < 0.001; 
+          const isFrame = isFrameLevel && !isMajor && showForensicDetails;
 
           return (
             <g key={i}>
               <line
-                x1={x} y1={isMajor ? 12 : isMinor ? 20 : 28}
+                x1={x} y1={isMajor ? 12 : isFrame ? 28 : 20}
                 x2={x} y2={36}
-                stroke={isMajor ? 'rgba(255,255,255,0.4)' : 'rgba(255,255,255,0.12)'}
-                strokeWidth={isMajor ? 1.5 : 1}
+                stroke={isMajor ? 'rgba(255,255,255,0.4)' : isFrame ? 'rgba(99, 102, 241, 0.3)' : 'rgba(255,255,255,0.12)'}
+                strokeWidth={isMajor ? 1.5 : 0.5}
               />
               {isMajor && (
                 <text
@@ -52,6 +72,17 @@ export const TimelineRuler = () => {
                   className="mono-tabular font-bold"
                 >
                   {formatTime(time)}
+                </text>
+              )}
+              {isFrame && (scale > 15000) && (
+                <text
+                  x={x + 2} y={32}
+                  fill="rgba(99, 102, 241, 0.5)"
+                  fontSize="6"
+                  fontFamily="JetBrains Mono, monospace"
+                  className="mono-tabular"
+                >
+                  +{Math.round((time % 1) * frameRate)}
                 </text>
               )}
             </g>

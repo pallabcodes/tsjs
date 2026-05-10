@@ -19,7 +19,7 @@ export const FeedHUD = ({ camId, label, isFocused }: FeedHUDProps) => {
       {/* ─── Corner Brackets (HTML/SVG) ────────────────────────────────────── */}
       <div className={cn(
         "absolute inset-0 transition-colors duration-300 pointer-events-none z-10",
-        isFocused ? "text-vms-accent" : "text-white/20"
+        isFocused ? "text-indigo-500" : "text-white/20"
       )} style={{ filter: 'url(#hud-glow)' }}>
         {/* Top Left */}
         <svg className="absolute top-3 left-3 w-8 h-8 overflow-visible">
@@ -51,7 +51,7 @@ export const FeedHUD = ({ camId, label, isFocused }: FeedHUDProps) => {
         {isFocused && (
           <line 
             x1="0" y1="0" x2="100%" y2="0" 
-            stroke="rgba(0, 243, 255, 0.15)" 
+            stroke="rgba(99, 102, 241, 0.15)" 
             strokeWidth="1"
             className="animate-scanline"
           />
@@ -68,7 +68,7 @@ export const FeedHUD = ({ camId, label, isFocused }: FeedHUDProps) => {
             Stream_ID: {camId}
           </span>
           <div className="flex items-center gap-1">
-             <div className={cn("w-1 h-1 rounded-full", hasMotion ? "bg-red-500 animate-pulse" : "bg-vms-emerald-500")} />
+             <div className={cn("w-1 h-1 rounded-full", hasMotion ? "bg-red-500 animate-pulse" : "bg-indigo-500")} />
              <span className="text-[7px] font-mono text-white/40 uppercase">{hasMotion ? 'Activity' : 'Stable'}</span>
           </div>
         </div>
@@ -76,7 +76,7 @@ export const FeedHUD = ({ camId, label, isFocused }: FeedHUDProps) => {
 
       <div className="absolute bottom-4 right-14 text-right flex flex-col gap-0.5">
         <div className="flex items-center justify-end gap-2">
-           <span className="text-[8px] font-mono text-vms-accent/60 uppercase">Forensic_Link</span>
+           <span className="text-[8px] font-mono text-indigo-500/60 uppercase">Forensic_Link</span>
            <span className="text-[9px] font-mono text-white/80">30.00 FPS</span>
         </div>
         <span className="text-[7px] font-mono text-white/20 uppercase">
@@ -87,9 +87,9 @@ export const FeedHUD = ({ camId, label, isFocused }: FeedHUDProps) => {
       {/* ─── Crosshair (Centered if focused) ─────────────────────────────── */}
       {isFocused && (
         <div className="absolute inset-0 flex items-center justify-center opacity-20">
-           <div className="w-12 h-px bg-vms-accent" />
-           <div className="h-12 w-px bg-vms-accent absolute" />
-           <div className="w-4 h-4 border border-vms-accent rounded-full absolute" />
+           <div className="w-12 h-px bg-indigo-500" />
+           <div className="h-12 w-px bg-indigo-500 absolute" />
+           <div className="w-4 h-4 border border-indigo-500 rounded-full absolute" />
         </div>
       )}
     </div>

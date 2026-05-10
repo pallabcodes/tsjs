@@ -95,11 +95,11 @@ export const CampusMap = () => {
       <div className="h-16 flex items-center justify-between px-8 border-b border-white/[0.05] bg-[#050505] z-30">
         <div className="flex items-center gap-6">
           <div className="flex items-center gap-3">
-             <div className="p-2 bg-vms-accent/10 border border-vms-accent/20 rounded">
-                <Globe size={20} className="text-vms-accent" />
+             <div className="p-2 bg-indigo-500/10 border border-indigo-500/20 rounded">
+                <Globe size={20} className="text-indigo-500" />
              </div>
              <div>
-                <h1 className="text-[14px] font-black uppercase tracking-tighter italic">Sovereign <span className="text-vms-accent">GIS</span></h1>
+                <h1 className="text-[14px] font-black uppercase tracking-tighter italic">Sovereign <span className="text-indigo-500">GIS</span></h1>
                 <p className="text-[9px] text-white/30 uppercase tracking-widest font-bold">Global Site Observability // Site_01_HQ</p>
              </div>
           </div>
@@ -107,7 +107,7 @@ export const CampusMap = () => {
           <div className="flex items-center gap-4">
              <div className="flex flex-col">
                 <span className="text-[8px] text-white/20 uppercase font-bold">Inference Latency</span>
-                <span className="text-[10px] text-vms-emerald-500 font-bold tabular-nums tracking-tighter">12.4ms // SYNCED</span>
+                <span className="text-[10px] text-indigo-500 font-bold tabular-nums tracking-tighter">12.4ms // SYNCED</span>
              </div>
              <div className="flex flex-col">
                 <span className="text-[8px] text-white/20 uppercase font-bold">Active Satellites</span>
@@ -166,7 +166,7 @@ export const CampusMap = () => {
                 opacity={1} 
                 className="custom-leaflet-tooltip"
               >
-                <div className="bg-black/90 backdrop-blur-xl border border-vms-accent/30 w-56 p-0 rounded overflow-hidden">
+                <div className="bg-black/90 backdrop-blur-xl border border-indigo-500/30 w-56 p-0 rounded overflow-hidden">
                   <div className="p-3">
                     <div className="text-[12px] text-white font-black uppercase tracking-widest">{site.label}</div>
                     <div className="text-[9px] text-white/40 uppercase font-bold">{site.sub}</div>
@@ -180,14 +180,14 @@ export const CampusMap = () => {
                         <span className="text-[8px] text-white/30 uppercase font-bold">Threat Level</span>
                         <span className={cn(
                           "text-[10px] font-mono uppercase font-bold",
-                          site.status === 'critical' ? "text-red-500" : "text-vms-emerald-500"
+                          site.status === 'critical' ? "text-red-500" : "text-indigo-500"
                         )}>{site.status === 'critical' ? 'HIGH_VULN' : 'NOMINAL'}</span>
                       </div>
                     </div>
                   </div>
-                  <div className="bg-vms-accent/10 px-3 py-1.5 flex items-center justify-between border-t border-vms-accent/20 cursor-pointer hover:bg-vms-accent/20 transition-colors">
-                    <span className="text-[9px] text-vms-accent font-black uppercase tracking-tighter">Deploy View</span>
-                    <span className="text-[9px] text-vms-accent font-black uppercase">&gt;</span>
+                  <div className="bg-indigo-500/10 px-3 py-1.5 flex items-center justify-between border-t border-indigo-500/20 cursor-pointer hover:bg-indigo-500/20 transition-colors">
+                    <span className="text-[9px] text-indigo-500 font-black uppercase tracking-tighter">Deploy View</span>
+                    <span className="text-[9px] text-indigo-500 font-black uppercase">&gt;</span>
                   </div>
                 </div>
               </Tooltip>
@@ -200,9 +200,9 @@ export const CampusMap = () => {
            <svg className="w-full h-full" viewBox="0 0 2000 1000" preserveAspectRatio="xMidYMid slice">
               <defs>
                  <radialGradient id="radar-gradient" cx="50%" cy="50%" r="50%">
-                    <stop offset="0%" stopColor="rgba(0, 243, 255, 0)" />
-                    <stop offset="80%" stopColor="rgba(0, 243, 255, 0.05)" />
-                    <stop offset="100%" stopColor="rgba(0, 243, 255, 0.2)" />
+                    <stop offset="0%" stopColor="rgba(99, 102, 241, 0)" />
+                    <stop offset="80%" stopColor="rgba(99, 102, 241, 0.05)" />
+                    <stop offset="100%" stopColor="rgba(99, 102, 241, 0.2)" />
                  </radialGradient>
                  
                  <mask id="radar-mask">
@@ -221,30 +221,30 @@ export const CampusMap = () => {
               </defs>
 
               {/* Radar Rings */}
-              <circle cx="1000" cy="500" r="200" fill="none" stroke="rgba(0, 243, 255, 0.05)" strokeWidth="1" />
-              <circle cx="1000" cy="500" r="400" fill="none" stroke="rgba(0, 243, 255, 0.05)" strokeWidth="1" />
-              <circle cx="1000" cy="500" r="600" fill="none" stroke="rgba(0, 243, 255, 0.05)" strokeWidth="1" />
-              <circle cx="1000" cy="500" r="800" fill="none" stroke="rgba(0, 243, 255, 0.05)" strokeWidth="1" />
+              <circle cx="1000" cy="500" r="200" fill="none" stroke="rgba(99, 102, 241, 0.05)" strokeWidth="1" />
+              <circle cx="1000" cy="500" r="400" fill="none" stroke="rgba(99, 102, 241, 0.05)" strokeWidth="1" />
+              <circle cx="1000" cy="500" r="600" fill="none" stroke="rgba(99, 102, 241, 0.05)" strokeWidth="1" />
+              <circle cx="1000" cy="500" r="800" fill="none" stroke="rgba(99, 102, 241, 0.05)" strokeWidth="1" />
 
               {/* The Sweep */}
               <circle cx="1000" cy="500" r="1000" fill="url(#radar-gradient)" mask="url(#radar-mask)" />
               
               {/* Fake Crosshairs */}
-              <line x1="1000" y1="480" x2="1000" y2="520" stroke="rgba(0, 243, 255, 0.3)" strokeWidth="1" />
-              <line x1="980" y1="500" x2="1020" y2="500" stroke="rgba(0, 243, 255, 0.3)" strokeWidth="1" />
+              <line x1="1000" y1="480" x2="1000" y2="520" stroke="rgba(99, 102, 241, 0.3)" strokeWidth="1" />
+              <line x1="980" y1="500" x2="1020" y2="500" stroke="rgba(99, 102, 241, 0.3)" strokeWidth="1" />
            </svg>
         </div>
 
         {/* Floating Coordinates Ticker */}
         <div className="absolute top-8 left-8 p-4 bg-black/80 backdrop-blur-md border border-white/5 rounded-lg z-[500] pointer-events-none">
-           <div className="flex items-center gap-2 mb-2 text-vms-accent">
+           <div className="flex items-center gap-2 mb-2 text-indigo-500">
               <Satellite size={12} />
               <span className="text-[9px] font-black uppercase tracking-widest">GPS_TELEMETRY</span>
            </div>
            <div className="space-y-1 font-mono">
               <div className="text-[10px] text-white/40 tabular-nums">LAT: 37.774929</div>
               <div className="text-[10px] text-white/40 tabular-nums">LON: -122.419416</div>
-              <div className="text-[10px] text-vms-emerald-500 tabular-nums uppercase font-bold mt-2">LOCK_STATUS: VERIFIED</div>
+              <div className="text-[10px] text-indigo-500 tabular-nums uppercase font-bold mt-2">LOCK_STATUS: VERIFIED</div>
            </div>
         </div>
 
@@ -253,10 +253,10 @@ export const CampusMap = () => {
            <div className="p-6 bg-black/80 backdrop-blur-xl border border-white/10 rounded-xl space-y-6 shadow-2xl pointer-events-auto">
               <div className="flex items-center justify-between border-b border-white/5 pb-3">
                  <div className="flex items-center gap-2">
-                    <Radio size={16} className="text-vms-accent" />
+                    <Radio size={16} className="text-indigo-500" />
                     <span className="text-[11px] font-black uppercase tracking-widest text-white/80">Site Topology</span>
                  </div>
-                 <div className="w-2 h-2 rounded-full bg-vms-emerald-500 shadow-[0_0_5px_rgba(16,185,129,0.5)]" />
+                 <div className="w-2 h-2 rounded-full bg-indigo-500 shadow-[0_0_5px_rgba(16,185,129,0.5)]" />
               </div>
 
               <div className="space-y-4">
@@ -266,17 +266,17 @@ export const CampusMap = () => {
                        <span className="text-white/80">14.2 km</span>
                     </div>
                     <div className="h-1 bg-white/5 rounded-full overflow-hidden">
-                       <div className="h-full bg-vms-accent w-[68%]" />
+                       <div className="h-full bg-indigo-500 w-[68%]" />
                     </div>
                  </div>
 
                  <div className="flex flex-col gap-1">
                     <div className="flex items-center justify-between text-[9px] font-bold uppercase tracking-widest text-white/30">
                        <span>Data Sovereignty Index</span>
-                       <span className="text-vms-emerald-500">99.98%</span>
+                       <span className="text-indigo-500">99.98%</span>
                     </div>
                     <div className="h-1 bg-white/5 rounded-full overflow-hidden">
-                       <div className="h-full bg-vms-emerald-500 w-[99%]" />
+                       <div className="h-full bg-indigo-500 w-[99%]" />
                     </div>
                  </div>
               </div>
@@ -284,14 +284,14 @@ export const CampusMap = () => {
               <div className="pt-4 border-t border-white/5 flex flex-col gap-3">
                  <div className="flex items-center gap-3">
                     <div className="p-2 bg-white/[0.03] border border-white/5 rounded">
-                       <Box size={14} className="text-vms-accent" />
+                       <Box size={14} className="text-indigo-500" />
                     </div>
                     <div className="flex flex-col">
                        <span className="text-[10px] font-bold uppercase text-white/80 tracking-tighter">Campus Map v3.0</span>
                        <span className="text-[8px] text-white/20 uppercase font-mono">CartoDB Dark Matter</span>
                     </div>
                  </div>
-                 <button className="w-full py-2.5 bg-vms-accent text-black text-[10px] font-black uppercase tracking-[0.2em] hover:bg-white transition-all shadow-lg pointer-events-auto">
+                 <button className="w-full py-2.5 bg-indigo-500 text-black text-[10px] font-black uppercase tracking-[0.2em] hover:bg-white transition-all shadow-lg pointer-events-auto">
                     Full Sector Scan
                  </button>
               </div>
@@ -300,7 +300,7 @@ export const CampusMap = () => {
            {/* Mini Legend */}
            <div className="p-4 bg-black/60 backdrop-blur-md border border-white/5 rounded-lg grid grid-cols-2 gap-3 pointer-events-auto">
               <div className="flex items-center gap-2">
-                 <div className="w-2 h-2 rounded-full bg-vms-accent" />
+                 <div className="w-2 h-2 rounded-full bg-indigo-500" />
                  <span className="text-[8px] text-white/40 uppercase font-bold">Secure Zone</span>
               </div>
               <div className="flex items-center gap-2">
@@ -320,14 +320,14 @@ export const CampusMap = () => {
 
         {/* 4. NAVIGATION TOOLS (BOTTOM RIGHT) */}
         <div className="absolute bottom-10 right-10 flex flex-col gap-2 z-[500]">
-           <button onClick={handleZoomIn} className="w-12 h-12 bg-black/80 backdrop-blur-xl border border-white/10 flex items-center justify-center text-white/40 hover:text-vms-accent transition-all shadow-2xl group hover:border-vms-accent/50 pointer-events-auto">
+           <button onClick={handleZoomIn} className="w-12 h-12 bg-black/80 backdrop-blur-xl border border-white/10 flex items-center justify-center text-white/40 hover:text-indigo-500 transition-all shadow-2xl group hover:border-indigo-500/50 pointer-events-auto">
               <ZoomIn size={20} />
            </button>
-           <button onClick={handleZoomOut} className="w-12 h-12 bg-black/80 backdrop-blur-xl border border-white/10 flex items-center justify-center text-white/40 hover:text-vms-accent transition-all shadow-2xl group hover:border-vms-accent/50 pointer-events-auto">
+           <button onClick={handleZoomOut} className="w-12 h-12 bg-black/80 backdrop-blur-xl border border-white/10 flex items-center justify-center text-white/40 hover:text-indigo-500 transition-all shadow-2xl group hover:border-indigo-500/50 pointer-events-auto">
               <ZoomOut size={20} />
            </button>
            <div className="h-4" />
-           <button onClick={handleRecenter} className="w-12 h-12 bg-vms-accent text-black flex items-center justify-center transition-all shadow-[0_0_20px_rgba(0,243,255,0.3)] hover:bg-white active:scale-95 pointer-events-auto">
+           <button onClick={handleRecenter} className="w-12 h-12 bg-indigo-500 text-black flex items-center justify-center transition-all shadow-[0_0_20px_rgba(0,243,255,0.3)] hover:bg-white active:scale-95 pointer-events-auto">
               <Crosshair size={22} />
            </button>
         </div>
@@ -335,7 +335,7 @@ export const CampusMap = () => {
         {/* 5. FOOTER HUD TIPS */}
         <div className="absolute bottom-10 left-10 flex items-center gap-4 z-[500] pointer-events-none">
            <div className="px-4 py-2 bg-black/80 backdrop-blur-md border border-white/5 flex items-center gap-3">
-              <Navigation size={14} className="text-vms-accent animate-pulse" />
+              <Navigation size={14} className="text-indigo-500 animate-pulse" />
               <div className="flex flex-col">
                  <span className="text-[9px] text-white/30 uppercase font-black tracking-widest">Macro Geospatial Context</span>
                  <span className="text-[10px] text-white/80 uppercase font-bold">Select Active Node for Deployment</span>
