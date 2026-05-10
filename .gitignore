@@ -9,22 +9,31 @@ build/
 **/build/
 .turbo/
 **/ .turbo/
+target/
 
 # Environment and logs
 *.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
 .env*
 .DS_Store
 Thumbs.db
 
+# OS and Editor files
+*.swp
+*.swo
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
 # Repository specific
-target/
 *.node
 *.dll
 *.exe
 *.pdb
 build_*.txt
-
-# Temporary/Debug files
 diag.ts
 sovereign_*
 focus_*
@@ -39,3 +48,9 @@ resolve.ts
 **/src/**/*.js
 **/src/**/*.js.map
 /references/
+
+# Caches and Coverage
+.eslintcache
+.cache/
+.nyc_output/
+*.lcov

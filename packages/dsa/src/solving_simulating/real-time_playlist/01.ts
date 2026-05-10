@@ -180,12 +180,7 @@ const userPreferences: Map<string, Map<string, number>> = new Map();
 
 /**
 // User context: Map<userId, context> (for context-aware recommendations)
-const userContextDSAMap: Map<string, string> = new Map();
-// User context: Map<userId, context> (for context-aware recommendations)
-const userContextDSAMap: Map<string, string> = new Map();
-
-// User context: Map<userId, context> (for context-aware recommendations)
-const userContextMap: Map<string, string> = new Map();
+const userContextDSA: Map<string, string> = new Map();
  * Recommendations: Map<userId, string[]>
  * DSA: Hash map for per-user recommendations, array for ordered tracks.
  * Could use MinHeap for top-N selection in production.
