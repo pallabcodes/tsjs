@@ -993,7 +993,7 @@ changePlaylistOwner("pl1", "user2");
 // Change privacy
 changePlaylistPrivacy("pl1", "public");
 
-// --- Event Bus Integration for Permission Changes ---
+// --- Integration for Permission Changes ---
 // (Moved below, after eventBus declaration)
 
 /**

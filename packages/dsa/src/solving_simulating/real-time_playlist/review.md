@@ -15,7 +15,7 @@
   - Global track removal, playlist/user deletion (compliance)
   - Smart playlist automation
   - Recommendation engine: personal, collaborative, trending, context-aware
-- **Not Implemented (by design):** No UI, no distributed event bus, no sharding/partitioning, no external API integration—these are outside pure business logic and DSA scope.
+- **Not Implemented (by design):** No UI, no distributed, no sharding/partitioning, no external API integration—these are outside pure business logic and DSA scope.
 
 ### 3. Are all edge cases covered?
 - **Yes:** All major edge cases are handled, including:
