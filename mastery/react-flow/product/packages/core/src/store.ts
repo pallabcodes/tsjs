@@ -33,6 +33,7 @@ export interface TrackMeta {
   hidden: boolean;
   height: number;
   collapsed: boolean;
+  offset: number; // Temporal offset in seconds
 }
 
 export interface Device {
@@ -246,6 +247,8 @@ interface MeshState {
   toggleTrackSolo: (id: string) => void;
   toggleTrackHidden: (id: string) => void;
   setTrackHeight: (id: string, height: number) => void;
+  setTrackOffset: (id: string, offset: number) => void;
+  nudgeTrack: (id: string, delta: number) => void;
 
   addAnnotation: (annotation: Omit<Annotation, 'id'>) => void;
   updateAnnotation: (id: string, updates: Partial<Annotation>) => void;
@@ -599,21 +602,33 @@ export const useMeshStore = create<MeshState>()(
 
     toggleTrackSolo: (id) =>
       set((state) => {
-        const existing = state.trackMeta[id] ?? { id, muted: false, solo: false, hidden: false, height: DEFAULT_TRACK_HEIGHT, collapsed: false };
+        const existing = state.trackMeta[id] ?? { id, muted: false, solo: false, hidden: false, height: DEFAULT_TRACK_HEIGHT, collapsed: false, offset: 0 };
         return { trackMeta: { ...state.trackMeta, [id]: { ...existing, solo: !existing.solo } } };
       }),
 
     toggleTrackHidden: (id) =>
       set((state) => {
-        const existing = state.trackMeta[id] ?? { id, muted: false, solo: false, hidden: false, height: DEFAULT_TRACK_HEIGHT, collapsed: false };
+        const existing = state.trackMeta[id] ?? { id, muted: false, solo: false, hidden: false, height: DEFAULT_TRACK_HEIGHT, collapsed: false, offset: 0 };
         return { trackMeta: { ...state.trackMeta, [id]: { ...existing, hidden: !existing.hidden } } };
       }),
 
     setTrackHeight: (id, height) =>
       set((state) => {
         const clamped = Math.min(MAX_TRACK_HEIGHT, Math.max(MIN_TRACK_HEIGHT, height));
-        const existing = state.trackMeta[id] ?? { id, muted: false, solo: false, hidden: false, height: DEFAULT_TRACK_HEIGHT, collapsed: false };
+        const existing = state.trackMeta[id] ?? { id, muted: false, solo: false, hidden: false, height: DEFAULT_TRACK_HEIGHT, collapsed: false, offset: 0 };
         return { trackMeta: { ...state.trackMeta, [id]: { ...existing, height: clamped } } };
+      }),
+
+    setTrackOffset: (id, offset) =>
+      set((state) => {
+        const existing = state.trackMeta[id] ?? { id, muted: false, solo: false, hidden: false, height: DEFAULT_TRACK_HEIGHT, collapsed: false, offset: 0 };
+        return { trackMeta: { ...state.trackMeta, [id]: { ...existing, offset } } };
+      }),
+
+    nudgeTrack: (id, delta) =>
+      set((state) => {
+        const existing = state.trackMeta[id] ?? { id, muted: false, solo: false, hidden: false, height: DEFAULT_TRACK_HEIGHT, collapsed: false, offset: 0 };
+        return { trackMeta: { ...state.trackMeta, [id]: { ...existing, offset: existing.offset + delta } } };
       }),
 
     addAnnotation: (ann) => set((state) => ({

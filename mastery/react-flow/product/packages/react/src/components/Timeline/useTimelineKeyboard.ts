@@ -120,13 +120,25 @@ export const useTimelineKeyboard = () => {
           e.preventDefault();
           jumpToPrevEvent(getAllEvents());
           break;
-        case 'BracketRight': // ] = next bookmark
-          e.preventDefault();
-          jumpToNextBookmark();
+        case 'BracketRight': // ] = next bookmark OR nudge
+          if (e.altKey) {
+            e.preventDefault();
+            const { selectedTrackIds, nudgeTrack } = useMeshStore.getState();
+            selectedTrackIds.forEach(id => nudgeTrack(id, e.shiftKey ? 1 : 0.1));
+          } else {
+            e.preventDefault();
+            jumpToNextBookmark();
+          }
           break;
-        case 'BracketLeft': // [ = prev bookmark
-          e.preventDefault();
-          jumpToPrevBookmark();
+        case 'BracketLeft': // [ = prev bookmark OR nudge
+          if (e.altKey) {
+            e.preventDefault();
+            const { selectedTrackIds, nudgeTrack } = useMeshStore.getState();
+            selectedTrackIds.forEach(id => nudgeTrack(id, e.shiftKey ? -1 : -0.1));
+          } else {
+            e.preventDefault();
+            jumpToPrevBookmark();
+          }
           break;
 
         // ─── Selection ───────────────────────────────────────────────

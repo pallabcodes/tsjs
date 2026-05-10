@@ -25,7 +25,8 @@ export const TimelineTrack = ({
   const scale = store.scale;
   const selectedTrackIds = store.selectedTrackIds;
   const toggleTrackSelection = store.toggleTrackSelection;
-  const trackMeta = store.trackMeta[id] ?? { id, muted: false, solo: false, hidden: false, height: DEFAULT_TRACK_HEIGHT, collapsed: false };
+  const trackMeta = store.trackMeta[id] ?? { id, muted: false, solo: false, hidden: false, height: DEFAULT_TRACK_HEIGHT, collapsed: false, offset: 0 };
+  const offset = trackMeta.offset || 0;
   const toggleTrackMute = store.toggleTrackMute;
   const toggleTrackSolo = store.toggleTrackSolo;
   const toggleTrackHidden = store.toggleTrackHidden;
@@ -119,7 +120,14 @@ export const TimelineTrack = ({
 
         {/* Label + type */}
         <div className="flex flex-col truncate flex-1 min-w-0">
-          <span className="text-[9px] font-bold text-white truncate leading-tight">{label}</span>
+          <div className="flex items-center gap-1.5 overflow-hidden">
+            <span className="text-[9px] font-bold text-white truncate leading-tight">{label}</span>
+            {offset !== 0 && (
+              <span className="text-[7px] font-black text-indigo-400 bg-indigo-500/10 px-1 rounded border border-indigo-500/20 shrink-0">
+                {offset > 0 ? '+' : ''}{offset.toFixed(1)}s
+              </span>
+            )}
+          </div>
           <span className="label-caps text-[7px] opacity-30">{type}</span>
         </div>
 
@@ -173,15 +181,15 @@ export const TimelineTrack = ({
               colorClasses[color]
             )}
             style={{
-              left: (start / 60) * scale,
+              left: ((start + offset) / 60) * scale,
               width: (duration / 60) * scale
             }}
             whileHover={{ scaleY: 1.05, backgroundColor: 'rgba(255,255,255,0.08)' }}
-            onHoverStart={() => setHoveredSpan({ start, duration, index: i })}
+            onHoverStart={() => setHoveredSpan({ start: start + offset, duration, index: i })}
             onHoverEnd={() => setHoveredSpan(null)}
             onClick={(e: React.MouseEvent) => {
               e.stopPropagation();
-              handleSpanClick({ start, duration });
+              handleSpanClick({ start: start + offset, duration });
             }}
           >
             {/* Heatmap gradient */}
@@ -206,7 +214,7 @@ export const TimelineTrack = ({
             {/* Span label when wide enough */}
             {(duration / 60) * scale > 60 && (
               <span className="absolute left-1 top-0.5 text-[7px] font-bold opacity-60 pointer-events-none truncate max-w-[80%]">
-                {formatTime(start)} +{Math.round(duration)}s
+                {formatTime(start + offset)} +{Math.round(duration)}s
               </span>
             )}
           </motion.div>
@@ -217,10 +225,10 @@ export const TimelineTrack = ({
           <div
             key={`event-${i}`}
             className="absolute top-0 bottom-0 w-px z-10 cursor-pointer group/event"
-            style={{ left: (ts / 60) * scale }}
+            style={{ left: ((ts + offset) / 60) * scale }}
             onClick={(e) => {
               e.stopPropagation();
-              useMeshStore.getState().setCurrentTime(ts);
+              useMeshStore.getState().setCurrentTime(ts + offset);
             }}
           >
             <div className={cn(
@@ -282,7 +290,7 @@ export const TimelineTrack = ({
                 }
               }}
               style={{ 
-                left: x, 
+                left: x + (offset / 60) * scale, 
                 width: ann.duration ? width : undefined,
                 backgroundColor: ann.color === 'emerald' ? '#10b981' : ann.color === 'red' ? '#ef4444' : ann.color === 'amber' ? '#fbbf24' : '#94a3b8'
               }}
@@ -359,22 +367,58 @@ export const TimelineTrack = ({
               )`
             }}
           />
-          {/* Stream Health / Frame Timing Layer */}
+          {/* Signal Integrity Ribbon (MediaMTX/OTel Logic) */}
           <div 
-            className="h-[2px] w-full opacity-60 animate-signal-flow"
+            className="h-[3px] w-full opacity-90 relative overflow-hidden"
+            title="Signal Integrity: 100% (Green) / Packet Loss (Red) / Jitter (Yellow)"
+          >
+            {/* Base Signal (Green) */}
+            <div className="absolute inset-0 bg-emerald-500/40" />
+            
+            {/* Randomized Anomalies (Mocking Signal Loss) */}
+            <div 
+              className="absolute inset-0"
+              style={{
+                background: `linear-gradient(90deg, 
+                  transparent 0%, 
+                  transparent 15%, 
+                  #ef4444 15%, 
+                  #ef4444 17%, 
+                  transparent 17%,
+                  transparent 45%,
+                  #f59e0b 45%,
+                  #f59e0b 48%,
+                  transparent 48%,
+                  transparent 82%,
+                  #ef4444 82%,
+                  #ef4444 85%,
+                  transparent 85%
+                )`
+              }}
+            />
+            
+            {/* Scanning Scanline (Signal Flow) */}
+            <div className="absolute inset-0 animate-signal-flow opacity-30 bg-[length:100px_100%] bg-[linear-gradient(90deg,transparent,rgba(255,255,255,0.4),transparent)]" />
+          </div>
+
+          {/* GOP Architecture Ribbon (I/P/B Visualization) */}
+          <div 
+            className="h-[2px] w-full opacity-40 border-t border-white/5"
             style={{
               background: `repeating-linear-gradient(90deg, 
-                rgba(99, 102, 241, 0.3) 0px, 
-                rgba(99, 102, 241, 0.3) 10px,
-                transparent 10px,
-                transparent 12px
-              )`,
-              backgroundSize: '100px 100%'
+                #6366f1 0px, 
+                #6366f1 2px,
+                transparent 2px,
+                transparent 30px,
+                rgba(255,255,255,0.4) 30px,
+                rgba(255,255,255,0.4) 31px,
+                transparent 31px,
+                transparent 60px
+              )`
             }}
           />
         </div>
       )}
-
 
       {/* Tooltip */}
       <AnimatePresence>
