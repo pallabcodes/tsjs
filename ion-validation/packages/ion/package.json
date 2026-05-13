@@ -1,0 +1,24 @@
+{
+  "name": "@foculist/ion",
+  "version": "0.0.1",
+  "description": "ion: The high-performance, functional validation engine for the Foculist ecosystem.",
+  "main": "dist/umd/index.js",
+  "module": "dist/esm/index.js",
+  "types": "dist/esm/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "sideEffects": false,
+  "scripts": {
+    "build": "tsc",
+    "typecheck": "tsc --noEmit"
+  },
+  "peerDependencies": {
+    "react": ">=16.8.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.28",
+    "react": "^19.2.6",
+    "typescript": "^5.0.0"
+  }
+}
