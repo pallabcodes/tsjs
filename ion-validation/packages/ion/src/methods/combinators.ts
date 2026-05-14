@@ -1,50 +1,32 @@
-import { Result, success, failure } from '../utils/result';
-import { isSuccess } from '../utils/result';
-import { Rule, ValidationContext } from '../types/validator';
+import { Result, Success, Failure, isSuccess } from '../types/monad';
+import { Rule, ValidationContext } from '../types/fields';
 
 /**
- * and: Combines multiple rules, all must pass.
+ * every: Combines multiple rules into one. Fails on the first error.
  */
-export function and<T, R>(...rules: Rule<T, R>[]): Rule<T, R> {
-  return async (val: T, ctx: ValidationContext<R>) => {
+export const every = <T, Ctx>(rules: ReadonlyArray<Rule<T, Ctx>>): Rule<T, Ctx> => {
+  return async (val: T, ctx: ValidationContext<Ctx>): Promise<Result<T>> => {
     let current = val;
     for (const rule of rules) {
-      const res = await rule(current, ctx);
-      if (!isSuccess(res)) return res;
-      current = res.value;
+      const result = await rule(current, ctx);
+      if (!isSuccess(result)) return result;
+      current = result.value as T; // Explicitly preserve the generic T
     }
-    return success(current);
+    return { value: current } as Success<T>;
   };
-}
+};
 
 /**
- * or: Combines multiple rules, at least one must pass.
+ * when: Conditional validation. Executes rules only if the predicate passes.
  */
-export function or<T, R>(...rules: Rule<T, R>[]): Rule<T, R> {
-  return async (val: T, ctx: ValidationContext<R>) => {
-    const errors: string[] = [];
-    for (const rule of rules) {
-      const res = await rule(val, ctx);
-      if (isSuccess(res)) return res;
-      errors.push(res.error);
+export const when = <T, Ctx>(
+  predicate: (data: Ctx) => boolean, 
+  rules: ReadonlyArray<Rule<T, Ctx>>
+): Rule<T, Ctx> => {
+  return async (val: T, ctx: ValidationContext<Ctx>): Promise<Result<T>> => {
+    if (!predicate(ctx.data)) {
+      return { value: val } as Success<T>;
     }
-    return failure(`None of the rules passed: ${errors.join(' OR ')}`);
+    return await every(rules)(val, ctx);
   };
-}
-
-/**
- * when: Conditional validation.
- * Runs the rule only if the predicate returns true.
- */
-export function when<T, R>(
-  predicate: (data: R, ctx: ValidationContext<R>) => boolean | Promise<boolean>,
-  rule: Rule<T, R>
-): Rule<T, R> {
-  return async (val: T, ctx: ValidationContext<R>) => {
-    const shouldRun = await predicate(ctx.data, ctx);
-    if (shouldRun) {
-      return await rule(val, ctx);
-    }
-    return success(val);
-  };
-}
+};

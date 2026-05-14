@@ -1,12 +1,19 @@
-import { Rule } from '../types/validator';
-import { success, failure } from '../utils/result';
+import { Rule, Success, Failure } from '../types/monad';
 
 /**
- * minLen: Ensures a string has a minimum number of characters.
+ * minLen: Validates that a string or array has a minimum length.
  */
-export const minLen = (min: number): Rule<string> => (val, ctx) => {
-  if (typeof val !== 'string' || val.length < min) {
-    return failure(`Minimum length is ${min} characters`);
-  }
-  return success(val);
+export const minLen = (len: number, message?: string): Rule<any> => {
+  return (val: any): Success<any> | Failure => {
+    if (val && val.length >= len) {
+      return { value: val } as Success<any>;
+    }
+    return { 
+      error: { 
+        code: 'min_len', 
+        message: message || `Minimum length is ${len}`,
+        params: { min: len }
+      } 
+    } as Failure;
+  };
 };

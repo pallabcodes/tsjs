@@ -1,13 +1,11 @@
-import { Rule } from '../types/validator';
-import { success } from '../utils/result';
+import { Validator, Success } from '../types/monad';
 
 /**
- * transform: A utility rule to reshape data mid-pipeline.
- * It always succeeds and returns the transformed value.
+ * transform: Mid-pipeline transformation logic.
+ * Primarily used to change the shape or type of data during validation.
  */
-export function transform<T, R, C = any>(fn: (val: T) => R | Promise<R>): Rule<any, C> {
-  return async (val: T) => {
-    const transformed = await fn(val);
-    return success(transformed) as any;
+export const transform = <In, Out>(fn: (val: In) => Out): Validator<In, Out> => {
+  return (val: In): Success<Out> => {
+    return { value: fn(val) } as Success<Out>;
   };
-}
+};

@@ -1,65 +1,53 @@
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { createValidation } from '../methods/createValidation';
-import { FieldDefinition } from '../protocols/ion';
+import { IonField } from '../types/fields';
+import { InferSchema } from '../types/inference';
+import { IonError } from '../types/monad';
 
 /**
- * useIon: The high-performance React hook for the Ion Validation Protocol.
- * It treats validation as a lazy, event-driven stream, updating the UI progressively.
+ * useIon: The primary React hook for Ion validation.
+ * It manages the reactive lifecycle of form data and validation diagnostics.
  */
-export function useIon<T>(initialData: T, schema: FieldDefinition<T>[]) {
+export function useIon<T, S extends ReadonlyArray<IonField<T>>>(
+  initialData: T,
+  schema: S
+) {
   const [data, setData] = useState<T>(initialData);
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [errors, setErrors] = useState<Record<string, IonError>>({});
   const [isValidating, setIsValidating] = useState(false);
 
-  // Using a ref to track the latest data for the validation stream
-  const dataRef = useRef(data);
-  dataRef.current = data;
+  const validator = useMemo(() => createValidation(data).schema(schema), [data, schema]);
 
   /**
-   * updateField: Updates state and clears the specific field error.
-   */
-  const updateField = useCallback((key: keyof T, value: any) => {
-    setData(prev => ({ ...prev, [key]: value }));
-    setErrors((prev: Record<string, string>) => {
-      const next = { ...prev };
-      delete next[key as string];
-      return next;
-    });
-  }, []);
-
-  /**
-   * validate: Executes the IonStream and yields errors progressively to the UI.
+   * validate: Executes the full validation contract.
    */
   const validate = useCallback(async () => {
     setIsValidating(true);
-    const validation = createValidation(dataRef.current).schema(schema);
-    const stream = validation.stream();
-
-    // Clear previous errors before starting
-    setErrors({});
-
-    for await (const event of stream) {
-      if (event.type === 'field_error') {
-        setErrors((prev: Record<string, string>) => ({
-          ...prev,
-          [event.key]: event.error
-        }));
-      }
-    }
-
+    const report = await validator.execute();
+    setErrors(report.errors);
     setIsValidating(false);
+    return report;
+  }, [validator]);
+
+  /**
+   * updateField: Updates a specific data field and re-validates the contract.
+   */
+  const updateField = useCallback(async <K extends keyof T>(key: K, value: T[K]) => {
+    const newData = { ...data, [key]: value };
+    setData(newData);
     
-    // Return final snapshot
-    return await validation.execute();
-  }, [schema]);
+    // We re-validate the entire schema for reactive consistency
+    const report = await createValidation(newData).schema(schema).execute();
+    setErrors(report.errors);
+  }, [data, schema]);
 
   return {
     data,
     errors,
     isValidating,
-    updateField,
     validate,
-    setData,
-    setErrors
+    updateField,
+    isValid: Object.keys(errors).length === 0,
+    inferred: data as unknown as InferSchema<S>
   };
 }

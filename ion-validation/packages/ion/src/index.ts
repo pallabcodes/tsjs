@@ -1,26 +1,21 @@
-// Types
-export * from './types/result';
-export * from './types/validator';
-export * from './types/stream';
+// --- The Bible (Core Types) ---
+export * from './types/monad';
+export * from './types/fields';
+export * from './types/protocol';
+export * from './types/inference';
 
-// Utils
-export * from './utils/result';
+// --- The Engine (Protocols) ---
+export * from './protocols/ion';
 
-// Actions (Rules)
-export * from './actions/required';
-export * from './actions/email';
-export * from './actions/minLen';
-export * from './actions/phone';
-export * from './actions/transform';
-
-// Methods (Orchestration)
-export * from './methods/pipe';
-export * from './methods/validate';
+// --- The Orchestrators (Methods) ---
 export * from './methods/createValidation';
 export * from './methods/combinators';
 
-// Protocols
-export * from './protocols/ion';
+// --- The Actions (Rules) ---
+export * from './actions/required';
+export * from './actions/email';
+export * from './actions/minLen';
+export * from './actions/transform';
 
-// React (Optional Adapter)
+// --- The Adapters (React) ---
 export * from './react/useIon';
