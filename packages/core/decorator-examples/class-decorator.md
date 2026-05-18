@@ -1,49 +1,40 @@
-Exploring the codebase and researching advanced decorator techniques. Checking for existing decorator examples.
-
-
-[10 tools called]
-
-
-Creating advanced decorator examples demonstrating advanced patterns. Reviewing the project structure first:
-
-
-[2 tools called]
-
-
-Creating advanced decorator examples covering advanced patterns:
-
-
-[1 tool called]
-
-
-Advanced decorator examples demonstrating patterns used in production systems. Create this file:
-
 ## File: `decorator-examples/advanced-class-decorators.ts`
 
 ```typescript
+
 import 'reflect-metadata';
 
 // ============================================================================
 // 1. MIXIN PATTERN - Compose multiple behaviors into a class
 // ============================================================================
 
-type Constructor<T = {}> = new (...args: any[]) => T;
+type Constructor<T = {}> = new (...args: any[]) => T; // this is how to type a class constructor
 
 /**
  * Mixin decorator that applies multiple mixins to a class
  * Inspired by Scala traits and Go interfaces
  */
 export function Mixin(...mixins: Constructor[]) {
+
+  // Dynamically create subclass from base class i.e. User then add new behaviors from mixins (User is the class on which this Mixin applied)
   return function <T extends Constructor>(base: T) {
+
+    // N.B: so we have declared a dynamic (annonymous) subclass which extends base and based is basically on which this mixin applied
+    
     class Mixed extends base {
+
       constructor(...args: any[]) {
-        super(...args);
-        // Apply all mixins
-        mixins.forEach((mixin) => {
-          Object.assign(this, new mixin());
-        });
+        super(...args); // calls the parent class constructor and initializes properties of base class i.e. constructor of User class
+
+        // Iterate over all mixins and apply all the mixins so it does new TimeStampMixin(), new SerializableMixin() and copies all properties and methods to the instance
+        mixins.forEach(mixin => Object.assign(this, new mixin()));
+
       }
+
     }
+
+    // const Mixed = class extends Base {}
+
     // Copy static properties
     mixins.forEach((mixin) => {
       Object.getOwnPropertyNames(mixin).forEach((name) => {
@@ -52,8 +43,10 @@ export function Mixin(...mixins: Constructor[]) {
         }
       });
     });
+
     return Mixed;
   };
+
 }
 
 // Example mixins
@@ -74,7 +67,7 @@ class SerializableMixin {
 
 // Usage:
 // @Mixin(TimestampMixin, SerializableMixin)
-// class User { ... }
+// class User { .... }
 
 // ============================================================================
 // 2. PROXY-BASED INTERCEPTION - AOP-style method interception
